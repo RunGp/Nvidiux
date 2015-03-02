@@ -11,4 +11,6 @@ work on ubuntu 12.04+ and derivative
 debian 7.0 +
 arch (manual installation)
 
+Licence:gpl-3.0 :https://github.com/RunGp/Nvidiux/blob/master/usr/share/nvidiux/gpl-3.0.txt
+
 Fr Version here : http://forum.ubuntu-fr.org/viewtopic.php?id=1589261
