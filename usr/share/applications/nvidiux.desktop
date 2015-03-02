@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Nvidiux
+Exec=Nvidiux
+Terminal=true
+Comment=Overclock your nvidia card !
+Icon=/usr/share/nvidiux/img/Nvidiux.png
+Categories=Tools

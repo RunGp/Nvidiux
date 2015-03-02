@@ -1,0 +1,10 @@
+Package:nvidiux
+Version:0.83b2
+Section:Base
+Priority:optional
+Architecture:all
+Depends:python-qt4,gksu,vainfo
+Maintainer:Payet Guillaume <willy97410@gmail.com>
+Description:Nvidiux_Program underclock or overclock your nvidia gpu
+Homepage:
+Installed-Size: 150
