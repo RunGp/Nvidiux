@@ -4,8 +4,11 @@ Nvidiux is a graphical python tool to overclock or underclock your nvidia gpu  (
 
 For using this tools you must install nvidia proprietary drivers 331 or later and python 2.7
 symply install the deb file here : https://github.com/RunGp/Nvidiux/releases
+
 sudo dpkg -i nvidiux.deb
+
 sudo apt-get install -f (for dependancy)
+
 and launch nvidiux
 
 
@@ -15,4 +18,5 @@ arch (manual installation)
 
 =============================================================
 Licence:gpl-3.0 :https://github.com/RunGp/Nvidiux/blob/master/usr/share/nvidiux/gpl-3.0.txt
+
 Fr Version here : http://forum.ubuntu-fr.org/viewtopic.php?id=1589261
