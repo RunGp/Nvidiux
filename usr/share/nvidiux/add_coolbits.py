@@ -26,4 +26,4 @@ else:
 	for line in fileinput.input("/etc/X11/xorg.conf",inplace=True): 
 	    print line.replace("\n","").replace("Section \"Device\"", "Section \"Device\"\n\tOption \"Coolbits\" \"8\"")
 
-
+os.chmod("/etc/X11/xorg.conf", 0664)

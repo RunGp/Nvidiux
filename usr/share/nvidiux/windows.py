@@ -322,7 +322,7 @@ class Ui_MainWindow(object):
         self.Title.setText(_translate("MainWindow", "Nvidiux", None))
         self.ButtonReset.setText(_translate("MainWindow", "Reset", None))
         self.ButtonApply.setText(_translate("MainWindow", "Appliquer", None))
-        self.Information.setText(_translate("MainWindow", "Version beta 2", None))
+        self.Information.setText(_translate("MainWindow", "Version 0.84b2", None))
         self.NomGpu.setText(_translate("MainWindow", "Nom gpu", None))
         self.label.setText(_translate("MainWindow", "Mhz", None))
         self.label_2.setText(_translate("MainWindow", "Mhz", None))

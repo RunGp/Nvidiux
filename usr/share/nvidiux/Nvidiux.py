@@ -74,7 +74,7 @@ def majGpu(numGpu,fen):
 	fen.ui.UPCIE.setText(_fromUtf8("Utilisation Bus PCIE\n" + str(output.split('=')[-1].replace('\n','').replace(',','')) + " %"))
 	fen.ui.UGPU.setText(_fromUtf8("Utilisation Gpu\n" + str(output.split('=')[1].split(',')[0]) + "%"))
 	output=os.popen("nvidia-settings --query [gpu:" + str(numGpu) + "]/UsedDedicatedGPUMemory | grep UsedDedicatedGPUMemory | head -1", "r").read()
-	fen.ui.UMem.setText(_fromUtf8("Utilisation Memoire\n" + str(output.split(':')[-1].split('.')[0]) + " Mo"))	
+	fen.ui.UMem.setText(_fromUtf8("Utilisation Memoire\n" + str(output.split(':')[-1].split('.')[0]) + " Mo"))
 
 class ShipHolderApplication(QMainWindow):
 	
@@ -86,6 +86,10 @@ class ShipHolderApplication(QMainWindow):
 	#a = None
 	change = 0
 	form = ""
+
+	error = -1
+	warning = -2
+	info = 0
 	
 	def __init__(self,parent=None):
 		super (ShipHolderApplication, self).__init__(parent)
@@ -137,6 +141,16 @@ class ShipHolderApplication(QMainWindow):
 		if gpuName in notWork:
 			return 1
 		return -1
+
+	def showError(self,errorCode,title,errorMsg,etype):
+		if etype == self.error:
+			errorMsg = errorMsg + "\nError Code:" + str(errorCode)
+			QMessageBox.critical(self, _fromUtf8(title),_fromUtf8(errorMsg))
+		elif etype == self.warning:
+			QMessageBox.warning(self, _fromUtf8(title),_fromUtf8(errorMsg))	
+		else:
+			QMessageBox.information(self, _fromUtf8(title),_fromUtf8(errorMsg))
+		return errorCode
 	
 	def overclock(self,mode):
 		offsetGpu = int(self.tabGpu[self.numGpu].freqGpu) - int(self.tabGpu[self.numGpu].defaultFreqGpu)
@@ -234,7 +248,7 @@ class ShipHolderApplication(QMainWindow):
 		self.change = 1
 		self.tabGpu[self.numGpu].freqMem = valeur
 		self.ui.lcdMem.display(valeur)
-		
+
 	def updategpu(self,valeur):
 		self.change = 1
 		self.tabGpu[self.numGpu].freqGpu = valeur
@@ -244,12 +258,10 @@ class ShipHolderApplication(QMainWindow):
 		self.ui.SliderShader.setSliderPosition(self.tabGpu[self.numGpu].freqShader)
 		
 	def iscompaptible(self):
-		if os.popen("dpkg -l | grep nvidia-3", "r").read()[0:2] != "ii":
-			QMessageBox.critical(self, _fromUtf8("Non supporté"),_fromUtf8("Drivers introuvable \nveuillez installer les pilotes proprietaires"))
-			return 1
+		if len(os.popen("ls -l /usr/lib | grep nvidia-3", "r").read()) == 0:#find better way...
+			return self.showError(1,"Non supporte","Driver introuvable \nVeuillez installer les pilotes proprietaires",self.error)
 		if os.popen("file /usr/bin/nvidia-settings", "r").read().find('executable') == -1:
-			QMessageBox.critical(self, _fromUtf8("Non supporté"),_fromUtf8("Nvidia settings introuvable \nveuillez installer les pilotes proprietaires et nvidia settings"))
-			return 1
+			return self.showError(2,"Non supporte","Nvidia settings introuvable \nveuillez installer les pilotes proprietaires et nvidia settings",self.error)
 		ListeGpu = os.popen("lspci -vnn | egrep 'VGA|3D'", "r").read()
 		self.nbGpuNvidia = ListeGpu.count('NVIDIA')
 		self.nbGpu = len(ListeGpu)
@@ -257,54 +269,50 @@ class ShipHolderApplication(QMainWindow):
 		if self.nbGpu >= 2: #MultiGpu
 			if ListeGpu.count('Intel') == 1 and self.nbGpuNvidia == 1 : #optimus
 				if os.popen("prime-supported 2>> /dev/null", "r").read().replace('\n','') != "yes":
-					QMessageBox.critical(self, _fromUtf8("Non supporté"),_fromUtf8("Seul prime est supporté pour les configurations optimus"))
-					return 1
+					return self.showError(3,"Prime","Seul prime est supporté pour les configurations optimus",self.error)	
 				if os.popen("prime-select query", "r").read().replace('\n','') != "nvidia":
-					QMessageBox.information(self, _fromUtf8("Mode intel"),_fromUtf8("Configuration Prime\nVeuillez passer en mode nvidia svp"))
-					return 1
+					return self.showError(-1,"Mode intel","Configuration Prime\nVeuillez passer en mode nvidia svp",self.info)
 				self.optimus = 1
 				self.ui.checkBoxOptimus.setChecked(1)
-			if self.nbGpuNvidia == 0:
-				QMessageBox.critical(self, _fromUtf8("Non supporté"),_fromUtf8("Gpu nvidia introuvable !"))	
-				return 1
-		Xorg = 0
+		if self.nbGpuNvidia == 0:
+			return self.showError(4,"Gpu Nvidia introuvable","Gpu Nvidia introuvable",self.error)
+		
 		if not os.path.isfile("/etc/X11/xorg.conf"):
 			reply = QtGui.QMessageBox.question(self, _fromUtf8("Xorg.conf"),_fromUtf8("Pas de fichier xorg.conf en générer un ?"), QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
 			if reply == QtGui.QMessageBox.No:
-				QMessageBox.critical(self, _fromUtf8("Erreur"),_fromUtf8("Vous n'avez pas de fichier xorg.conf"))
-				return 1
+				return self.showError(6,"Erreur","Vous devez avoir un fichier xorg.conf",self.error)
 			else:
 				os.popen("bash /usr/share/nvidiux/toRoot.sh >> /dev/null 2>&1 ;echo $?", "r").read()
-				if int(os.popen("touch /tmp/.reboot_nvidiux;echo $?", "r").read()) == 0:
-					QMessageBox.information(self, _fromUtf8("Redémarrage Requis"),_fromUtf8("Configuration effectué\nVous devez redémarrer votre machine"))
-					return 2
-				else:
-					QMessageBox.critical(self, _fromUtf8("Erreur"),_fromUtf8("Erreur 5 configuration !"))
-					return 1
+				try:
+					tempFile = open('/tmp/.reboot_nvidiux','a')
+					tempFile.write('Nvidiux temp file')
+					tempFile.close()
+					return self.showError(-1,"Redémarrage Requis","Configuration effectué\nVous devez redémarrer votre machine",self.info)
+				except:
+					return self.showError(5,"Erreur","Erreur configuration nvidiux",self.error)
 
-		if Xorg == 0 and int(os.popen("cat /etc/X11/xorg.conf | grep Coolbits | wc -l", "r").read()) == 0:
-			QMessageBox.information(self, _fromUtf8("Configuration"),_fromUtf8("La configuration du fichier xorg n'est pas effectué !\nEntrer votre mot de passe administrateur pour effectuer la configuration"))
+		if int(os.popen("cat /etc/X11/xorg.conf | grep Coolbits | wc -l", "r").read()) == 0:
+			self.showError(-1,"Configuration","La configuration du fichier xorg n'est pas effectué !\nEntrer votre mot de passe administrateur pour effectuer la configuration",self.info)
 			if int(os.popen("bash /usr/share/nvidiux/toRoot.sh >> /dev/null 2>&1 ;echo $?", "r").read()) != 0:
-				QMessageBox.critical(self, _fromUtf8("Erreur"),_fromUtf8("Votre mot de passe est incorrect"))
-				return 1
+				return self.showError(7,"Erreur Credential","Votre mot de passe est incorrect",self.info)
 			else:
-				if int(os.popen("touch /tmp/.reboot_nvidiux;echo $?", "r").read()) == 0:
-					QMessageBox.information(self, _fromUtf8("Redémarrage Requis"),_fromUtf8("Configuration effectué\nVous devez redémarrer votre machine"))
-					return 2
-				else:
-					QMessageBox.critical(self, _fromUtf8("Erreur"),_fromUtf8("Erreur 5 configuration !"))
-					return 1
+				try:
+					tempFile = open('/tmp/.reboot_nvidiux','a')
+					tempFile.write('Nvidiux temp file')
+					tempFile.close()
+					return self.showError(-1,"Redémarrage Requis","Configuration effectué\nVous devez redémarrer votre machine",self.info)
+				except:
+					return self.showError(5,"Erreur","Erreur configuration nvidiux",self.error)
 		else:
 			if os.path.isfile("/tmp/.reboot_nvidiux"):
-				QMessageBox.information(self, _fromUtf8("Redémarrage Requis"),_fromUtf8("Configuration effectué\nVous devez redémarrer votre machine"))
-				return 2
+				return self.showError(-1,"Redémarrage Requis","Configuration effectué\nVous devez redémarrer votre machine",self.info)
 		return 0
 
 	def initialisedata(self):
 		compaptibility = self.iscompaptible()
-		if compaptibility == 1:
-			sys.exit(1)
-		if compaptibility == 2:
+		if compaptibility >= 1 and  compaptibility <= 7:
+			sys.exit(compaptibility)
+		if compaptibility == -1:
 			print "Please reboot"
 			sys.exit(0)
 
@@ -313,7 +321,6 @@ class ShipHolderApplication(QMainWindow):
 		info = ""
 		if versionPilote > 346.35:
 			info = "Driver non testé\n"
-		
 		
 		if versionPilote <= 337.12:
 			self.ui.SliderMem.setEnabled(0)

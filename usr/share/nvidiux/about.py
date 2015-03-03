@@ -74,7 +74,7 @@ class Ui_About(QWidget):
 		font.setWeight(75)
 		font.setStyleStrategy(QtGui.QFont.PreferAntialias)
 		self.labelInfo.setFont(font)
-		self.labelInfo.setText(_fromUtf8("Permet d'underclocker ou d'overclocker votre gpu nvidia\nVersion Beta 2(17/01/15)\n(C) 2014 Payet Guillaume\nNvidiux n'est en aucun cas affilié à Nvidia"))
+		self.labelInfo.setText(_fromUtf8("Permet d'underclocker ou d'overclocker votre gpu nvidia\nVersion Beta 2(03/03/15)\n(C) 2014 Payet Guillaume\nNvidiux n'est en aucun cas affilié à Nvidia"))
 		self.textBrowser = QtGui.QTextBrowser(self)
 		self.textBrowser.setGeometry(QtCore.QRect(10, 280, 580, 240))
 		txtFile = open('/usr/share/nvidiux/gpl-3.0.txt', 'r')
