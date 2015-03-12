@@ -206,7 +206,7 @@ class ShipHolderApplication(QMainWindow):
 			else:
 				if self.saveProfile(home + "/.nvidiux/" + gpuName + ".ndi") != 0:
 					return self.showError(21,"Droit insuffisant","Impossible d'ecrire le fichier !",self.error)
-						
+				self.loadProfile(home + "/.nvidiux/" + gpuName + ".ndi",True)		
 			if os.path.isfile(home + "/.nvidiux/Startup.ndi"):
 				self.loadProfile(home +"/.nvidiux/Startup.ndi",False)	
 		except:
@@ -289,7 +289,7 @@ class ShipHolderApplication(QMainWindow):
 				output=os.popen("lspci -vnn | grep NVIDIA | head -n " + str(i + 1), "r").read()
 			else:
 				output=os.popen("lspci -vnn | grep NVIDIA | head -n " + str(i + 1), "r").read().split('\n')[-1]
-			self.tabGpu[i].nameGpu = output.split(':')[-2].split('[')[-2].split(']')[0]		
+			self.tabGpu[i].nameGpu = output.split(':')[-2].split('[')[-2].split(']')[0].replace('/','|')		
 			output=os.popen("nvidia-settings --query [gpu:" + str(i) + "]/videoRam", "r").read()
 			self.tabGpu[i].videoRam=float(output.split(': ')[1].split('.')[0]) / 1048576
 			output=os.popen("nvidia-settings --query [gpu:" + str(i) + "]/cudaCores", "r").read()
@@ -510,7 +510,6 @@ class ShipHolderApplication(QMainWindow):
 				filename = filename + ".ndi"
 		else:
 			filename = path
-		path.replace('/','_')	
 		fileToSave = minidom.Document()
 		racine = fileToSave.createElement("nvidiux")
 		fileToSave.appendChild(racine)
