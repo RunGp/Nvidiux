@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+#!/usr/bin/python2
 
 # Copyright 2014 Payet Guillaume
 #
@@ -53,8 +54,8 @@ class Ui_About(QWidget):
 		self.Img = QtGui.QLabel(self)
 		self.Img.move(190,5)
 		self.Img.setPixmap(QtGui.QPixmap("/usr/share/nvidiux/img/drivers_nvidia_linux.png"))	
-		self.Title = QtGui.QLabel(self)
-		self.Title.move(210,142)
+		self.title = QtGui.QLabel(self)
+		self.title.move(210,142)
 		font = QtGui.QFont()
 		font.setPointSize(40)
 		font.setBold(True)
@@ -62,19 +63,19 @@ class Ui_About(QWidget):
 		font.setWeight(75)
 		font.setStrikeOut(False)
 		font.setStyleStrategy(QtGui.QFont.PreferAntialias)
-		self.Title.setFont(font)
-		self.Title.setAlignment(QtCore.Qt.AlignCenter)
-		self.Title.setText("Nvidiux")
+		self.title.setFont(font)
+		self.title.setAlignment(QtCore.Qt.AlignCenter)
+		self.title.setText("Nvidiux")
 		self.labelInfo = QtGui.QLabel(self)
 		self.labelInfo.move(90,200)
 		self.labelInfo.setAlignment(QtCore.Qt.AlignCenter)
 		font = QtGui.QFont()
-		font.setPointSize(12)
+		font.setPointSize(11)
 		font.setBold(True)
 		font.setWeight(75)
 		font.setStyleStrategy(QtGui.QFont.PreferAntialias)
 		self.labelInfo.setFont(font)
-		self.labelInfo.setText(_fromUtf8("Permet d'underclocker ou d'overclocker votre gpu nvidia\nVersion Beta 2(03/03/15)\n(C) 2014 Payet Guillaume\nNvidiux n'est en aucun cas affilié à Nvidia"))
+		self.labelInfo.setText(_fromUtf8("Permet d'underclocker ou d'overclocker votre gpu nvidia\nVersion 0.9 Beta 1 (11/03/15)\n(C) 2014 Payet Guillaume\nNvidiux n'est en aucun cas affilié à Nvidia"))
 		self.textBrowser = QtGui.QTextBrowser(self)
 		self.textBrowser.setGeometry(QtCore.QRect(10, 280, 580, 240))
 		txtFile = open('/usr/share/nvidiux/gpl-3.0.txt', 'r')
@@ -84,4 +85,5 @@ class Ui_About(QWidget):
 			self.textBrowser.setText(_fromUtf8("Programme distribué sous license GPL V3\nVoir http://www.gnu.org/licenses/gpl-3.0.txt"))
 		
 		def retranslateUi(self):
-			self.setWindowTitle(_translate("About", "A Propos Nvidiux", None))
+			self.setWindowTitle(_translate("About", "À Propos Nvidiux", None))
+			self.setWindowTitle(_translate("About", "Permet d'underclocker ou d'overclocker votre gpu nvidia\nVersion 0.9 Beta 1 (11/03/15)\n(C) 2014 Payet Guillaume\nNvidiux n'est en aucun cas affilié à Nvidia", None))

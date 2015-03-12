@@ -1,9 +1,11 @@
-# Nvidiux pre release 0.8 beta 2
-=============================================================
-Nvidiux is a graphical python tool to overclock or underclock your nvidia gpu  (generation 4XX  5XX or 6XX) currently not checked for newer gpu
+# Nvidiux pre release 0.9 beta 1
 
-For using this tools you must install nvidia proprietary drivers 331 or later and python 2.7
-symply install the deb file here : https://github.com/RunGp/Nvidiux/releases
+Nvidiux is a graphical python tool to overclock or underclock your nvidia gpu  (generation 4XX  5XX  6XX) 
+currently not checked for newer gpu
+
+For using this tools you must install nvidia proprietary drivers 331 or later (min 337 to use overclock)  and python 2.7
+
+simply install the deb file here : https://github.com/RunGp/Nvidiux/releases
 
 sudo dpkg -i nvidiux.deb
 
@@ -13,7 +15,9 @@ and launch nvidiux
 
 
 Work on ubuntu 12.04+ and derivative 
+
 debian 7.0 +
+
 arch (manual installation)
 
 =============================================================

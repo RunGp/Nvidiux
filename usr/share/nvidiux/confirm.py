@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+#!/usr/bin/python2
 
 # Copyright 2014 Payet Guillaume
 #
@@ -33,9 +34,11 @@ except AttributeError:
         return QtGui.QApplication.translate(context, text, disambig)
 
 class ConfirmWindow(QWidget):
-	def __init__(self,text,parent=None):
+	def __init__(self,text,size=10,parent=None):
 		super (ConfirmWindow, self).__init__(parent)
+		self.size = size
 		self.createWidgets(text)
+		
 	
 	def createWidgets(self,text):
 		
@@ -45,7 +48,7 @@ class ConfirmWindow(QWidget):
 		self.labelInfo.move(60,15)
 		self.labelInfo.setAlignment(QtCore.Qt.AlignCenter)
 		font = QtGui.QFont()
-		font.setPointSize(20)
+		font.setPointSize(self.size)
 		font.setBold(True)
 		font.setWeight(75)
 		self.labelInfo.setFont(font)

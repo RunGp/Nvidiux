@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+#!/usr/bin/python2
 
 # Copyright 2014 Payet Guillaume
 #

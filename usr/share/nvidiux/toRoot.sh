@@ -16,10 +16,10 @@
 
 if [ $XDG_CURRENT_DESKTOP = "Kde" ] || [ $XDG_CURRENT_DESKTOP = "KDE" ]
 then
-	kdesudo python /usr/share/nvidiux/add_coolbits.py
+	kdesudo python2 /usr/share/nvidiux/add_coolbits.py
 	exit $?
 else
-	gksudo python /usr/share/nvidiux/add_coolbits.py
+	gksudo python2 /usr/share/nvidiux/add_coolbits.py
 	exit $?
 fi
 	
