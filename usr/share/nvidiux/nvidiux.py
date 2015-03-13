@@ -29,7 +29,7 @@ import os
 import threading
 import time
 
-
+muttex = threading.RLock()
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -72,14 +72,15 @@ class Mythread(threading.Thread):
         if self.timer.isAlive():
             self.timer.cancel()
 
-def majGpu(numGpu,fen): 
-	output=os.popen("nvidia-settings --query [gpu:" + str(numGpu) + "]/GPUCoreTemp | grep GPUCore | head -1", "r").read() 
-	fen.ui.Temp.setText(_fromUtf8("Température\n" + str(output.split(':')[-1].split('.')[0]) + " °C"))
-	output=os.popen("nvidia-settings --query [gpu:" + str(numGpu) + "]/GPUUtilization | grep GPUUtilization | head -1", "r").read()
-	fen.ui.UPCIE.setText(_fromUtf8("Utilisation Bus PCIE\n" + str(output.split('=')[-1].replace('\n','').replace(',','')) + " %"))
-	fen.ui.UGPU.setText(_fromUtf8("Utilisation Gpu\n" + str(output.split('=')[1].split(',')[0]) + "%"))
-	output=os.popen("nvidia-settings --query [gpu:" + str(numGpu) + "]/UsedDedicatedGPUMemory | grep UsedDedicatedGPUMemory | head -1", "r").read()
-	fen.ui.UMem.setText(_fromUtf8("Utilisation Memoire\n" + str(output.split(':')[-1].split('.')[0]) + " Mo"))
+def majGpu(numGpu,fen):
+	with muttex: 
+		output=os.popen("nvidia-settings --query [gpu:" + str(numGpu) + "]/GPUCoreTemp | grep GPUCore | head -1", "r").read() 
+		fen.ui.Temp.setText(_fromUtf8("Température\n" + str(output.split(':')[-1].split('.')[0]) + " °C"))
+		output=os.popen("nvidia-settings --query [gpu:" + str(numGpu) + "]/GPUUtilization | grep GPUUtilization | head -1", "r").read()
+		fen.ui.UPCIE.setText(_fromUtf8("Utilisation Bus PCIE\n" + str(output.split('=')[-1].replace('\n','').replace(',','')) + " %"))
+		fen.ui.UGPU.setText(_fromUtf8("Utilisation Gpu\n" + str(output.split('=')[1].split(',')[0]) + "%"))
+		output=os.popen("nvidia-settings --query [gpu:" + str(numGpu) + "]/UsedDedicatedGPUMemory | grep UsedDedicatedGPUMemory | head -1", "r").read()
+		fen.ui.UMem.setText(_fromUtf8("Utilisation Memoire\n" + str(output.split(':')[-1].split('.')[0]) + " Mo"))
 
 class ShipHolderApplication(QMainWindow):
 	
@@ -610,9 +611,9 @@ if __name__ == "__main__":
 	"""translator.load(QString("qt_") + locale,LibraryInfo.location(QLibraryInfo.TranslationsPath))
 	app.installTranslator(translator)"""
 	myapp = ShipHolderApplication(sys.argv)
-	a = Mythread(1, majGpu, [0], {"fen":myapp})
-	a.setDaemon(True)
-	myapp.setThread(a)
-	a.start()
+	threadInfoGpu = Mythread(1, majGpu, [0], {"fen":myapp})
+	threadInfoGpu.setDaemon(True)
+	myapp.setThread(threadInfoGpu)
+	threadInfoGpu.start()
 	myapp.show()
 	sys.exit(app.exec_())

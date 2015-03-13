@@ -86,4 +86,4 @@ class Ui_About(QWidget):
 		
 		def retranslateUi(self):
 			self.setWindowTitle(_translate("About", "À Propos Nvidiux", None))
-			self.setWindowTitle(_translate("About", "Permet d'underclocker ou d'overclocker votre gpu nvidia\nVersion 0.9 Beta 1 (11/03/15)\n(C) 2014 Payet Guillaume\nNvidiux n'est en aucun cas affilié à Nvidia", None))
+			self.setWindowTitle(_translate("About", "Permet d'underclocker ou d'overclocker votre gpu nvidia\nVersion 0.9 Beta 1 (13/03/15)\n(C) 2014 Payet Guillaume\nNvidiux n'est en aucun cas affilié à Nvidia", None))
