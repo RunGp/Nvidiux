@@ -93,6 +93,7 @@ class ShipHolderApplication(QMainWindow):
 	change = 0
 	isFermiArch = []
 	form = ""
+	threadInfoGpu = None
 	isSli= False
 	error = -1
 	warning = -2
@@ -127,10 +128,10 @@ class ShipHolderApplication(QMainWindow):
 		
 	def changeGpu(self,item):
 		self.numGpu = int(item.text().split(':')[0]) - 1
-		self.a.stop()
-		self.a = Mythread(1, majGpu, [self.numGpu], {"fen":myapp})
-		self.a.setDaemon(True)
-		self.a.start()
+		self.threadInfoGpu.stop()
+		self.threadInfoGpu = Mythread(1, majGpu, [self.numGpu], {"fen":myapp})
+		self.threadInfoGpu.setDaemon(True)
+		self.threadInfoGpu.start()
 		self.ui.lcdShader.display(self.tabGpu[self.numGpu].freqShader)
 		self.ui.SliderShader.setSliderPosition(int(self.tabGpu[self.numGpu].freqShader))
 		self.ui.SliderMem.setSliderPosition(int(self.tabGpu[self.numGpu].freqMem))
@@ -150,14 +151,14 @@ class ShipHolderApplication(QMainWindow):
 		if self.change:
 			reply = QtGui.QMessageBox.question(self, _fromUtf8("Message"),_fromUtf8("Etes vous sur de vouloir quitter sans appliquer les modifications ?"), QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
 			if reply == QtGui.QMessageBox.Yes:
-				self.a.stop()
+				self.threadInfoGpu.stop()
 				time.sleep(0.5)
 				event.accept()
 			else:
 				event.ignore()
 				self.applyNewClock()
 		else:
-			self.a.stop()
+			self.threadInfoGpu.stop()
 			time.sleep(0.5)
 			event.accept()
 	
@@ -344,7 +345,7 @@ class ShipHolderApplication(QMainWindow):
 		self.ui.PiloteVersion.setText(_fromUtf8("Version du Pilote\n" + str(versionPilote)))
 		self.ui.OpenGlSupport.setText(_fromUtf8("OpenGl Support\n" + str(self.tabGpu[self.numGpu].openGlVersion)))
 		self.ui.checkBoxSli.setChecked(0)
-		if self.nbGpuNvidia >= 2:#detect sli 2 card with same name
+		if self.nbGpuNvidia >= 2: #detect sli 2 card with same name
 			if len(list(set(self.tabGpu[i].nameGpu))) == 1:
 				self.ui.checkBoxSli.setChecked(1)
 				self.isSli = True
@@ -474,13 +475,13 @@ class ShipHolderApplication(QMainWindow):
 		if self.change:
 			reply = QtGui.QMessageBox.question(self, _fromUtf8("Message"),_fromUtf8("Etes vous sur de vouloir quitter sans appliquer les modifications ?"), QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
 			if reply == QtGui.QMessageBox.Yes:
-				self.a.stop()
+				self.threadInfoGpu.stop()
 				time.sleep(0.5)
 				self.close()
 			else:
 				self.applyNewClock()
 		else:
-			self.a.stop()
+			self.threadInfoGpu.stop()
 			time.sleep(0.5)
 			self.close()
 			
@@ -565,17 +566,11 @@ class ShipHolderApplication(QMainWindow):
 			QMessageBox.information(self, _fromUtf8(title),_fromUtf8(errorMsg))
 		return errorCode
 		
-	def setThread(self,a):
-		self.a = a
+	def setThread(self,thread):
+		self.threadInfoGpu = thread
 				
 	def updateshader(self,value):
 		return 0
-		#~ self.change = 1
-		#~ self.tabGpu[self.numGpu].freqShader = value
-		#~ self.tabGpu[self.numGpu].freqGpu = value / 2
-		#~ self.ui.lcdShader.display(self.tabGpu[self.numGpu].freqShader)
-		#~ self.ui.lcdGPU.display(self.tabGpu[self.numGpu].freqGpu)
-		#~ self.ui.SliderGpu.setSliderPosition(self.tabGpu[self.numGpu].freqGpu)
 		
 	def updateMem(self,value):
 		self.change = 1
@@ -608,8 +603,8 @@ if __name__ == "__main__":
 	app = QApplication(sys.argv)
 	locale = QLocale.system().name()
 	translator=QTranslator ()
-	"""translator.load(QString("qt_") + locale,LibraryInfo.location(QLibraryInfo.TranslationsPath))
-	app.installTranslator(translator)"""
+	#~ translator.load(QString("qt_") + locale,LibraryInfo.location(QLibraryInfo.TranslationsPath))
+	#~ app.installTranslator(translator)
 	myapp = ShipHolderApplication(sys.argv)
 	threadInfoGpu = Mythread(1, majGpu, [0], {"fen":myapp})
 	threadInfoGpu.setDaemon(True)
