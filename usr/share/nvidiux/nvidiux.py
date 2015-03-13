@@ -306,7 +306,10 @@ class ShipHolderApplication(QMainWindow):
 				output=os.popen("nvidia-settings --query all | grep GPUCurrentClockFreqs | head -1", "r").read()
 			self.tabGpu[i].freqGpu = output.split(': ')[1].split(',')[0]
 			output=os.popen("nvidia-settings --query [gpu:" + str(i) + "]/GPUCurrentProcessorClockFreqs | head -2", "r").read()
-			self.tabGpu[i].freqShader = output.split(': ')[1].split('.')[0]			
+			if output != "\n\n":
+				self.tabGpu[i].freqShader = output.split(': ')[1].split('.')[0]
+			else:
+				self.tabGpu[i].freqShader = self.tabGpu[i].freqGpu			
 			if int(self.tabGpu[i].freqShader) == int(self.tabGpu[i].freqGpu) * 2 or int(self.tabGpu[i].freqShader) == int(self.tabGpu[i].freqGpu) * 2 + 1:
 				self.isFermiArch.append(True);
 			else:
