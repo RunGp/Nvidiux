@@ -176,9 +176,12 @@ class ShipHolderApplication(QMainWindow):
 		self.ui.SliderShader.connect(self.ui.SliderShader, SIGNAL("sliderMoved(int)"),self.updateshader)
 		self.ui.SliderMem.connect(self.ui.SliderMem, SIGNAL("sliderMoved(int)"),self.updateMem)
 		self.ui.SliderGpu.connect(self.ui.SliderGpu, SIGNAL("sliderMoved(int)"),self.updateGpu)
+		self.ui.SliderFan.connect(self.ui.SliderFan, SIGNAL("sliderMoved(int)"),self.changeFanSpeed)
 		self.ui.actionQuitter.connect(self.ui.actionQuitter, SIGNAL("triggered()"),self.quitapp)
 		self.ui.actionLoadProfile.connect(self.ui.actionLoadProfile, SIGNAL("triggered()"),self.loadProfile)
 		self.ui.actionSaveProfile.connect(self.ui.actionSaveProfile, SIGNAL("triggered()"),self.saveProfile)
+		self.ui.checkBoxFan.connect(self.ui.checkBoxFan,QtCore.SIGNAL("clicked(bool)"),self.stateFan)
+		
 		#~ self.ui.actionStartMonitor.connect(self.ui.actionStartMonitor, SIGNAL("triggered()"),self.startMonitor)
 		#~ self.ui.actionConfigureMonitor.connect(self.ui.actionConfigureMonitor, SIGNAL("triggered()"),self.configureMonitor)
 		self.ui.actionAbout.connect(self.ui.actionAbout, SIGNAL("triggered()"),self.about)
@@ -196,6 +199,12 @@ class ShipHolderApplication(QMainWindow):
 	
 	def configureMonitor(self):
 		print "todo configure interface"
+		
+	def changeFanSpeed(self,value):
+		if int(os.popen("nvidia-settings -a [fan:" + str(self.numGpu) + "]/GPUCurrentFanSpeed="+ str(value) + " >> /dev/null 2>&1 ;echo $?", "r").read()) != 0:
+			self.ui.Message.setText(_fromUtf8("Echec\nchangement vitesse ventillo"))
+		else:
+			self.ui.labelFanVitesse.setText(str(value) + "%")
 		
 	def defineDefaultFreqGpu(self,gpuName):
 		home = expanduser("~")
@@ -270,7 +279,6 @@ class ShipHolderApplication(QMainWindow):
 		if compatibility >= 1 and  compatibility <= 7:
 			sys.exit(compatibility)
 		if compatibility == -1:
-			print "Please reboot"
 			sys.exit(0)
 
 		output=os.popen("nvidia-settings --query [gpu:0]/NvidiaDriverVersion", "r").read() #priority verify driver version 
@@ -279,10 +287,13 @@ class ShipHolderApplication(QMainWindow):
 		if versionPilote > 346.47:
 			info = "Driver non testé\n"
 		if versionPilote <= 337.12:
-			self.ui.SliderMem.setEnabled(0)
-			self.ui.SliderGpu.setEnabled(0)
-			self.ui.buttonReset.setEnabled(0)
-			self.ui.buttonApply.setEnabled(0)
+			self.ui.SliderMem.setEnabled(False)
+			self.ui.SliderGpu.setEnabled(False)
+			self.ui.buttonReset.setEnabled(False)
+			self.ui.buttonApply.setEnabled(False)
+			self.ui.SliderFan.setEnabled(False)
+			self.ui.checkBoxFan.setCheckable(False)
+			
 			self.ui.Message.setText(_fromUtf8("Driver non supporté (trop ancien)!\nOverclock desactivé"))
 			QMessageBox.information(self, _fromUtf8("Driver"),_fromUtf8("Driver non supporté:trop ancien\nOverclock desactivé\nIl vous faut la version 337.19 ou plus recent pour overclocker"))
 		for i in range(0, self.nbGpuNvidia):
@@ -319,11 +330,19 @@ class ShipHolderApplication(QMainWindow):
 			for gpu in self.tabGpu:
 				self.defineDefaultFreqGpu(gpu.nameGpu)
 			
+			self.ui.SliderFan.setEnabled(False)
+			#GPUCurrentPerfLevel Max Perf Level
+			
+			
 		self.ui.label_Img.setPixmap(QtGui.QPixmap("/usr/share/nvidiux/img/drivers_nvidia_linux.png"))	
 		self.ui.SliderShader.setMinimum(int(self.tabGpu[self.numGpu].defaultFreqShader) * 0.85)
 		self.ui.SliderShader.setMaximum(int(self.tabGpu[self.numGpu].defaultFreqShader) * 1.25)
 		self.ui.SliderShader.setSliderPosition(int(self.tabGpu[self.numGpu].freqShader))
 		self.ui.lcdShader.display(int(self.tabGpu[self.numGpu].freqShader))
+		
+		self.ui.SliderFan.setMinimum(30)
+		self.ui.SliderFan.setMaximum(100)
+		self.ui.SliderFan.setSliderPosition(30)
 		
 		self.ui.SliderMem.setMinimum(int(self.tabGpu[self.numGpu].defaultFreqMem) * 0.85)
 		self.ui.SliderMem.setMaximum(int(self.tabGpu[self.numGpu].defaultFreqMem) * 1.25)
@@ -505,6 +524,22 @@ class ShipHolderApplication(QMainWindow):
 	def resizeEvent(self, event):
 		self.showNormal()
 		
+	def stateFan(self,value):
+		if value:
+			if int(os.popen("nvidia-settings -a [gpu:" + str(self.numGpu) + "]/GPUFanControlState=1 >> /dev/null 2>&1 ;echo $?", "r").read()) != 0:
+				self.ui.SliderFan.setEnabled(False)
+				self.ui.checkBoxFan.setChecked(False)
+				self.showError(-1,"Impossible","Impossible de changer la configuration des ventillos",self.warning)
+			else:
+				self.ui.SliderFan.setEnabled(True)
+		else:
+			if int(os.popen("nvidia-settings -a [gpu:" + str(self.numGpu) + "]/GPUFanControlState=0 >> /dev/null 2>&1 ;echo $?", "r").read()) != 0:
+				self.ui.SliderFan.setEnabled(True)
+				self.ui.checkBoxFan.setChecked(True)
+				self.showError(-1,"Impossible","Impossible de revenir a la configuration par defaut des ventillos",self.warning)
+			else:
+				self.ui.SliderFan.setEnabled(False)
+				self.ui.labelFanVitesse.setText("Auto")
 	def startMonitor(self):
 		print "todo monitor interface"
 	
