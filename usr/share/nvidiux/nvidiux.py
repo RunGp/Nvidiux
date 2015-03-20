@@ -24,6 +24,7 @@ from windows import Ui_MainWindow
 from confirm import ConfirmWindow
 from about import Ui_About
 from os.path import expanduser
+import subprocess as sub
 import sys
 import os
 import threading
@@ -44,6 +45,7 @@ class Gpuinfo():
 	freqShader = 0
 	freqGpu = 0
 	freqMem = 0 
+	fanSpeed = 0
 	nameGpu = ""
 	videoRam = ""
 	cudaCores = ""
@@ -181,13 +183,14 @@ class ShipHolderApplication(QMainWindow):
 		self.ui.actionLoadProfile.connect(self.ui.actionLoadProfile, SIGNAL("triggered()"),self.loadProfile)
 		self.ui.actionSaveProfile.connect(self.ui.actionSaveProfile, SIGNAL("triggered()"),self.saveProfile)
 		self.ui.checkBoxFan.connect(self.ui.checkBoxFan,QtCore.SIGNAL("clicked(bool)"),self.stateFan)
-		
+		self.ui.checkBoxVSync.connect(self.ui.checkBoxVSync,QtCore.SIGNAL("clicked(bool)"),self.stateVSync)
 		#~ self.ui.actionStartMonitor.connect(self.ui.actionStartMonitor, SIGNAL("triggered()"),self.startMonitor)
 		#~ self.ui.actionConfigureMonitor.connect(self.ui.actionConfigureMonitor, SIGNAL("triggered()"),self.configureMonitor)
 		self.ui.actionAbout.connect(self.ui.actionAbout, SIGNAL("triggered()"),self.about)
 		self.ui.listWidgetGpu.itemClicked.connect(self.changeGpu)
 
-		if int(os.popen("vainfo | wc -l", "r").read().replace('\n','')) > 6:
+		cmd = "vainfo | wc -l"
+		if int(sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()[0].replace('\n','')) > 6:
 			self.ui.checkBoxVaapi.setChecked(1)
 		i = 0
 		for gpu in self.tabGpu:
@@ -201,10 +204,11 @@ class ShipHolderApplication(QMainWindow):
 		print "todo configure interface"
 		
 	def changeFanSpeed(self,value):
-		if int(os.popen("nvidia-settings -a [fan:" + str(self.numGpu) + "]/GPUCurrentFanSpeed="+ str(value) + " >> /dev/null 2>&1 ;echo $?", "r").read()) != 0:
-			self.ui.Message.setText(_fromUtf8("Echec\nchangement vitesse ventillo"))
-		else:
+		cmd = "nvidia-settings -a [fan:" + str(self.numGpu) + "]/GPUCurrentFanSpeed="+ str(value)
+		if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 			self.ui.labelFanVitesse.setText(str(value) + "%")
+		else:
+			self.ui.Message.setText(_fromUtf8("Echec\nchangement vitesse ventillo"))			
 		
 	def defineDefaultFreqGpu(self,gpuName):
 		home = expanduser("~")
@@ -275,15 +279,21 @@ class ShipHolderApplication(QMainWindow):
 		return 0
 		
 	def initialiseData(self):
+		info = ""
+		err = ""
+		out = ""
 		compatibility = self.iscompaptible()
 		if compatibility >= 1 and  compatibility <= 7:
 			sys.exit(compatibility)
 		if compatibility == -1:
 			sys.exit(0)
-
-		output=os.popen("nvidia-settings --query [gpu:0]/NvidiaDriverVersion", "r").read() #priority verify driver version 
-		versionPilote = float(output.split(':')[-1][1:])
-		info = ""
+		
+		cmd = "nvidia-settings --query [gpu:0]/NvidiaDriverVersion"
+		if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
+			out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+			versionPilote = float(out.split(':')[-1][1:])
+		else:
+			self.showError(29,"Échec","Impossible de determiner la version des drivers",self.error)
 		if versionPilote > 346.47:
 			info = "Driver non testé\n"
 		if versionPilote <= 337.12:
@@ -298,67 +308,130 @@ class ShipHolderApplication(QMainWindow):
 			QMessageBox.information(self, _fromUtf8("Driver"),_fromUtf8("Driver non supporté:trop ancien\nOverclock desactivé\nIl vous faut la version 337.19 ou plus recent pour overclocker"))
 		for i in range(0, self.nbGpuNvidia):
 			self.tabGpu.append(Gpuinfo())
-			if i == 0:#si un seul pas de retour ligne
-				output=os.popen("lspci -vnn | grep NVIDIA | head -n " + str(i + 1), "r").read()
+			if i == 0: #si un seul pas de retour ligne
+				cmd = "lspci -vnn | grep NVIDIA | grep -v Audio | head -n " + str(i + 1)
+				out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
 			else:
-				output=os.popen("lspci -vnn | grep NVIDIA | head -n " + str(i + 1), "r").read().split('\n')[-1]
-			self.tabGpu[i].nameGpu = output.split(':')[-2].split('[')[-2].split(']')[0].replace('/','|')		
-			output=os.popen("nvidia-settings --query [gpu:" + str(i) + "]/videoRam", "r").read()
-			self.tabGpu[i].videoRam=float(output.split(': ')[1].split('.')[0]) / 1048576
-			output=os.popen("nvidia-settings --query [gpu:" + str(i) + "]/cudaCores", "r").read()
-			self.tabGpu[i].cudaCores = output.split(': ')[1].split('.')[0]
-			output=os.popen("nvidia-settings --query [gpu:" + str(i) + "]/GPUPerfModes | grep memTransferRatemax= | tail -1", "r").read()
-			self.tabGpu[i].freqMem = output.split(',')[1].split('=')[1]
-			output=os.popen("nvidia-settings --query [gpu:" + str(i) + "]/NvidiaDriverVersion", "r").read()
-			self.tabGpu[i].version = float(output.split(':')[-1][1:])
-			output=os.popen("nvidia-settings --query all | grep OpenGLVersion | head -1", "r").read()
-			self.tabGpu[i].openGlVersion = output.split('NVIDIA')[0].split(':')[-1]
-			if versionPilote <= 343.113:
-				output=os.popen("nvidia-settings --query [gpu:" + str(i) + "]/GPU3DClockFreqs", "r").read()
+				cmd = "lspci -vnn | grep NVIDIA | grep -v Audio | head -n " + str(i + 1)
+				out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+				out = out.split('\n')[-1]	
+			self.tabGpu[i].nameGpu = out.split(':')[-2].split('[')[-2].split(']')[0].replace('/','|')
+			cmd =  "nvidia-settings -a [gpu:" + str(i) + "]/GPUPowerMizerMode=1"
+			sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True)
+			cmd = "nvidia-settings --query [gpu:" + str(i) + "]/videoRam"
+			if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
+				out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+				self.tabGpu[i].videoRam = float(out.split(': ')[1].split('.')[0]) / 1048576
 			else:
-				output=os.popen("nvidia-settings --query all | grep GPUCurrentClockFreqs | head -1", "r").read()
-			self.tabGpu[i].freqGpu = output.split(': ')[1].split(',')[0]
-			output=os.popen("nvidia-settings --query [gpu:" + str(i) + "]/GPUCurrentProcessorClockFreqs | head -2", "r").read()
-			if output != "\n\n":
-				self.tabGpu[i].freqShader = output.split(': ')[1].split('.')[0]
+				self.tabGpu[i].videoRam = "N/A"
+			
+			cmd = "nvidia-settings --query [gpu:" + str(i) + "]/cudaCores"
+			if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
+				out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+				self.tabGpu[i].cudaCores = int(out.split(': ')[1].split('.')[0])
 			else:
-				self.tabGpu[i].freqShader = self.tabGpu[i].freqGpu			
+				self.tabGpu[i].cudaCores = "N/A"
+			
+			cmd = "nvidia-settings --query [gpu:" + str(i) + "]/GPUPerfModes | grep memTransferRatemax= | tail -1"
+			if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
+				out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+				self.tabGpu[i].freqMem = out.split(',')[1].split('=')[1]
+			else:
+				self.showError(31,"Échec","Échec chargement des parametres Gpu",self.error)
+				
+			cmd = "nvidia-settings --query [gpu:" + str(i) + "]/NvidiaDriverVersion"
+			if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
+				out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+				self.tabGpu[i].version = float(out.split(':')[-1][1:])
+			else:
+				self.showError(32,"Échec","Échec chargement des parametres Gpu",self.error)
+				
+			cmd = "nvidia-settings --query all | grep OpenGLVersion"
+			if not sub.call(cmd + "| head -1",stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
+				out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+				self.tabGpu[i].openGlVersion = out.split('NVIDIA')[0].split(':')[-1]
+			else:
+				self.tabGpu[i].openGlVersion = "N/A"
+			
+			cmd = "nvidia-settings --query [gpu:" + str(i) + "]/GPU3DClockFreqs"
+			if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
+				out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+				self.tabGpu[i].freqGpu = out.split(': ')[1].split(',')[0]
+			else:
+				cmd = "nvidia-settings --query [gpu:" + str(i) + "]/GPUCurrentClockFreqs"
+				if not sub.call(cmd + " | head -1",stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
+					out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+					self.tabGpu[i].freqGpu = out.split(': ')[1].split(',')[0]
+				else:
+					self.showError(33,"Échec","Échec chargement des parametres Gpu",self.error)
+			cmd = "nvidia-settings --query [gpu:" + str(i) + "]/GPUCurrentProcessorClockFreqs"
+			if not sub.call(cmd + " | head -2",stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
+				out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+				self.tabGpu[i].freqShader = out.split(': ')[1].split('.')[0]
+			else:
+				self.showError(34,"Échec","Échec chargement des parametres Gpu",self.error)		
 			if int(self.tabGpu[i].freqShader) == int(self.tabGpu[i].freqGpu) * 2 or int(self.tabGpu[i].freqShader) == int(self.tabGpu[i].freqGpu) * 2 + 1:
 				self.isFermiArch.append(True);
 			else:
 				self.isFermiArch.append(False);
-			for gpu in self.tabGpu:
-				self.defineDefaultFreqGpu(gpu.nameGpu)
 			
-			self.ui.SliderFan.setEnabled(False)
-			#GPUCurrentPerfLevel Max Perf Level
+			cmd = "nvidia-settings --query all | grep SyncToVBlank"
+			out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+			if out != "":
+				if out.split(': ')[1].split('.')[0]:
+					self.ui.checkBoxVSync.setChecked(True)
+					self.ui.SliderFan.setEnabled(True)
+				else:
+					self.checkBoxVSync.setChecked(False)
+					self.ui.SliderFan.setEnabled(True)
+			else:
+				self.ui.checkBoxVSync.setChecked(False)
+				self.ui.SliderFan.setEnabled(False)
 			
+			
+			cmd = "nvidia-settings --query [fan:" + str(i) + "]/GPUCurrentFanSpeed"
+			if not sub.call(cmd ,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
+				out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+				self.tabGpu[i].fanSpeed = out.split(': ')[1].split('.')[0]
+			else:
+				self.tabGpu[i].fanSpeed = 30
+				
+			cmd = "nvidia-settings --query [gpu:" + str(i) + "]/GPUFanControlState"
+			out,err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+			if int(out.split(': ')[1].split('.')[0]) == 0:
+				self.ui.SliderFan.setEnabled(False)
+				self.ui.checkBoxFan.setChecked(False)
+			else:
+				self.ui.SliderFan.setEnabled(True)
+				self.ui.checkBoxFan.setChecked(True)
+				self.ui.labelFanVitesse.setText(str(self.tabGpu[i].fanSpeed)+ "%")
+				self.ui.SliderFan.setSliderPosition(int(self.tabGpu[i].fanSpeed))
+			
+			cmd =  "nvidia-settings -a [gpu:" + str(i) + "]/GPUPowerMizerMode=0"
+			sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True)
+		
+		for gpu in self.tabGpu:
+			self.defineDefaultFreqGpu(gpu.nameGpu)	
 			
 		self.ui.label_Img.setPixmap(QtGui.QPixmap("/usr/share/nvidiux/img/drivers_nvidia_linux.png"))	
 		self.ui.SliderShader.setMinimum(int(self.tabGpu[self.numGpu].defaultFreqShader) * 0.85)
 		self.ui.SliderShader.setMaximum(int(self.tabGpu[self.numGpu].defaultFreqShader) * 1.25)
 		self.ui.SliderShader.setSliderPosition(int(self.tabGpu[self.numGpu].freqShader))
 		self.ui.lcdShader.display(int(self.tabGpu[self.numGpu].freqShader))
-		
 		self.ui.SliderFan.setMinimum(30)
 		self.ui.SliderFan.setMaximum(100)
-		self.ui.SliderFan.setSliderPosition(30)
-		
 		self.ui.SliderMem.setMinimum(int(self.tabGpu[self.numGpu].defaultFreqMem) * 0.85)
 		self.ui.SliderMem.setMaximum(int(self.tabGpu[self.numGpu].defaultFreqMem) * 1.25)
 		self.ui.SliderMem.setSliderPosition(int(self.tabGpu[self.numGpu].freqMem))
 		self.ui.lcdMem.display(int(self.tabGpu[self.numGpu].freqMem))
-		
 		self.ui.SliderGpu.setMinimum(int(self.tabGpu[self.numGpu].defaultFreqGpu) * 0.85)
 		self.ui.SliderGpu.setMaximum(int(self.tabGpu[self.numGpu].defaultFreqGpu) * 1.25)
 		self.ui.SliderGpu.setSliderPosition(int(self.tabGpu[self.numGpu].freqGpu))
 		self.ui.lcdGPU.display(int(self.tabGpu[self.numGpu].freqGpu))
-		
 		self.ui.label_Dfreq_Gpu.setText(str(self.tabGpu[self.numGpu].defaultFreqGpu) + _fromUtf8("Mhz →"))
 		self.ui.label_Dfreq_Shader.setText(str(self.tabGpu[self.numGpu].defaultFreqShader) + _fromUtf8("Mhz →"))
 		self.ui.label_Dfreq_Mem.setText(str(self.tabGpu[self.numGpu].defaultFreqMem) + _fromUtf8("Mhz →"))
 		self.ui.nomGpu.setText(self.tabGpu[self.numGpu].nameGpu)
-
 		self.ui.MemGpu.setText(_fromUtf8("Memoire video\n" + str(self.tabGpu[self.numGpu].videoRam) + " Go"))
 		self.ui.CudaCore.setText(_fromUtf8("NB coeur cuda\n" + str(self.tabGpu[self.numGpu].cudaCores)))
 		self.ui.PiloteVersion.setText(_fromUtf8("Version du Pilote\n" + str(versionPilote)))
@@ -397,9 +470,7 @@ class ShipHolderApplication(QMainWindow):
 		except:
 			return self.showError(-1,"Fichier endommagé","Impossible de charger ce fichier de configuration",self.warning)
 			
-		versionElement = ndiFile.getElementsByTagName('version')
-		
-			
+		versionElement = ndiFile.getElementsByTagName('version')	
 		itemlist = ndiFile.getElementsByTagName('gpu')
 		error = True
 		errorCode = 0
@@ -467,12 +538,11 @@ class ShipHolderApplication(QMainWindow):
 			offsetShader = int(self.tabGpu[i].freqShader) - int(self.tabGpu[i].defaultFreqShader)
 			offsetMem = int(self.tabGpu[i].freqMem) - int(self.tabGpu[i].defaultFreqMem)
 			cmd = "nvidia-settings -a \"[gpu:" + str(i) + "]/GPUGraphicsClockOffset[2]=" + str(offsetGpu) + "\" -a \"[gpu:" + str(i) + "]/GPUMemoryTransferRateOffset[2]=" + str(offsetMem) + "\" >> /dev/null 2>&1 ;echo $?"
-			result = os.popen(cmd, "r").read()
-			if int(result) == 0:
+			if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 				success = True
 			else:
 				success = False
-				break	
+				break						
 		if success:
 			if mode == "1":
 				self.showError(0,"Effectué","Changement effectué",self.info)
@@ -520,20 +590,32 @@ class ShipHolderApplication(QMainWindow):
 		self.overclock("0")
 		self.change = 0
 		self.ui.Message.setText(_fromUtf8("Reset effectué"))
+		
 	
 	def resizeEvent(self, event):
 		self.showNormal()
 		
 	def stateFan(self,value):
 		if value:
-			if int(os.popen("nvidia-settings -a [gpu:" + str(self.numGpu) + "]/GPUFanControlState=1 >> /dev/null 2>&1 ;echo $?", "r").read()) != 0:
+			cmd = "nvidia-settings -a [gpu:" + str(self.numGpu) + "]/GPUFanControlState=1"
+			if sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 				self.ui.SliderFan.setEnabled(False)
 				self.ui.checkBoxFan.setChecked(False)
 				self.showError(-1,"Impossible","Impossible de changer la configuration des ventillos",self.warning)
 			else:
+				cmd = "nvidia-settings --query [fan:" + str(self.numGpu) + "]/GPUCurrentFanSpeed"
+				if not sub.call(cmd ,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
+					out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+					self.tabGpu[self.numGpu].fanSpeed = out.split(': ')[1].split('.')[0]
+				else:
+					self.tabGpu[self.numGpu].fanSpeed = 30
 				self.ui.SliderFan.setEnabled(True)
+				self.ui.SliderFan.setSliderPosition(int(self.tabGpu[self.numGpu].fanSpeed))
+				self.ui.labelFanVitesse.setText(str(self.tabGpu[self.numGpu].fanSpeed)+ "%")
+	
 		else:
-			if int(os.popen("nvidia-settings -a [gpu:" + str(self.numGpu) + "]/GPUFanControlState=0 >> /dev/null 2>&1 ;echo $?", "r").read()) != 0:
+			cmd = "nvidia-settings -a [gpu:" + str(self.numGpu) + "]/GPUFanControlState=0"
+			if sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 				self.ui.SliderFan.setEnabled(True)
 				self.ui.checkBoxFan.setChecked(True)
 				self.showError(-1,"Impossible","Impossible de revenir a la configuration par defaut des ventillos",self.warning)
@@ -542,6 +624,24 @@ class ShipHolderApplication(QMainWindow):
 				self.ui.labelFanVitesse.setText("Auto")
 	def startMonitor(self):
 		print "todo monitor interface"
+		
+	def stateVSync(self,value):
+		if value:
+			cmd = "nvidia-settings -a SyncToVBlank=1"
+			if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
+				self.ui.checkBoxVSync.setChecked(True)
+				self.ui.Message.setText(_fromUtf8("Vsync Actif"))
+			else:
+				self.ui.checkBoxVSync.setChecked(False)
+				self.showError(-1,"Impossible","Impossible d'activer la syncro vertical",self.warning)
+		else:
+			cmd = "nvidia-settings -a SyncToVBlank=0"
+			if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
+				self.ui.checkBoxVSync.setChecked(False)
+				self.ui.Message.setText(_fromUtf8("Vsync Inactif"))
+			else:
+				self.ui.checkBoxVSync.setChecked(True)
+				self.showError(-1,"Impossible","Impossible de desactiver la syncro vertical",self.warning)
 	
 	def saveProfile(self,path=""):
 		if path == "":
