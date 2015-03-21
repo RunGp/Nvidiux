@@ -76,13 +76,29 @@ class Mythread(threading.Thread):
 
 def majGpu(numGpu,fen):
 	with muttex: 
-		output=os.popen("nvidia-settings --query [gpu:" + str(numGpu) + "]/GPUCoreTemp | grep GPUCore | head -1", "r").read() 
-		fen.ui.Temp.setText(_fromUtf8("Température\n" + str(output.split(':')[-1].split('.')[0]) + " °C"))
-		output=os.popen("nvidia-settings --query [gpu:" + str(numGpu) + "]/GPUUtilization | grep GPUUtilization | head -1", "r").read()
-		fen.ui.UPCIE.setText(_fromUtf8("Utilisation Bus PCIE\n" + str(output.split('=')[-1].replace('\n','').replace(',','')) + " %"))
-		fen.ui.UGPU.setText(_fromUtf8("Utilisation Gpu\n" + str(output.split('=')[1].split(',')[0]) + "%"))
-		output=os.popen("nvidia-settings --query [gpu:" + str(numGpu) + "]/UsedDedicatedGPUMemory | grep UsedDedicatedGPUMemory | head -1", "r").read()
-		fen.ui.UMem.setText(_fromUtf8("Utilisation Memoire\n" + str(output.split(':')[-1].split('.')[0]) + " Mo"))
+		
+		cmd = "nvidia-settings --query [gpu:" + str(numGpu) + "]/GPUCoreTemp"
+		if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
+			out, err = sub.Popen(cmd + " | grep GPUCore | head -1",stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+			fen.ui.Temp.setText(_fromUtf8("Température\n" + str(out.split(':')[-1].split('.')[0]) + " °C"))
+		else:
+			fen.ui.Temp.setText(_fromUtf8("N/A"))
+
+		cmd = "nvidia-settings --query [gpu:" + str(numGpu) + "]/GPUUtilization"
+		if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
+			out, err = sub.Popen(cmd + "| grep GPUUtilization | head -1",stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+			fen.ui.UPCIE.setText(_fromUtf8("Utilisation Bus PCIE\n" + str(out.split('=')[-1].replace('\n','').replace(',','')) + " %"))
+			fen.ui.UGPU.setText(_fromUtf8("Utilisation Gpu\n" + str(out.split('=')[1].split(',')[0]) + "%"))
+		else:
+			fen.ui.UPCIE.setText(_fromUtf8("N/A"))
+			fen.ui.UGPU.setText(_fromUtf8("N/A"))
+
+		cmd = "nvidia-settings --query [gpu:" + str(numGpu) + "]/UsedDedicatedGPUMemory"
+		if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
+			out, err = sub.Popen(cmd + " | grep UsedDedicatedGPUMemory | head -1",stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+			fen.ui.UMem.setText(_fromUtf8("Utilisation Memoire\n" + str(out.split(':')[-1].split('.')[0]) + " Mo"))
+		else:
+			fen.ui.UMem.setText(_fromUtf8("N/A"))
 
 class ShipHolderApplication(QMainWindow):
 	
@@ -228,11 +244,15 @@ class ShipHolderApplication(QMainWindow):
 			return self.showError(20,"Erreur","Erreur Chargement configuration",self.error)					
 		
 	def iscompaptible(self):
-		if len(os.popen("ls -l /usr/lib | grep nvidia", "r").read()) == 0:#find better way...
+		
+		cmd = "ls -l /usr/lib | grep nvidia"
+		if sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 			return self.showError(1,"Non supporte","Driver introuvable \nVeuillez installer les pilotes proprietaires",self.error)
-		if os.popen("file /usr/bin/nvidia-settings", "r").read().find('executable') == -1:
+		if not os.path.isfile("/usr/bin/nvidia-settings"):
 			return self.showError(2,"Non supporte","Nvidia settings introuvable \nveuillez installer les pilotes proprietaires et nvidia settings",self.error)
-		ListeGpu = os.popen("lspci -vnn | egrep 'VGA|3D'", "r").read()
+		
+		cmd = "lspci -vnn | egrep 'VGA|3D'"
+		ListeGpu, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
 		self.nbGpuNvidia = ListeGpu.count('NVIDIA')
 		self.nbGpu = len(ListeGpu)
 
@@ -252,19 +272,23 @@ class ShipHolderApplication(QMainWindow):
 			if reply == QtGui.QMessageBox.No:
 				return self.showError(6,"Erreur","Vous devez avoir un fichier xorg.conf",self.error)
 			else:
-				os.popen("bash /usr/share/nvidiux/toRoot.sh >> /dev/null 2>&1 ;echo $?", "r").read()
-				try:
-					tempFile = open('/tmp/.reboot_nvidiux','a')
-					tempFile.write('Nvidiux temp file')
-					tempFile.close()
-					return self.showError(-1,"Redémarrage Requis","Configuration effectué\nVous devez redémarrer votre machine",self.info)
-				except:
-					return self.showError(5,"Erreur","Erreur configuration nvidiux",self.error)
+				cmd = "bash /usr/share/nvidiux/toRoot.sh >> /dev/null 2>&1"
+				if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
+					try:
+						tempFile = open('/tmp/.reboot_nvidiux','a')
+						tempFile.write('Nvidiux temp file')
+						tempFile.close()
+						return self.showError(-1,"Redémarrage Requis","Configuration effectué\nVous devez redémarrer votre machine",self.info)
+					except:
+						return self.showError(5,"Erreur","Erreur configuration nvidiux",self.error)
+				else:
+					return self.showError(7,"Erreur Credential","Votre mot de passe est incorrect",self.error)
 
 		if int(os.popen("cat /etc/X11/xorg.conf | grep Coolbits | wc -l", "r").read()) == 0:
 			self.showError(-1,"Configuration","La configuration du fichier xorg n'est pas effectué !\nEntrer votre mot de passe administrateur pour effectuer la configuration",self.info)
-			if int(os.popen("bash /usr/share/nvidiux/toRoot.sh >> /dev/null 2>&1 ;echo $?", "r").read()) != 0:
-				return self.showError(7,"Erreur Credential","Votre mot de passe est incorrect",self.info)
+			cmd = "bash /usr/share/nvidiux/toRoot.sh >> /dev/null 2>&1"
+			if sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
+				return self.showError(7,"Erreur Credential","Votre mot de passe est incorrect",self.error)
 			else:
 				try:
 					tempFile = open('/tmp/.reboot_nvidiux','a')

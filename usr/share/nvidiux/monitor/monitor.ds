@@ -1,0 +1,7 @@
+(if
+	(is (application_name) "Moniteur_Nvidiux")
+	(begin
+		(skip_pager)
+		(skip_tasklist)
+	)
+)
