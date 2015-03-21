@@ -24,6 +24,8 @@ from windows import Ui_MainWindow
 from confirm import ConfirmWindow
 from about import Ui_About
 from os.path import expanduser
+import subprocess
+import monitor
 import subprocess as sub
 import sys
 import os
@@ -76,7 +78,6 @@ class Mythread(threading.Thread):
 
 def majGpu(numGpu,fen):
 	with muttex: 
-		
 		cmd = "nvidia-settings --query [gpu:" + str(numGpu) + "]/GPUCoreTemp"
 		if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 			out, err = sub.Popen(cmd + " | grep GPUCore | head -1",stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
@@ -111,7 +112,9 @@ class ShipHolderApplication(QMainWindow):
 	change = 0
 	isFermiArch = []
 	form = ""
+	monitor = False
 	threadInfoGpu = None
+	pidMonitor = 0
 	isSli= False
 	error = -1
 	warning = -2
@@ -147,7 +150,7 @@ class ShipHolderApplication(QMainWindow):
 	def changeGpu(self,item):
 		self.numGpu = int(item.text().split(':')[0]) - 1
 		self.threadInfoGpu.stop()
-		self.threadInfoGpu = Mythread(1, majGpu, [self.numGpu], {"fen":myapp})
+		self.threadInfoGpu = threadGpuInfo(1, majGpu, [self.numGpu], {"fen":myapp})
 		self.threadInfoGpu.setDaemon(True)
 		self.threadInfoGpu.start()
 		self.ui.lcdShader.display(self.tabGpu[self.numGpu].freqShader)
@@ -188,8 +191,8 @@ class ShipHolderApplication(QMainWindow):
 		self.ui.buttonAbout.connect(self.ui.buttonAbout,SIGNAL("released()"),self.about)
 		self.ui.buttonLoadProfile.connect(self.ui.buttonLoadProfile,SIGNAL("released()"),self.loadProfile)
 		self.ui.buttonSaveProfile.connect(self.ui.buttonSaveProfile,SIGNAL("released()"),self.saveProfile)
-		#~ self.ui.buttonStartMonitor.connect(self.ui.buttonStartMonitor,SIGNAL("released()"),self.startMonitor)
-		#~ self.ui.buttonConfigureMonitor.connect(self.ui.buttonConfigureMonitor,SIGNAL("released()"),self.configureMonitor)
+		self.ui.buttonStartMonitor.connect(self.ui.buttonStartMonitor,SIGNAL("released()"),self.startMonitor)
+		self.ui.buttonConfigureMonitor.connect(self.ui.buttonConfigureMonitor,SIGNAL("released()"),self.configureMonitor)
 		self.ui.buttonApply.connect(self.ui.buttonApply,SIGNAL("released()"),self.applyNewClock)
 		self.ui.SliderShader.connect(self.ui.SliderShader, SIGNAL("sliderMoved(int)"),self.updateshader)
 		self.ui.SliderMem.connect(self.ui.SliderMem, SIGNAL("sliderMoved(int)"),self.updateMem)
@@ -200,8 +203,8 @@ class ShipHolderApplication(QMainWindow):
 		self.ui.actionSaveProfile.connect(self.ui.actionSaveProfile, SIGNAL("triggered()"),self.saveProfile)
 		self.ui.checkBoxFan.connect(self.ui.checkBoxFan,QtCore.SIGNAL("clicked(bool)"),self.stateFan)
 		self.ui.checkBoxVSync.connect(self.ui.checkBoxVSync,QtCore.SIGNAL("clicked(bool)"),self.stateVSync)
-		#~ self.ui.actionStartMonitor.connect(self.ui.actionStartMonitor, SIGNAL("triggered()"),self.startMonitor)
-		#~ self.ui.actionConfigureMonitor.connect(self.ui.actionConfigureMonitor, SIGNAL("triggered()"),self.configureMonitor)
+		self.ui.actionStartMonitor.connect(self.ui.actionStartMonitor, SIGNAL("triggered()"),self.startMonitor)
+		self.ui.actionConfigureMonitor.connect(self.ui.actionConfigureMonitor, SIGNAL("triggered()"),self.configureMonitor)
 		self.ui.actionAbout.connect(self.ui.actionAbout, SIGNAL("triggered()"),self.about)
 		self.ui.listWidgetGpu.itemClicked.connect(self.changeGpu)
 
@@ -340,6 +343,7 @@ class ShipHolderApplication(QMainWindow):
 				out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
 				out = out.split('\n')[-1]	
 			self.tabGpu[i].nameGpu = out.split(':')[-2].split('[')[-2].split(']')[0].replace('/','|')
+			
 			cmd =  "nvidia-settings -a [gpu:" + str(i) + "]/GPUPowerMizerMode=1"
 			sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True)
 			cmd = "nvidia-settings --query [gpu:" + str(i) + "]/videoRam"
@@ -647,7 +651,18 @@ class ShipHolderApplication(QMainWindow):
 				self.ui.SliderFan.setEnabled(False)
 				self.ui.labelFanVitesse.setText("Auto")
 	def startMonitor(self):
-		print "todo monitor interface"
+		if self.pidMonitor != 0:
+			try:
+				os.kill(self.pidMonitor,9)
+			except OSError:
+				self.showError(-1,"Erreur communication","Impossible de communiquer avec le processus monitor",self.warning)
+			self.ui.buttonStartMonitor.setText("Start")
+			self.pidMonitor = 0
+		else:
+			proc = subprocess.Popen(['python2', '/usr/share/nvidiux/monitor/monitor.py', "&"])
+			self.pidMonitor = proc.pid
+			self.ui.buttonStartMonitor.setText("Stop")
+		return True
 		
 	def stateVSync(self,value):
 		if value:
@@ -666,6 +681,7 @@ class ShipHolderApplication(QMainWindow):
 			else:
 				self.ui.checkBoxVSync.setChecked(True)
 				self.showError(-1,"Impossible","Impossible de desactiver la syncro vertical",self.warning)
+		return True
 	
 	def saveProfile(self,path=""):
 		if path == "":

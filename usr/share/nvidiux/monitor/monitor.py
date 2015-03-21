@@ -1,8 +1,19 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/python2
 
-#This program was created by Peter Schmidt on January 21, 2011
-#This depends on the the Nvidia driver 270.xx or higher and devilspie.
+# Copyright 2014 Payet Guillaume
+#
+# This program is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 3, as published
+# by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranties of
+# MERCHANTABILITY, SATISFACTORY QUALITY, or FITNESS FOR A PARTICULAR
+# PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from Tkinter import *
 import os, sys
@@ -32,7 +43,6 @@ class GpuInfoMonitor():
 	shaderclklabel = ""
 	
 def loop():
-	
 	if gpu1.ABS >= 580:
 		fanchart.delete("all")
 		tempchart.delete("all")
@@ -41,11 +51,23 @@ def loop():
 		gpu1.ABS = 0
 
 	if gpu1.ABS == 0:
-		for i in range (1,5):
-			fanchart.create_line(0, i * 76,580, i * 76,fill="grey")
-			tempchart.create_line(0, i * 76,580, i * 76,fill="grey")
-			gpuchart.create_line(0, i * 76,580, i * 76,fill="grey")
-			memchart.create_line(0, i * 76,580, i * 76,fill="grey")
+		for i in range (1,6):
+			fanchart.create_line(0, i * 76,580, i * 76,fill = "grey")
+			fanchartText = fanchart.create_text(2, 381 - i * 76, anchor="nw",fill = "grey")
+			fanchart.itemconfig(fanchartText, text = str(int(i * 20)) + "%")
+			fanchart.insert(fanchartText, 12, "")
+			gpuchartText = gpuchart.create_text(2, 381 - i * 76, anchor="nw",fill = "grey")
+			gpuchart.itemconfig(gpuchartText, text = str(int(i * 20)) + "%")
+			gpuchart.insert(gpuchartText, 12, "")
+			gpuchart.create_line(0, i * 76,580, i * 76,fill = "grey")
+			tempchartText = tempchart.create_text(2, 381 - i * 76, anchor="nw",fill = "grey")
+			tempchart.itemconfig(tempchartText, text = str(int(i * 24)) + "°C")
+			tempchart.insert(tempchartText, 12, "")
+			tempchart.create_line(0, i * 76,580, i * 76,fill = "grey")
+			memchartText = memchart.create_text(2, 381 - i * 76, anchor="nw",fill = "grey")
+			memchart.itemconfig(memchartText, text = str(int(i * float(gpu1.totalMem / 5))) + "Mo")
+			memchart.insert(memchartText, 12, "")
+			memchart.create_line(0, i * 76,580, i * 76,fill = "grey")
 		
 	cmd = "nvidia-settings --query [gpu:0]/GPUCoreTemp"
 	if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
@@ -94,18 +116,39 @@ def loop():
 	newPointMem = int(380 - int(out.split(':')[-1].split('.')[0]) * 380 / gpu1.totalMem)
 	memchart.create_line(gpu1.ABS,gpu1.oldPointMem,gpu1.ABS + 5,newPointMem,fill=gpu1.color)
 	gpu1.oldPointMem = newPointMem
+	
+	
+	cmd = "nvidia-settings --query [gpu:0]/GPU3DClockFreqs"
+	if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
+		out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+		self.tabGpu[i].freqGpu = out.split(': ')[1].split(',')[0]
+	else:
+		cmd = "nvidia-settings --query [gpu:0]/GPUCurrentClockFreqs"
+		if not sub.call(cmd + " | head -1",stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
+			out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+			coreclklabel.set("Core:" + out.split(': ')[1].split(',')[0] + "Mhz")
+		else:
+			sys.exit(1)
+		
+	cmd = "nvidia-settings --query [gpu:0]/GPUPerfModes | grep memTransferRatemax= | tail -1"
+	if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
+		out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+		memclklabel.set("Mem:" + str(out.split(',')[1].split('=')[1]) + "Mhz")
+	else:
+		sys.exit(1)
 		
 	gpu1.ABS = gpu1.ABS + 5
 	gpu1.time = gpu1.time + interval
-	timeLabel.set("Temps écoulé :" + str(int(gpu1.time / 1000)) + " secondes")
-	
+	if int(gpu1.time / 1000) <= 1:
+		timeLabel.set("Temps écoulé : " + str(int(gpu1.time / 1000)) + " seconde")
+	else:
+		timeLabel.set("Temps écoulé : " + str(int(gpu1.time / 1000)) + " secondes")
 	tkRT.after(interval,loop)
 
 
 interval = 1000
-
 tkRT=Tk()
-tkRT.title("Moniteur_Nvidiux")
+tkRT.title("Moniteur Nvidiux")
 gpuName = StringVar()
 templabel = StringVar()
 fanlabel = StringVar()
@@ -116,42 +159,67 @@ coreclklabel = StringVar()
 shaderclklabel = StringVar()
 timeLabel = StringVar()
 gpu1 = GpuInfoMonitor("red")
-gpu1.totalMem = 1280
+
 gpu1.time = 0
 
-gpuName.set("GTX570")
-coreclklabel.set("Core:732 MHz")
-shaderclklabel.set("Shader:1048 MHz")
-memclklabel.set("Memory:4000 MHz")
-timeLabel.set("Temps écoulé:0 secondes")
+cmd = "lspci -vnn | grep NVIDIA | grep -v Audio | head -n 2"
+out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+gpuName.set(out.split(':')[-2].split('[')[-2].split(']')[0])
+
+cmd = "nvidia-settings --query [gpu:0]/GPU3DClockFreqs"
+if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
+	out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+	self.tabGpu[i].freqGpu = out.split(': ')[1].split(',')[0]
+else:
+	cmd = "nvidia-settings --query [gpu:0]/GPUCurrentClockFreqs"
+	if not sub.call(cmd + " | head -1",stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
+		out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+		coreclklabel.set("Core:" + out.split(': ')[1].split(',')[0] + "Mhz")
+	else:
+		sys.exit(1)
+cmd = "nvidia-settings --query [gpu:0]/GPUPerfModes | grep memTransferRatemax= | tail -1"
+if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
+	out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+	memclklabel.set("Mem:" + str(out.split(',')[1].split('=')[1]) + "Mhz")
+else:
+	sys.exit(1)
+
+timeLabel.set("Temps écoulé : 0 seconde")
 
 cmd = "nvidia-settings --query [gpu:0]/GPUCoreTemp"
 if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 	out, err = sub.Popen(cmd + " | grep GPUCore | head -1",stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
 	gpu1.oldPointTemp = int(380 - int(out.split(':')[-1].split('.')[0]) * 380 / 125)
 else:
-	sys.exit(0)
+	sys.exit(1)
 
 cmd = "nvidia-settings --query [fan:0]/GPUCurrentFanSpeed"
 if not sub.call(cmd ,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 	out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
 	gpu1.oldPointFan = int(380 - int(out.split(': ')[1].split('.')[0]) * 380 / 100)
 else:
-	sys.exit(0)
+	sys.exit(1)
 
 cmd = "nvidia-settings --query [gpu:0]/GPUUtilization"
 if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 	out, err = sub.Popen(cmd + "| grep GPUUtilization | head -1",stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
 	gpu1.oldPointGpu = int( 380 - int(out.split('=')[1].split(',')[0]) * 380 / 100)
 else:
-	sys.exit(0)
+	sys.exit(1)
+
+cmd = "nvidia-settings --query [gpu:0]/videoRam"
+if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
+	out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+	gpu1.totalMem = float(out.split(': ')[1].split('.')[0]) / 1024
+else:
+	sys.exit(1)
 
 cmd = "nvidia-settings --query [gpu:0]/UsedDedicatedGPUMemory"
 if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 	out, err = sub.Popen(cmd + " | grep UsedDedicatedGPUMemory | head -1",stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
 	gpu1.oldPointMem = int(380 - int(out.split(':')[-1].split('.')[0]) * 380 / gpu1.totalMem)
 else:
-	sys.exit(0)
+	sys.exit(1)
 
 mainframe=Frame(tkRT)
 mainframe.pack()
@@ -180,10 +248,8 @@ Label(mainframe,textvariable = memlabel).grid(column=2,row=7)
 
 Label(mainframe,textvariable = gpuName).grid(column=0,row=0,columnspan=3)
 Label(mainframe,textvariable = memclklabel).grid(column=0,row=1,columnspan=3)
-Label(mainframe,textvariable = coreclklabel).grid(column=0,row=3,columnspan=3)
-Label(mainframe,textvariable = shaderclklabel).grid(column=0,row=2,columnspan=3)
-
+Label(mainframe,textvariable = coreclklabel).grid(column=0,row=2,columnspan=3)
 tkRT.geometry("1280x880+0+0")
-
 tkRT.after(interval,loop)
 tkRT.mainloop()
+sys.exit(0)
