@@ -25,7 +25,6 @@ from confirm import ConfirmWindow
 from about import Ui_About
 from os.path import expanduser
 import subprocess
-import monitor
 import subprocess as sub
 import sys
 import os
@@ -393,11 +392,12 @@ class ShipHolderApplication(QMainWindow):
 				else:
 					self.showError(33,"Échec","Échec chargement des parametres Gpu",self.error)
 			cmd = "nvidia-settings --query [gpu:" + str(i) + "]/GPUCurrentProcessorClockFreqs"
-			if not sub.call(cmd + " | head -2",stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
-				out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-				self.tabGpu[i].freqShader = out.split(': ')[1].split('.')[0]
+			if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
+				out, err = sub.Popen(cmd + " | head -3",stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+				self.tabGpu[i].freqShader = out.replace('\n','').split(': ')[1].split('.')[0]
 			else:
-				self.showError(34,"Échec","Échec chargement des parametres Gpu",self.error)		
+				self.showError(34,"Échec","Échec chargement des parametres Gpu",self.error)
+			
 			if int(self.tabGpu[i].freqShader) == int(self.tabGpu[i].freqGpu) * 2 or int(self.tabGpu[i].freqShader) == int(self.tabGpu[i].freqGpu) * 2 + 1:
 				self.isFermiArch.append(True);
 			else:

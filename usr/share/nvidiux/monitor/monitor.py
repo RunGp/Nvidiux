@@ -72,7 +72,7 @@ def loop():
 	cmd = "nvidia-settings --query [gpu:0]/GPUCoreTemp"
 	if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 		out, err = sub.Popen(cmd + " | grep GPUCore | head -1",stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-		gpu1.templabel = "Temp:" + str(out.split(':')[-1].split('.')[0]) + "°C"
+		gpu1.templabel = "Temp : " + str(out.split(':')[-1].split('.')[0]) + "°C"
 		templabel.set(gpu1.templabel)
 	else:
 		sys.exit(0)
@@ -84,7 +84,7 @@ def loop():
 	cmd = "nvidia-settings --query [fan:0]/GPUCurrentFanSpeed"
 	if not sub.call(cmd ,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 		out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-		gpu1.fanlabel = "Fan:" + str(out.split(': ')[1].split('.')[0]) + "%"
+		gpu1.fanlabel = "Fan : " + str(out.split(': ')[1].split('.')[0]) + "%"
 		fanlabel.set(gpu1.fanlabel)
 	else:
 		sys.exit(0)
@@ -96,7 +96,7 @@ def loop():
 	cmd = "nvidia-settings --query [gpu:0]/GPUUtilization"
 	if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 		out, err = sub.Popen(cmd + "| grep GPUUtilization | head -1",stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-		gpu1.gpulabel = "Core:" + str(out.split('=')[1].split(',')[0]) + "%"
+		gpu1.gpulabel = "Core : " + str(out.split('=')[1].split(',')[0]) + "%"
 		gpulabel.set(gpu1.gpulabel)
 	else:
 		sys.exit(0)
@@ -109,7 +109,7 @@ def loop():
 	cmd = "nvidia-settings --query [gpu:0]/UsedDedicatedGPUMemory"
 	if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 		out, err = sub.Popen(cmd + " | grep UsedDedicatedGPUMemory | head -1",stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-		gpu1.memlabel = "Mem:" + str(out.split(':')[-1].split('.')[0]) + " Mo"
+		gpu1.memlabel = "Mem : " + str(out.split(':')[-1].split('.')[0]) + " Mo"
 		memlabel.set(gpu1.memlabel)
 	else:
 		sys.exit(0)
@@ -126,14 +126,14 @@ def loop():
 		cmd = "nvidia-settings --query [gpu:0]/GPUCurrentClockFreqs"
 		if not sub.call(cmd + " | head -1",stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 			out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-			coreclklabel.set("Core:" + out.split(': ')[1].split(',')[0] + "Mhz")
+			coreclklabel.set("Core : " + out.split(': ')[1].split(',')[0] + "Mhz")
 		else:
 			sys.exit(1)
 		
 	cmd = "nvidia-settings --query [gpu:0]/GPUPerfModes | grep memTransferRatemax= | tail -1"
 	if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 		out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-		memclklabel.set("Mem:" + str(out.split(',')[1].split('=')[1]) + "Mhz")
+		memclklabel.set("Mem : " + str(out.split(',')[1].split('=')[1]) + "Mhz")
 	else:
 		sys.exit(1)
 		
@@ -174,13 +174,13 @@ else:
 	cmd = "nvidia-settings --query [gpu:0]/GPUCurrentClockFreqs"
 	if not sub.call(cmd + " | head -1",stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 		out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-		coreclklabel.set("Core:" + out.split(': ')[1].split(',')[0] + "Mhz")
+		coreclklabel.set("Core :" + out.split(': ')[1].split(',')[0] + "Mhz")
 	else:
 		sys.exit(1)
 cmd = "nvidia-settings --query [gpu:0]/GPUPerfModes | grep memTransferRatemax= | tail -1"
 if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 	out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-	memclklabel.set("Mem:" + str(out.split(',')[1].split('=')[1]) + "Mhz")
+	memclklabel.set("Mem : " + str(out.split(',')[1].split('=')[1]) + "Mhz")
 else:
 	sys.exit(1)
 
