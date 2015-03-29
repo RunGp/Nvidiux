@@ -107,7 +107,7 @@ class ShipHolderApplication(QMainWindow):
 	nbGpu = -1
 	nbGpuNvidia = -1
 	optimus = 0
-	nvidiuxVersion = 0.84
+	nvidiuxVersion = 0.93
 	change = 0
 	isFermiArch = []
 	form = ""
@@ -333,68 +333,114 @@ class ShipHolderApplication(QMainWindow):
 			self.ui.Message.setText(_fromUtf8("Driver non supporté (trop ancien)!\nOverclock desactivé"))
 			QMessageBox.information(self, _fromUtf8("Driver"),_fromUtf8("Driver non supporté:trop ancien\nOverclock desactivé\nIl vous faut la version 337.19 ou plus recent pour overclocker"))
 		for i in range(0, self.nbGpuNvidia):
-			self.tabGpu.append(Gpuinfo())
-			if i == 0: #si un seul pas de retour ligne
-				cmd = "lspci -vnn | grep NVIDIA | grep -v Audio | head -n " + str(i + 1)
-				out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-			else:
-				cmd = "lspci -vnn | grep NVIDIA | grep -v Audio | head -n " + str(i + 1)
-				out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-				out = out.split('\n')[-1]	
-			self.tabGpu[i].nameGpu = out.split(':')[-2].split('[')[-2].split(']')[0].replace('/','|')
+			try:
+				self.tabGpu.append(Gpuinfo())
+				if i == 0: #si un seul pas de retour ligne
+					cmd = "lspci -vnn | grep NVIDIA | grep -v Audio | head -n " + str(i + 1)
+					out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+				else:
+					cmd = "lspci -vnn | grep NVIDIA | grep -v Audio | head -n " + str(i + 1)
+					out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+					out = out.split('\n')[-1]	
+				self.tabGpu[i].nameGpu = out.split(':')[-2].split('[')[-2].split(']')[0].replace('/','|')
+			except:
+				self.showError(34,"Échec","Échec chargement des parametres Gpu",self.error)
+				sys.exit(1)
 			
 			cmd =  "nvidia-settings -a [gpu:" + str(i) + "]/GPUPowerMizerMode=1"
 			sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True)
 			cmd = "nvidia-settings --query [gpu:" + str(i) + "]/videoRam"
 			if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 				out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-				self.tabGpu[i].videoRam = float(out.split(': ')[1].split('.')[0]) / 1048576
+				try:
+					self.tabGpu[i].videoRam = float(out.split(': ')[1].split('.')[0]) / 1048576
+				except:
+					print "Text to send:" + str(out)
+					self.showError(35,"Échec","Échec chargement des parametres Gpu",self.error)
+					sys.exit(1)
+					
 			else:
 				self.tabGpu[i].videoRam = "N/A"
 			
 			cmd = "nvidia-settings --query [gpu:" + str(i) + "]/cudaCores"
 			if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 				out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-				self.tabGpu[i].cudaCores = int(out.split(': ')[1].split('.')[0])
+				try:
+					self.tabGpu[i].cudaCores = int(out.split(': ')[1].split('.')[0])
+				except:
+					print "Text to send:" + str(out)
+					self.showError(35,"Échec","Échec chargement des parametres Gpu",self.error)
+					sys.exit(1)
 			else:
 				self.tabGpu[i].cudaCores = "N/A"
 			
 			cmd = "nvidia-settings --query [gpu:" + str(i) + "]/GPUPerfModes | grep memTransferRatemax= | tail -1"
 			if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 				out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-				self.tabGpu[i].freqMem = out.split(',')[1].split('=')[1]
+				try:
+					self.tabGpu[i].freqMem = out.split(',')[1].split('=')[1]
+				except:
+					print "Text to send:" + str(out)
+					self.showError(36,"Échec","Échec chargement des parametres Gpu",self.error)
+					sys.exit(1)
 			else:
 				self.showError(31,"Échec","Échec chargement des parametres Gpu",self.error)
 				
 			cmd = "nvidia-settings --query [gpu:" + str(i) + "]/NvidiaDriverVersion"
 			if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 				out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-				self.tabGpu[i].version = float(out.split(':')[-1][1:])
+				try:
+					self.tabGpu[i].version = float(out.split(':')[-1][1:])
+				except:
+					print "Text to send:" + str(out)
+					self.showError(37,"Échec","Échec chargement des parametres Gpu",self.error)
+					sys.exit(1)
 			else:
 				self.showError(32,"Échec","Échec chargement des parametres Gpu",self.error)
-				
 			cmd = "nvidia-settings --query all | grep OpenGLVersion"
 			if not sub.call(cmd + "| head -1",stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 				out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-				self.tabGpu[i].openGlVersion = out.split('NVIDIA')[0].split(':')[-1]
+				try:
+					self.tabGpu[i].openGlVersion = out.split('NVIDIA')[0].split(':')[-1]
+				except:
+					print "Text to send:" + str(out)
+					self.showError(38,"Échec","Échec chargement des parametres Gpu",self.error)
+					sys.exit(1)
 			else:
 				self.tabGpu[i].openGlVersion = "N/A"
 			
 			cmd = "nvidia-settings --query [gpu:" + str(i) + "]/GPU3DClockFreqs"
 			if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 				out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-				self.tabGpu[i].freqGpu = out.split(': ')[1].split(',')[0]
+				try:
+					self.tabGpu[i].freqGpu = out.split(': ')[1].split(',')[0]
+				except:
+					print "Text to send:" + str(out)
+					self.showError(39,"Échec","Échec chargement des parametres Gpu",self.error)
+					sys.exit(1)
+					
 			else:
 				cmd = "nvidia-settings --query [gpu:" + str(i) + "]/GPUCurrentClockFreqs"
 				if not sub.call(cmd + " | head -1",stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 					out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-					self.tabGpu[i].freqGpu = out.split(': ')[1].split(',')[0]
+					try:
+						self.tabGpu[i].freqGpu = out.split(': ')[1].split(',')[0]
+					except:
+						print "Text to send:" + str(out)
+						self.showError(40,"Échec","Échec chargement des parametres Gpu",self.error)
+						sys.exit(1)
 				else:
 					self.showError(33,"Échec","Échec chargement des parametres Gpu",self.error)
 			cmd = "nvidia-settings --query [gpu:" + str(i) + "]/GPUCurrentProcessorClockFreqs"
 			if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 				out, err = sub.Popen(cmd + " | head -3",stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-				self.tabGpu[i].freqShader = out.replace('\n','').split(': ')[1].split('.')[0]
+				try:
+					self.tabGpu[i].freqShader = out.replace('\n','').split(': ')[1].split('.')[0]
+				except: #get an empty response on most gt7XX generation... => shadder = gpu clock
+					self.tabGpu[i].freqShader = self.tabGpu[i].freqGpu
+					#~ print "Text to send:" + str(out)
+					#~ self.showError(41,"Échec","Échec chargement des parametres Gpu",self.error)
+					#~ sys.exit(1)
 			else:
 				self.showError(34,"Échec","Échec chargement des parametres Gpu",self.error)
 			
@@ -473,7 +519,7 @@ class ShipHolderApplication(QMainWindow):
 		if i == -1:
 			info = info + "Ce gpu n'est pas dans la base des gpu compatibles"
 		if i == 1:
-			info = info + "Ce gpu n'est pas compatibles"
+			info = info + "Ce gpu n'est pas compatible"
 			self.ui.SliderMem.setEnabled(0)
 			self.ui.SliderGpu.setEnabled(0)
 			self.ui.SliderShader.setEnabled(0)
@@ -565,12 +611,15 @@ class ShipHolderApplication(QMainWindow):
 			offsetGpu = int(self.tabGpu[i].freqGpu) - int(self.tabGpu[i].defaultFreqGpu)
 			offsetShader = int(self.tabGpu[i].freqShader) - int(self.tabGpu[i].defaultFreqShader)
 			offsetMem = int(self.tabGpu[i].freqMem) - int(self.tabGpu[i].defaultFreqMem)
-			cmd = "nvidia-settings -a \"[gpu:" + str(i) + "]/GPUGraphicsClockOffset[2]=" + str(offsetGpu) + "\" -a \"[gpu:" + str(i) + "]/GPUMemoryTransferRateOffset[2]=" + str(offsetMem) + "\" >> /dev/null 2>&1 ;echo $?"
-			if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
-				success = True
-			else:
-				success = False
-				break						
+			try:
+				cmd = "nvidia-settings -a \"[gpu:" + str(i) + "]/GPUGraphicsClockOffset[2]=" + str(offsetGpu) + "\" -a \"[gpu:" + str(i) + "]/GPUMemoryTransferRateOffset[2]=" + str(offsetMem) + "\" >> /dev/null 2>&1 ;echo $?"
+				if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
+					success = True
+				else:
+					success = False
+					break
+			except:
+				self.showError(-1,"Erreur","Erreur interne overclock/downclock impossible",self.warning)						
 		if success:
 			if mode == "1":
 				self.showError(0,"Effectué","Changement effectué",self.info)
