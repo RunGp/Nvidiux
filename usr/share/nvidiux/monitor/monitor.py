@@ -16,6 +16,7 @@
 # with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from Tkinter import *
+import tkMessageBox
 import os, sys
 import subprocess as sub
 import threading
@@ -33,6 +34,7 @@ class GpuInfoMonitor():
 	totalMem = 0
 	ABS = 0
 	time = 0
+	driverVersion = 0
 	gpuName = ""
 	templabel = ""
 	fanlabel = ""
@@ -68,7 +70,7 @@ def loop():
 			memchart.itemconfig(memchartText, text = str(int(i * float(gpu1.totalMem / 5))) + "Mo")
 			memchart.insert(memchartText, 12, "")
 			memchart.create_line(0, i * 76,580, i * 76,fill = "grey")
-		
+
 	cmd = "nvidia-settings --query [gpu:0]/GPUCoreTemp"
 	if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 		out, err = sub.Popen(cmd + " | grep GPUCore | head -1",stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
@@ -165,6 +167,16 @@ gpu1.time = 0
 cmd = "lspci -vnn | grep NVIDIA | grep -v Audio | head -n 2"
 out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
 gpuName.set(out.split(':')[-2].split('[')[-2].split(']')[0])
+
+cmd = "nvidia-settings --query [gpu:0]/NvidiaDriverVersion"
+if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
+	out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+	versionPilote = float(out.split(':')[-1][1:])
+else:
+	sys.exit(1)
+if versionPilote > 346.56:
+	tkMessageBox.showwarning("Erreur Version","Le moniteur n'est pas compatible avec cette version:(%s)" % versionPilote)
+        sys.exit(1)
 
 cmd = "nvidia-settings --query [gpu:0]/GPU3DClockFreqs"
 if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
