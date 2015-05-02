@@ -34,9 +34,9 @@ class Ui_MainWindow(object):
         self.centralwidget.setObjectName(_fromUtf8("centralwidget"))
         
         self.title = QtGui.QLabel(self.centralwidget)
-        self.title.setGeometry(QtCore.QRect(20, 0, 180, 80))
+        self.title.setGeometry(QtCore.QRect(16, 0, 180, 80))
         font = QtGui.QFont()
-        font.setPointSize(32)
+        font.setPointSize(30)
         font.setBold(True)
         font.setUnderline(False)
         font.setWeight(75)
@@ -46,16 +46,24 @@ class Ui_MainWindow(object):
         self.title.setAlignment(QtCore.Qt.AlignCenter)
         self.title.setObjectName(_fromUtf8("title"))
         self.about = QtGui.QLabel(self.centralwidget)
-        self.about.setGeometry(QtCore.QRect(50, 55, 100, 30))
+        self.about.setGeometry(QtCore.QRect(14, 56, 100, 30))
         self.about.setAlignment(QtCore.Qt.AlignCenter)
         self.about.setObjectName(_fromUtf8("about"))
         self.buttonAbout = QtGui.QPushButton(self.centralwidget)
-        self.buttonAbout.setGeometry(QtCore.QRect(145, 60, 20, 20))
+        self.buttonAbout.setGeometry(QtCore.QRect(110, 58, 24, 24))
         self.buttonAbout.setAutoDefault(False)
         self.buttonAbout.setDefault(False)
         self.buttonAbout.setFlat(False)
         self.buttonAbout.setObjectName(_fromUtf8("buttonAbout"))
-       
+        self.buttonConfigure = QtGui.QPushButton(self.centralwidget)
+        self.buttonConfigure.setGeometry(QtCore.QRect(145, 58, 24, 24))
+        self.buttonConfigure.setAutoDefault(False)
+        self.buttonConfigure.setDefault(False)
+        self.buttonConfigure.setFlat(False)
+        self.buttonConfigure.setObjectName(_fromUtf8("buttonConfigure"))
+        self.buttonConfigure.setIcon(QtGui.QIcon("/usr/share/nvidiux/img/conf.png"))
+        self.buttonConfigure.setIconSize(QtCore.QSize(16,16))
+        
         self.groupBoxProfile = QtGui.QGroupBox(self.centralwidget)
         self.groupBoxProfile.setGeometry(QtCore.QRect(6, 86, 198,65 ))
         self.groupBoxProfile.setStyleSheet(_fromUtf8("QGroupBox \n"
@@ -124,7 +132,7 @@ class Ui_MainWindow(object):
         self.buttonConfigureMonitor.setAutoDefault(False)
         self.buttonConfigureMonitor.setDefault(False)
         self.buttonConfigureMonitor.setFlat(False)
-        self.buttonConfigureMonitor.setEnabled(False)
+        self.buttonConfigureMonitor.setEnabled(True)
         self.buttonConfigureMonitor.setObjectName(_fromUtf8("ButtonConfigureProfile"))
         self.labelMonitor = QtGui.QLabel(self.groupBoxMonitor)
         self.labelMonitor.setGeometry(QtCore.QRect(50, 2, 100, 20))
@@ -135,7 +143,7 @@ class Ui_MainWindow(object):
         self.labelMonitor.setFont(font)
         
         self.groupBoxInfoGpu = QtGui.QGroupBox(self.centralwidget)
-        self.groupBoxInfoGpu.setGeometry(QtCore.QRect(34, 156, 346,310))
+        self.groupBoxInfoGpu.setGeometry(QtCore.QRect(34, 156, 346,316))
         self.groupBoxInfoGpu.setStyleSheet(_fromUtf8("QGroupBox \n"
 	"{ \n"
 	"border: 2px solid MediumBlue;\n"
@@ -146,7 +154,7 @@ class Ui_MainWindow(object):
        
         
         self.groupBoxOverclock = QtGui.QGroupBox(self.centralwidget)
-        self.groupBoxOverclock.setGeometry(QtCore.QRect(406, 156, 386,310))
+        self.groupBoxOverclock.setGeometry(QtCore.QRect(406, 156, 386,316))
         self.groupBoxOverclock.setStyleSheet(_fromUtf8("QGroupBox \n"
 	"{ \n"
 	"border: 2px solid MediumBlue;\n"
@@ -292,7 +300,7 @@ class Ui_MainWindow(object):
         
         
         self.labelFan = QtGui.QLabel(self.groupBoxOverclock)
-        self.labelFan.setGeometry(QtCore.QRect(25, 255, 60, 30))
+        self.labelFan.setGeometry(QtCore.QRect(28, 265, 60, 30))
         font = QtGui.QFont()
         font.setPointSize(15)
         font.setBold(True)
@@ -301,7 +309,7 @@ class Ui_MainWindow(object):
         self.labelFan.setObjectName(_fromUtf8("labelFan"))
         
         self.labelFanVitesse = QtGui.QLabel(self.groupBoxOverclock)
-        self.labelFanVitesse.setGeometry(QtCore.QRect(80, 257, 60, 30))
+        self.labelFanVitesse.setGeometry(QtCore.QRect(80, 266, 120, 30))
         font = QtGui.QFont()
         font.setPointSize(12)
         font.setBold(True)
@@ -311,7 +319,7 @@ class Ui_MainWindow(object):
         
         self.SliderFan = QtGui.QSlider(self.groupBoxOverclock)
         self.SliderFan.setEnabled(True)
-        self.SliderFan.setGeometry(QtCore.QRect(5, 275, 370, 26))
+        self.SliderFan.setGeometry(QtCore.QRect(5, 285, 370, 26))
         self.SliderFan.setAutoFillBackground(False)
         self.SliderFan.setStyleSheet(_fromUtf8("color: rgb(205, 0, 0);"))
         self.SliderFan.setSingleStep(2)
@@ -321,7 +329,7 @@ class Ui_MainWindow(object):
         self.SliderFan.setObjectName(_fromUtf8("SliderFan"))
         self.checkBoxFan = QtGui.QCheckBox(self.groupBoxOverclock)
         self.checkBoxFan.setEnabled(True)
-        self.checkBoxFan.setGeometry(QtCore.QRect(5, 260, 20, 20))
+        self.checkBoxFan.setGeometry(QtCore.QRect(8, 271, 20, 20))
         self.checkBoxFan.setCheckable(True)
         self.checkBoxFan.setChecked(False)
         self.checkBoxFan.setObjectName(_fromUtf8("checkBoxOptimus"))
@@ -453,14 +461,16 @@ class Ui_MainWindow(object):
         self.menuFichier.setObjectName(_fromUtf8("menuFichier"))
         self.menuMonitor = QtGui.QMenu(self.menubar)
         self.menuMonitor.setObjectName(_fromUtf8("menuMonitor"))
-        self.menuAide = QtGui.QMenu(self.menubar)
-        self.menuAide.setObjectName(_fromUtf8("menuAide"))
+        #~ self.menuAide = QtGui.QMenu(self.menubar)
+        #~ self.menuAide.setObjectName(_fromUtf8("menuAide"))
         MainWindow.setMenuBar(self.menubar)
         
         self.actionLoadProfile = QtGui.QAction(MainWindow)
         self.actionLoadProfile.setObjectName(_fromUtf8("actionLoadProfile"))
         self.actionSaveProfile = QtGui.QAction(MainWindow)
         self.actionSaveProfile.setObjectName(_fromUtf8("actionSaveProfile"))
+        self.actionPref = QtGui.QAction(MainWindow)
+        self.actionPref.setObjectName(_fromUtf8("actionPref"))
         self.actionQuitter = QtGui.QAction(MainWindow)
         self.actionQuitter.setObjectName(_fromUtf8("actionQuitter"))
         self.actionAbout = QtGui.QAction(MainWindow)
@@ -472,14 +482,15 @@ class Ui_MainWindow(object):
         
         self.menuFichier.addAction(self.actionLoadProfile)
         self.menuFichier.addAction(self.actionSaveProfile)
+        self.menuFichier.addAction(self.actionPref)
+        self.menuFichier.addAction(self.actionAbout)
         self.menuFichier.addAction(self.actionQuitter)
         self.menuMonitor.addAction(self.actionStartMonitor)
         self.menuMonitor.addAction(self.actionConfigureMonitor)
-        self.menuAide.addAction(self.actionAbout)
         
         self.menubar.addAction(self.menuFichier.menuAction())
         self.menubar.addAction(self.menuMonitor.menuAction())
-        self.menubar.addAction(self.menuAide.menuAction())
+        #~ self.menubar.addAction(self.menuAide.menuAction())
         
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -492,13 +503,13 @@ class Ui_MainWindow(object):
         self.title.setText(_translate("MainWindow", "Nvidiux", None))
         self.buttonReset.setText(_translate("MainWindow", "Reset", None))
         self.buttonApply.setText(_translate("MainWindow", "Appliquer", None))
-        self.about.setText(_translate("MainWindow", "Version 0.93", None))
+        self.about.setText(_translate("MainWindow", "Version XXX", None))
         self.buttonAbout.setText(_translate("MainWindow", "i", None))
         self.labelFanVitesse.setText(_translate("MainWindow", "Auto",None))
         self.labelFan.setText(_translate("MainWindow", "Fan", None))
         self.buttonStartMonitor.setText(_translate("MainWindow", "Start", None))
         self.buttonConfigureMonitor.setText(_translate("MainWindow", "Configurer", None))
-        self.labelMonitor.setText(_translate("MainWindow", "Monitorer", None))
+        self.labelMonitor.setText(_translate("MainWindow", "Moniteur", None))
         self.buttonLoadProfile.setText(_translate("MainWindow", "Charger", None))
         self.buttonSaveProfile.setText(_translate("MainWindow", "Enregister", None))
         self.labelProfile.setText(_translate("MainWindow", "Profil", None))
@@ -523,12 +534,13 @@ class Ui_MainWindow(object):
         self.label_Dfreq_Shader.setText(_translate("MainWindow", "Shader", None))
         self.label_Dfreq_Mem.setText(_translate("MainWindow", "Mem", None))
         self.menuFichier.setTitle(_translate("MainWindow", "Fichier", None))
-        self.menuAide.setTitle(_translate("MainWindow", "Aide", None))
-        self.menuMonitor.setTitle(_translate("MainWindow", "Monitorer", None))
+        #~ self.menuAide.setTitle(_translate("MainWindow", "Aide", None))
+        self.menuMonitor.setTitle(_translate("MainWindow", "Moniteur", None))
         self.actionQuitter.setText(_translate("MainWindow", "Quitter", None))
         self.actionStartMonitor.setText(_translate("MainWindow", "Start", None))
         self.actionConfigureMonitor.setText(_translate("MainWindow", "Configurer", None))
-        self.actionAbout.setText(_translate("MainWindow", "A Propos de", None))
+        self.actionAbout.setText(_translate("MainWindow", "A Propos", None))
+        self.actionPref.setText(_translate("MainWindow", "Préférences", None))
         self.actionLoadProfile.setText(_translate("MainWindow", "Charger", None))
         self.actionSaveProfile.setText(_translate("MainWindow", "Enregistrer", None))
        

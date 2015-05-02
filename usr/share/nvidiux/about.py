@@ -51,6 +51,7 @@ class Ui_About(QWidget):
 		self.setObjectName(_fromUtf8("About Nvidiux"))
 		self.setWindowTitle("A propos Nvidiux")
 		self.resize(600, 530)
+		self.setFixedSize(600, 530)
 		self.Img = QtGui.QLabel(self)
 		self.Img.move(190,5)
 		self.Img.setPixmap(QtGui.QPixmap("/usr/share/nvidiux/img/drivers_nvidia_linux.png"))	
@@ -83,7 +84,8 @@ class Ui_About(QWidget):
 			self.textBrowser.setText(_fromUtf8(txtFile.read()))
 		else:
 			self.textBrowser.setText(_fromUtf8("Programme distribué sous license GPL V3\nVoir http://www.gnu.org/licenses/gpl-3.0.txt"))
+		self.retranslateUi()
 		
-		def retranslateUi(self):
+	def retranslateUi(self):
 			self.setWindowTitle(_translate("About", "À Propos Nvidiux", None))
 			self.setWindowTitle(_translate("About", "Permet d'underclocker ou d'overclocker votre gpu nvidia\nVersion 0.9 Beta 1 (13/03/15)\n(C) 2014 Payet Guillaume\nNvidiux n'est en aucun cas affilié à Nvidia", None))

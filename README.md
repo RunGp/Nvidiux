@@ -1,9 +1,9 @@
-# Nvidiux pre release 0.92
+# Nvidiux beta version 0.94
 
 Nvidiux is a graphical python tool to overclock or underclock your nvidia gpu  (generation 4XX  5XX  6XX) 
 currently not checked for newer gpu
 
-For using this tools you must install nvidia proprietary drivers 331 or later (min 337 to use overclock)  and python 2.7
+For using this tools you must install nvidia proprietary drivers 331 or later (min 337 to use overclock) and python 2.7 (ubuntu dependancy:python-qt4,gksu,vainfo,python-tk)
 
 simply install the deb file here : https://github.com/RunGp/Nvidiux/releases
 
