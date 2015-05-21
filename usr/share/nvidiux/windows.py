@@ -1,12 +1,19 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/python2
 
-# Form implementation generated from reading ui file 'mainwindow.ui'
+# Copyright 2014 Payet Guillaume
 #
-# Created: Mon May 26 00:12:10 2014
-#      by: PyQt4 UI code generator 4.10.4
+# This program is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 3, as published
+# by the Free Software Foundation.
 #
-# WARNING! All changes made in this file will be lost!
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranties of
+# MERCHANTABILITY, SATISFACTORY QUALITY, or FITNESS FOR A PARTICULAR
+# PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from PyQt4 import QtCore, QtGui
 
@@ -319,7 +326,7 @@ class Ui_MainWindow(object):
         
         self.SliderFan = QtGui.QSlider(self.groupBoxOverclock)
         self.SliderFan.setEnabled(True)
-        self.SliderFan.setGeometry(QtCore.QRect(5, 285, 370, 26))
+        self.SliderFan.setGeometry(QtCore.QRect(5, 287, 370, 26))
         self.SliderFan.setAutoFillBackground(False)
         self.SliderFan.setStyleSheet(_fromUtf8("color: rgb(205, 0, 0);"))
         self.SliderFan.setSingleStep(2)
@@ -461,8 +468,6 @@ class Ui_MainWindow(object):
         self.menuFichier.setObjectName(_fromUtf8("menuFichier"))
         self.menuMonitor = QtGui.QMenu(self.menubar)
         self.menuMonitor.setObjectName(_fromUtf8("menuMonitor"))
-        #~ self.menuAide = QtGui.QMenu(self.menubar)
-        #~ self.menuAide.setObjectName(_fromUtf8("menuAide"))
         MainWindow.setMenuBar(self.menubar)
         
         self.actionLoadProfile = QtGui.QAction(MainWindow)
@@ -490,7 +495,6 @@ class Ui_MainWindow(object):
         
         self.menubar.addAction(self.menuFichier.menuAction())
         self.menubar.addAction(self.menuMonitor.menuAction())
-        #~ self.menubar.addAction(self.menuAide.menuAction())
         
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -534,7 +538,6 @@ class Ui_MainWindow(object):
         self.label_Dfreq_Shader.setText(_translate("MainWindow", "Shader", None))
         self.label_Dfreq_Mem.setText(_translate("MainWindow", "Mem", None))
         self.menuFichier.setTitle(_translate("MainWindow", "Fichier", None))
-        #~ self.menuAide.setTitle(_translate("MainWindow", "Aide", None))
         self.menuMonitor.setTitle(_translate("MainWindow", "Moniteur", None))
         self.actionQuitter.setText(_translate("MainWindow", "Quitter", None))
         self.actionStartMonitor.setText(_translate("MainWindow", "Start", None))

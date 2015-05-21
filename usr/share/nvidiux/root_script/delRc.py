@@ -1,4 +1,5 @@
-#!/bin/bash
+# -*- coding: utf-8 -*-
+#!/usr/bin/python2
 
 # Copyright 2014 Payet Guillaume
 #
@@ -14,21 +15,14 @@
 # You should have received a copy of the GNU General Public License along
 # with this program. If not, see <http://www.gnu.org/licenses/>.
 
-if [ $# -lt 1 ]
-then
-	exit 254
-fi
-if [ ! -e "/usr/share/nvidiux/root_script/$1" ]
-then
-	exit 253
-fi
+import shutil
+import os
+import sys
+if not os.path.isfile("/tmp/nvidiux.rcfile"):
+	sys.exit(1)
+if os.getuid() != 0:
+	sys.exit(2)
 
-if [ $XDG_CURRENT_DESKTOP = "Kde" ] || [ $XDG_CURRENT_DESKTOP = "KDE" ]
-then
-	kdesudo python2 /usr/share/nvidiux/root_script/$1
-	exit $?
-else
-	gksudo python2 /usr/share/nvidiux/root_script/$1
-	exit $?
-fi
-	
+shutil.move("/etc/rc.local","/etc/rc.local.bak")
+shutil.copy("/tmp/nvidiux.rcfile","/etc/rc.local")
+sys.exit(0)

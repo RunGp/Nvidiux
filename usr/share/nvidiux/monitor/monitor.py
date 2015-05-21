@@ -174,7 +174,7 @@ if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 	versionPilote = float(out.split(':')[-1][1:])
 else:
 	sys.exit(1)
-if versionPilote > 346.56:
+if versionPilote > 349.00:
 	tkMessageBox.showwarning("Erreur Version","Le moniteur n'est pas compatible avec cette version:(%s)" % versionPilote)
         sys.exit(1)
 
