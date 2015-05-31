@@ -29,6 +29,7 @@ import sys
 import os
 import threading
 import time
+import psutil
 
 muttex = threading.RLock()
 
@@ -51,14 +52,36 @@ class Gpuinfo():
 	cudaCores = ""
 	openGlVersion = ""
 	version = ""
+	
+class ThreadCheckMonitor(threading.Thread):
+ 
+    def __init__(self,args=[], kwargs={}):
+        threading.Thread.__init__(self)
+        self.args = args
+        self.kwargs = kwargs
+        self.infinite = True 
+        self.timer = None
+ 
+    def run(self,args=0):
+        while self.infinite:
+            self.timer = threading.Timer(1, checkMonitor, self.args, self.kwargs)
+            self.timer.setDaemon(True)
+            self.timer.start()
+            self.timer.join()
+ 
+    def stop(self):
+        self.infinite = False
+        if self.timer != None:
+		if self.timer.isAlive():
+		    self.timer.cancel()
 
 class Mythread(threading.Thread):
  
-    def __init__(self, duree, fonction, args=[], kwargs={}):
+    def __init__(self, duree, fonction,args=[], kwargs={}):
         threading.Thread.__init__(self)
+        self.args = args
         self.duree = duree
         self.fonction = fonction
-        self.args = args
         self.kwargs = kwargs
         self.infinite = True 
  
@@ -99,7 +122,6 @@ def majGpu(numGpu,fen):
 		else:
 			fen.ui.UMem.setText(_fromUtf8("N/A"))
 		
-		
 		if fen.ui.labelFanVitesse.text()[0:4] == "Auto":
 			cmd = "nvidia-settings --query [fan:" + str(numGpu) + "]/GPUCurrentFanSpeed"
 			if not sub.call(cmd ,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
@@ -110,20 +132,25 @@ def majGpu(numGpu,fen):
 					fen.ui.labelFanVitesse.setText(_fromUtf8("???%"))
 			else:
 				fen.ui.labelFanVitesse.setText(_fromUtf8("???%"))
-			
+def checkMonitor(pid,fen):
+	if not psutil.pid_exists(pid):
+		fen.ui.buttonStartMonitor.setText("Start")
+		fen.ui.actionStartMonitor.setText("Start")
+		fen.killTMonitor()
+				
 class ShipHolderApplication(QMainWindow):
-	
 	numGpu = 0
 	tabGpu = []
 	nbGpu = -1
 	nbGpuNvidia = -1
 	optimus = 0
-	nvidiuxVersion = 0.95
+	nvidiuxVersion = 0.96
 	change = 0
 	isFermiArch = []
 	form = ""
 	monitor = False
 	threadInfoGpu = None
+	threadMonitor = None
 	pidMonitor = 0
 	isSli= False
 	error = -1
@@ -133,6 +160,7 @@ class ShipHolderApplication(QMainWindow):
 	updateTime = 1
 	startWithSystem = False
 	valueStart = "0:0"
+	versionPilote = "331.31"
 	argv = []
 	
 	def __init__(self,argv,parent=None):
@@ -194,6 +222,8 @@ class ShipHolderApplication(QMainWindow):
 		if self.change:
 			reply = QtGui.QMessageBox.question(self, _fromUtf8("Message"),_fromUtf8("Etes vous sur de vouloir quitter sans appliquer les modifications ?"), QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
 			if reply == QtGui.QMessageBox.Yes:
+				if self.threadMonitor != None:
+					self.threadMonitor.stop()
 				if self.autoUpdate:
 					self.threadInfoGpu.stop()
 					time.sleep(0.5)
@@ -203,6 +233,8 @@ class ShipHolderApplication(QMainWindow):
 				event.ignore()
 				self.applyNewClock()
 		else:
+			if self.threadMonitor != None:
+				self.threadMonitor.stop()
 			if self.autoUpdate:
 				self.threadInfoGpu.stop()
 				time.sleep(0.5)
@@ -221,7 +253,7 @@ class ShipHolderApplication(QMainWindow):
 		self.ui.buttonConfigureMonitor.connect(self.ui.buttonConfigureMonitor,SIGNAL("released()"),self.configureMonitor)
 		self.ui.buttonConfigure.connect(self.ui.buttonConfigure,SIGNAL("released()"),self.loadPrefWindow)
 		self.ui.buttonApply.connect(self.ui.buttonApply,SIGNAL("released()"),self.applyNewClock)
-		self.ui.SliderShader.connect(self.ui.SliderShader, SIGNAL("sliderMoved(int)"),self.updateshader)
+		#~ self.ui.SliderShader.connect(self.ui.SliderShader, SIGNAL("sliderMoved(int)"),self.updateshader)
 		self.ui.SliderMem.connect(self.ui.SliderMem, SIGNAL("sliderMoved(int)"),self.updateMem)
 		self.ui.SliderGpu.connect(self.ui.SliderGpu, SIGNAL("sliderMoved(int)"),self.updateGpu)
 		self.ui.SliderFan.connect(self.ui.SliderFan, SIGNAL("sliderMoved(int)"),self.changeFanSpeed)
@@ -259,7 +291,10 @@ class ShipHolderApplication(QMainWindow):
 		self.form.show()
 		
 	def changeFanSpeed(self,value):
-		cmd = "nvidia-settings -a [fan:" + str(self.numGpu) + "]/GPUCurrentFanSpeed="+ str(value)
+		if self.versionPilote < 346.99:
+			cmd = "nvidia-settings -a [fan:" + str(self.numGpu) + "]/GPUCurrentFanSpeed="+ str(value)
+		else:
+			cmd = "nvidia-settings -a [fan:" + str(self.numGpu) + "]/GPUTargetFanSpeed="+ str(value)
 		if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 			self.ui.labelFanVitesse.setText(str(value) + "%")
 		else:
@@ -353,12 +388,13 @@ class ShipHolderApplication(QMainWindow):
 		cmd = "nvidia-settings --query [gpu:0]/NvidiaDriverVersion"
 		if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 			out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-			versionPilote = float(out.split(':')[-1][1:])
+			self.versionPilote = float(out.split(':')[-1][1:])
+			
 		else:
 			self.showError(29,"Échec","Impossible de determiner la version des drivers",self.error)
-		if versionPilote > 349.16:
+		if self.versionPilote > 352.09:
 			info = "Driver non testé\n"
-		if versionPilote <= 337.12:
+		if self.versionPilote <= 337.12:
 			self.ui.SliderMem.setEnabled(False)
 			self.ui.SliderGpu.setEnabled(False)
 			self.ui.buttonReset.setEnabled(False)
@@ -450,7 +486,7 @@ class ShipHolderApplication(QMainWindow):
 			if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 				out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
 				try:
-					self.tabGpu[i].freqGpu = out.split(': ')[1].split(',')[0]
+					self.tabGpu[i].freqGpu = int(out.split(': ')[1].split(',')[0])
 				except:
 					print "Text to send:" + str(out)
 					self.showError(39,"Échec","Échec chargement des parametres Gpu",self.error)
@@ -461,7 +497,7 @@ class ShipHolderApplication(QMainWindow):
 				if not sub.call(cmd + " | head -1",stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 					out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
 					try:
-						self.tabGpu[i].freqGpu = out.split(': ')[1].split(',')[0]
+						self.tabGpu[i].freqGpu = int(out.split(': ')[1].split(',')[0])
 					except:
 						print "Text to send:" + str(out)
 						self.showError(40,"Échec","Échec chargement des parametres Gpu",self.error)
@@ -472,10 +508,8 @@ class ShipHolderApplication(QMainWindow):
 			if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 				out, err = sub.Popen(cmd + " | head -3",stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
 				try:
-					self.tabGpu[i].freqShader = out.replace('\n','').split(': ')[1].split('.')[0]
+					self.tabGpu[i].freqShader = int(out.replace('\n','').split(': ')[1].split('.')[0])
 				except: #get an empty response on most gt7XX generation... => shadder = gpu clock
-					if out == "":
-						print "Warn:Null value shader"
 					self.tabGpu[i].freqShader = self.tabGpu[i].freqGpu
 			else:
 				self.showError(34,"Échec","Échec chargement des parametres Gpu",self.error)
@@ -495,7 +529,7 @@ class ShipHolderApplication(QMainWindow):
 			else:
 				self.ui.checkBoxVSync.setChecked(False)
 			
-			if versionPilote < 349.0:
+			if self.versionPilote < 349.0 or self.versionPilote > 352.0:
 				cmd = "nvidia-settings --query [fan:" + str(i) + "]/GPUCurrentFanSpeed" #GPUCurrentFanSpeedRPM for version 349 ...
 				if not sub.call(cmd ,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 					try:
@@ -576,7 +610,7 @@ class ShipHolderApplication(QMainWindow):
 		self.ui.nomGpu.setText(self.tabGpu[self.numGpu].nameGpu)
 		self.ui.MemGpu.setText(_fromUtf8("Memoire video\n" + str(self.tabGpu[self.numGpu].videoRam) + " Go"))
 		self.ui.CudaCore.setText(_fromUtf8("NB coeur cuda\n" + str(self.tabGpu[self.numGpu].cudaCores)))
-		self.ui.PiloteVersion.setText(_fromUtf8("Version du Pilote\n" + str(versionPilote)))
+		self.ui.PiloteVersion.setText(_fromUtf8("Version du Pilote\n" + str(self.versionPilote)))
 		self.ui.OpenGlSupport.setText(_fromUtf8("OpenGl Support\n" + str(self.tabGpu[self.numGpu].openGlVersion)))
 		self.ui.checkBoxSli.setChecked(0)
 		if self.nbGpuNvidia >= 2: #detect sli 2 card with same name
@@ -588,6 +622,10 @@ class ShipHolderApplication(QMainWindow):
 		majGpu(0,self)
 		self.ui.SliderShader.setEnabled(0)
 		self.ui.about.setText("Version " + str(self.nvidiuxVersion))
+		
+	def killTMonitor(self):
+		self.threadMonitor.stop()
+		self.pidMonitor = 0
 		
 	def loadNvidiuxConf(self):
 		try:
@@ -719,7 +757,6 @@ class ShipHolderApplication(QMainWindow):
 		i = 0
 		for gpu in self.tabGpu:
 			offsetGpu = int(self.tabGpu[i].freqGpu) - int(self.tabGpu[i].defaultFreqGpu)
-			#~ offsetShader = int(self.tabGpu[i].freqShader) - int(self.tabGpu[i].defaultFreqShader)
 			offsetMem = int(self.tabGpu[i].freqMem) - int(self.tabGpu[i].defaultFreqMem)
 			try:
 				cmd = "nvidia-settings -a \"[gpu:" + str(i) + "]/GPUGraphicsClockOffset[2]=" + str(offsetGpu) + "\" -a \"[gpu:" + str(i) + "]/GPUMemoryTransferRateOffset[2]=" + str(offsetMem) + "\" >> /dev/null 2>&1" # ;echo $?
@@ -757,6 +794,8 @@ class ShipHolderApplication(QMainWindow):
 				if self.autoUpdate:
 					self.threadInfoGpu.stop()
 					time.sleep(0.5)
+				if self.threadMonitor != None:
+					self.threadMonitor.stop()
 				self.saveNvidiuxConf()
 				self.close()
 			else:
@@ -765,6 +804,8 @@ class ShipHolderApplication(QMainWindow):
 			if self.autoUpdate:
 				self.threadInfoGpu.stop()
 				time.sleep(0.5)
+			if self.threadMonitor != None:
+				self.threadMonitor.stop()
 			self.saveNvidiuxConf()
 			self.close()
 			
@@ -788,7 +829,7 @@ class ShipHolderApplication(QMainWindow):
 	
 	def resizeEvent(self, event):
 		self.showNormal()
-		
+			
 	def setStartSystem(self,start,value):
 		self.startWithSystem = start
 		self.valueStart = value
@@ -849,10 +890,15 @@ class ShipHolderApplication(QMainWindow):
 				self.showError(-1,"Erreur communication","Impossible de communiquer avec le processus monitor",self.warning)
 			self.ui.buttonStartMonitor.setText("Start")
 			self.ui.actionStartMonitor.setText("Start")
+			self.threadMonitor.stop()
 			self.pidMonitor = 0
 		else:
+
 			proc = sub.Popen(['python2', '/usr/share/nvidiux/monitor/monitor.py', "&"])
 			self.pidMonitor = proc.pid
+			
+			self.threadMonitor = ThreadCheckMonitor([proc.pid], {"fen":myApp})
+			self.threadMonitor.start()
 			self.ui.buttonStartMonitor.setText("Stop")
 			self.ui.actionStartMonitor.setText("Stop")
 		return True
@@ -967,11 +1013,12 @@ class ShipHolderApplication(QMainWindow):
 			QMessageBox.information(self, _fromUtf8(title),_fromUtf8(errorMsg))
 		return errorCode
 		
-	def setThread(self,thread):
-		self.threadInfoGpu = thread
+	def setThread(self,threadMonitor,threadInfoGpu):
+		self.threadMonitor = threadMonitor
+		self.threadInfoGpu = threadInfoGpu
 				
-	def updateshader(self,value):
-		return 0
+	#~ def updateshader(self,value):
+		#~ return 0
 		
 	def updateMem(self,value):
 		self.change = 1
@@ -1006,7 +1053,7 @@ class ShipHolderApplication(QMainWindow):
 			return 0
 		if gpuName in notWork:
 			return 1
-		return -1	
+		return -1
 			
 if __name__ == "__main__":
 	app = QApplication(sys.argv)
@@ -1014,11 +1061,13 @@ if __name__ == "__main__":
 	translator=QTranslator()
 	#translator.load(QString("qt_") + locale,LibraryInfo.location(QLibraryInfo.TranslationsPath))
 	myApp = ShipHolderApplication(sys.argv)
+	threadMonitor = ThreadCheckMonitor([0], {"fen":myApp})
+	threadInfoGpu = None
 	if myApp.autoUpdate:
 		threadInfoGpu = Mythread(myApp.updateTime, majGpu, [0], {"fen":myApp})
 		threadInfoGpu.setDaemon(True)
-		myApp.setThread(threadInfoGpu)
 		threadInfoGpu.start()
+	myApp.setThread(threadMonitor,threadInfoGpu)
 	app.installTranslator(translator)
 	myApp.show()
 	sys.exit(app.exec_())
