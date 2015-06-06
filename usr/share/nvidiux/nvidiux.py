@@ -497,7 +497,7 @@ class ShipHolderApplication(QMainWindow):
 				if not sub.call(cmd + " | head -1",stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 					out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
 					try:
-						self.tabGpu[i].freqGpu = int(out.split(': ')[1].split(',')[0])
+						self.tabGpu[i].freqGpu = int(out.split('):')[1].split(',')[0])
 					except:
 						print "Text to send:" + str(out)
 						self.showError(40,"Échec","Échec chargement des parametres Gpu",self.error)
