@@ -101,24 +101,37 @@ def majGpu(numGpu,fen):
 	with muttex: 
 		cmd = "nvidia-settings --query [gpu:" + str(numGpu) + "]/GPUCoreTemp"
 		if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
-			out, err = sub.Popen(cmd + " | grep GPUCore | head -1",stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-			fen.ui.Temp.setText(_fromUtf8("Température\n" + str(out.split(':')[-1].split('.')[0]) + " °C"))
+			try:
+				out, err = sub.Popen(cmd + " | grep GPUCore | head -1",stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+				fen.ui.Temp.setText(_fromUtf8("Température\n" + str(out.split(':')[-1].split('.')[0]) + " °C"))
+			except:
+				fen.ui.Temp.setText(_fromUtf8("N/A"))
+				print "Text to send:" + str(out)
 		else:
 			fen.ui.Temp.setText(_fromUtf8("N/A"))
 
 		cmd = "nvidia-settings --query [gpu:" + str(numGpu) + "]/GPUUtilization"
 		if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
-			out, err = sub.Popen(cmd + "| grep GPUUtilization | head -1",stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-			fen.ui.UPCIE.setText(_fromUtf8("Utilisation Bus PCIE\n" + str(out.split('=')[-1].replace('\n','').replace(',','')) + " %"))
-			fen.ui.UGPU.setText(_fromUtf8("Utilisation Gpu\n" + str(out.split('=')[1].split(',')[0]) + "%"))
+			try:
+				out, err = sub.Popen(cmd + "| grep GPUUtilization | head -1",stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+				fen.ui.UPCIE.setText(_fromUtf8("Utilisation Bus PCIE\n" + str(out.split('=')[-1].replace('\n','').replace(',','')) + " %"))
+				fen.ui.UGPU.setText(_fromUtf8("Utilisation Gpu\n" + str(out.split('=')[1].split(',')[0]) + "%"))
+			except:
+				fen.ui.UPCIE.setText(_fromUtf8("N/A"))
+				fen.ui.UGPU.setText(_fromUtf8("N/A"))
+				print "Text to send:" + str(out)
 		else:
 			fen.ui.UPCIE.setText(_fromUtf8("N/A"))
 			fen.ui.UGPU.setText(_fromUtf8("N/A"))
 
 		cmd = "nvidia-settings --query [gpu:" + str(numGpu) + "]/UsedDedicatedGPUMemory"
 		if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
-			out, err = sub.Popen(cmd + " | grep UsedDedicatedGPUMemory | head -1",stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-			fen.ui.UMem.setText(_fromUtf8("Utilisation Memoire\n" + str(out.split(':')[-1].split('.')[0]) + " Mo"))
+			try:
+				out, err = sub.Popen(cmd + " | grep UsedDedicatedGPUMemory | head -1",stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+				fen.ui.UMem.setText(_fromUtf8("Utilisation Memoire\n" + str(out.split(':')[-1].split('.')[0]) + " Mo"))
+			except:
+				fen.ui.UMem.setText(_fromUtf8("N/A"))
+				print "Text to send:" + str(out)
 		else:
 			fen.ui.UMem.setText(_fromUtf8("N/A"))
 		
@@ -144,7 +157,7 @@ class ShipHolderApplication(QMainWindow):
 	nbGpu = -1
 	nbGpuNvidia = -1
 	optimus = 0
-	nvidiuxVersion = 0.96
+	nvidiuxVersion = 0.961
 	change = 0
 	isFermiArch = []
 	form = ""
@@ -539,7 +552,7 @@ class ShipHolderApplication(QMainWindow):
 						self.tabGpu[i].fanSpeed = 30
 						self.ui.SliderFan.setEnabled(False)
 						self.ui.checkBoxFan.setChecked(False)
-						self.ui.labelFanVitesse.setText("incompatible")
+						self.ui.labelFanVitesse.setText("incompatible(impossible de detecter la vitesse)")
 				else:
 					self.tabGpu[i].fanSpeed = 30
 					
@@ -559,7 +572,7 @@ class ShipHolderApplication(QMainWindow):
 					self.ui.SliderFan.setEnabled(False)
 					self.ui.checkBoxFan.setChecked(False)
 					self.ui.checkBoxFan.setEnabled(False)
-					self.ui.labelFanVitesse.setText("incompatible")
+					self.ui.labelFanVitesse.setText("incompatible(version non supporte)")
 			else:
 				self.ui.SliderFan.setEnabled(False)
 				self.ui.checkBoxFan.setChecked(False)
@@ -574,9 +587,9 @@ class ShipHolderApplication(QMainWindow):
 				self.defineDefaultFreqGpu(gpu.nameGpu)
 				returnCode = self.verifyGpu(gpu.nameGpu)
 				if returnCode == -1:
-					info = info + "Ce gpu " + str(gpu.nameGpu) + "n'est pas dans la base des gpu compatibles"
+					info = info + "Ce gpu " + str(gpu.nameGpu) + " n'est pas dans la liste blanche\nn'hesitez pas à confirmer son fonctionnement"
 				if returnCode == 1:
-					info = info + "Ce gpu " + str(gpu.nameGpu) + "n'est pas compatible"
+					info = info + "Ce gpu " + str(gpu.nameGpu) + " n'est pas compatible (Overclock désactivé !)"
 					self.ui.SliderMem.setEnabled(0)
 					self.ui.SliderGpu.setEnabled(0)
 					self.ui.SliderShader.setEnabled(0)
@@ -584,7 +597,7 @@ class ShipHolderApplication(QMainWindow):
 					self.ui.buttonApply.setEnabled(0)
 					self.ui.Message.setText(_fromUtf8("Gpu( "+ str(gpu.nameGpu) + ")non supporté\nOverclock desactivé"))
 			if info != "":
-					QMessageBox.warning(self, _fromUtf8("Warning"),_fromUtf8(info))	
+					QMessageBox.information(self, _fromUtf8("Information"),_fromUtf8(info))	
 		except:
 			self.showError(41,"Échec","Échec chargement des parametres Gpu",self.error)
 			sys.exit(1)
@@ -1016,10 +1029,7 @@ class ShipHolderApplication(QMainWindow):
 	def setThread(self,threadMonitor,threadInfoGpu):
 		self.threadMonitor = threadMonitor
 		self.threadInfoGpu = threadInfoGpu
-				
-	#~ def updateshader(self,value):
-		#~ return 0
-		
+					
 	def updateMem(self,value):
 		self.change = 1
 		self.tabGpu[self.numGpu].freqMem = value
@@ -1038,7 +1048,7 @@ class ShipHolderApplication(QMainWindow):
 		self.ui.SliderShader.setSliderPosition(self.tabGpu[self.numGpu].freqShader)
 		
 	def verifyGpu(self,gpuName):#-1:unknow 0:ok 1:not ok
-		verified = ["GeForce GT 420M","GeForce GTX 460M","GeForce GTX 460","GeForce GTX 470","GeForce GTX 560M","GeForce GTX 560 Ti","GeForce GTX 570","GeForce GTX 580","GeForce GT 620","GeForce GTX 770"]
+		verified = ["GeForce GT 420M","GeForce GTX 460M","GeForce GTX 460","GeForce GTX 470","GeForce GTX 560M","GeForce GTX 560 Ti","GeForce GTX 570","GeForce GTX 580","GeForce GT 620","GeForce GT 630","GeForce GTX 660","GeForce GTX 770"]
 		notWork = ["GeForce GTX TITAN Z","GeForce GTX TITAN Black","GeForce GTX TITAN","GeForce GTX 690","GeForce GTX 590",
 		"GeForce GT 340", "GeForce GT 330", "GeForce GT 320", "GeForce 315", "GeForce 310","GeForce GTS 360M", "GeForce GTS 350M", "GeForce GT 335M", "GeForce GT 330M","GeForce GT 325M", "GeForce GT 320M", "GeForce 320M", "GeForce 315M", "GeForce 310M", "GeForce 305M",
 		"GeForce GTX 295", "GeForce GTX 285","GeForce GTX 280", "GeForce GTX 275", "GeForce GTX 260", "GeForce GTS 250", "GeForce GTS 240", "GeForce GT 230", "GeForce GT 240", "GeForce GT 220", "GeForce G210", "GeForce 210", "GeForce 205",
