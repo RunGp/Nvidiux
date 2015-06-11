@@ -1,4 +1,4 @@
-# Nvidiux beta version 0.95
+# Nvidiux beta version 0.96
 
 Nvidiux is a graphical python tool to overclock or underclock your nvidia gpu  (generation 4XX  5XX  6XX) 
 For newer gpu support is not complete

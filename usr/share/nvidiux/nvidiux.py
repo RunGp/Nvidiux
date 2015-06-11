@@ -157,7 +157,7 @@ class ShipHolderApplication(QMainWindow):
 	nbGpu = -1
 	nbGpuNvidia = -1
 	optimus = 0
-	nvidiuxVersion = 0.961
+	nvidiuxVersion = 0.962
 	change = 0
 	isFermiArch = []
 	form = ""
@@ -460,17 +460,7 @@ class ShipHolderApplication(QMainWindow):
 			else:
 				self.tabGpu[i].cudaCores = "N/A"
 			
-			cmd = "nvidia-settings --query [gpu:" + str(i) + "]/GPUPerfModes | grep memTransferRatemax= | tail -1"
-			if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
-				out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-				try:
-					self.tabGpu[i].freqMem = out.split(',')[1].split('=')[1]
-				except:
-					print "Text to send:" + str(out)
-					self.showError(36,"Échec","Échec chargement des parametres Gpu",self.error)
-					sys.exit(1)
-			else:
-				self.showError(31,"Échec","Échec chargement des parametres Gpu",self.error)
+			
 				
 			cmd = "nvidia-settings --query [gpu:" + str(i) + "]/NvidiaDriverVersion"
 			if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
@@ -495,37 +485,84 @@ class ShipHolderApplication(QMainWindow):
 			else:
 				self.tabGpu[i].openGlVersion = "N/A"
 			
-			cmd = "nvidia-settings --query [gpu:" + str(i) + "]/GPU3DClockFreqs"
+			cmd = "nvidia-settings --query [gpu:" + str(i) + "]/GPUCurrentClockFreqsString"
 			if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 				out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
 				try:
-					self.tabGpu[i].freqGpu = int(out.split(': ')[1].split(',')[0])
+					self.tabGpu[i].freqGpu = int(out.split('nvclockmax=')[1].split(',')[0])
 				except:
 					print "Text to send:" + str(out)
 					self.showError(39,"Échec","Échec chargement des parametres Gpu",self.error)
 					sys.exit(1)
-					
-			else:
-				cmd = "nvidia-settings --query [gpu:" + str(i) + "]/GPUCurrentClockFreqs"
-				if not sub.call(cmd + " | head -1",stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
-					out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-					try:
-						self.tabGpu[i].freqGpu = int(out.split('):')[1].split(',')[0])
-					except:
-						print "Text to send:" + str(out)
-						self.showError(40,"Échec","Échec chargement des parametres Gpu",self.error)
-						sys.exit(1)
-				else:
-					self.showError(33,"Échec","Échec chargement des parametres Gpu",self.error)
-			cmd = "nvidia-settings --query [gpu:" + str(i) + "]/GPUCurrentProcessorClockFreqs"
+			
+			cmd = "nvidia-settings --query [gpu:" + str(i) + "]/GPUCurrentClockFreqsString"
 			if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
-				out, err = sub.Popen(cmd + " | head -3",stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+				out, err = sub.Popen(cmd ,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
 				try:
-					self.tabGpu[i].freqShader = int(out.replace('\n','').split(': ')[1].split('.')[0])
-				except: #get an empty response on most gt7XX generation... => shadder = gpu clock
-					self.tabGpu[i].freqShader = self.tabGpu[i].freqGpu
+					self.tabGpu[i].freqShader = int(out.split('processorclockmax=')[1].split(',')[0])
+				except:
+					print "Text to send:" + str(out)
+					self.showError(40,"Échec","Échec chargement des parametres Gpu",self.error)
+					sys.exit(1)
 			else:
 				self.showError(34,"Échec","Échec chargement des parametres Gpu",self.error)
+			
+			cmd = "nvidia-settings --query [gpu:" + str(i) + "]/GPUCurrentClockFreqsString"
+			if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
+				out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+				try:
+					self.tabGpu[i].freqMem = int(out.split('memTransferRatemax=')[1].split(',')[0])
+				except:
+					print "Text to send:" + str(out)
+					self.showError(36,"Échec","Échec chargement des parametres Gpu",self.error)
+					sys.exit(1)
+			else:
+				self.showError(31,"Échec","Échec chargement des parametres Gpu",self.error)
+				
+			#~ cmd = "nvidia-settings --query [gpu:" + str(i) + "]/GPUPerfModes | grep memTransferRatemax= | tail -1"
+			#~ if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
+				#~ out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+				#~ try:
+					#~ self.tabGpu[i].freqMem = out.split(',')[1].split('=')[1]
+				#~ except:
+					#~ print "Text to send:" + str(out)
+					#~ self.showError(36,"Échec","Échec chargement des parametres Gpu",self.error)
+					#~ sys.exit(1)
+			#~ else:
+				#~ self.showError(31,"Échec","Échec chargement des parametres Gpu",self.error)
+			
+			#~ cmd = "nvidia-settings --query [gpu:" + str(i) + "]/GPU3DClockFreqs"
+			#~ if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
+				#~ out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+				#~ try:
+					#~ self.tabGpu[i].freqGpu = int(out.split(': ')[1].split(',')[0])
+				#~ except:
+					#~ print "Text to send:" + str(out)
+					#~ self.showError(39,"Échec","Échec chargement des parametres Gpu",self.error)
+					#~ sys.exit(1)
+					#~ 
+			#~ else:
+				#~ cmd = "nvidia-settings --query [gpu:" + str(i) + "]/GPUCurrentClockFreqs"
+				#~ if not sub.call(cmd + " | head -1",stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
+					#~ out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+					#~ try:
+						#~ self.tabGpu[i].freqGpu = int(out.split('):')[1].split(',')[0])
+					#~ except:
+						#~ print "Text to send:" + str(out)
+						#~ self.showError(40,"Échec","Échec chargement des parametres Gpu",self.error)
+						#~ sys.exit(1)
+				#~ else:
+					#~ self.showError(33,"Échec","Échec chargement des parametres Gpu",self.error)
+			
+			#~ cmd = "nvidia-settings --query [gpu:" + str(i) + "]/GPUCurrentProcessorClockFreqs"
+			#~ if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
+				#~ out, err = sub.Popen(cmd + " | head -3",stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+				#~ try:
+					#~ self.tabGpu[i].freqShader = int(out.replace('\n','').split(': ')[1].split('.')[0])
+				#~ except: #get an empty response on most gt7XX generation... => shadder = gpu clock
+					#~ self.tabGpu[i].freqShader = self.tabGpu[i].freqGpu
+			#~ else:
+				#~ self.showError(34,"Échec","Échec chargement des parametres Gpu",self.error)
 			
 			if int(self.tabGpu[i].freqShader) == int(self.tabGpu[i].freqGpu) * 2 or int(self.tabGpu[i].freqShader) == int(self.tabGpu[i].freqGpu) * 2 + 1:
 				self.isFermiArch.append(True);
