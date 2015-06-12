@@ -106,7 +106,6 @@ def majGpu(numGpu,fen):
 				fen.ui.Temp.setText(_fromUtf8("Température\n" + str(out.split(':')[-1].split('.')[0]) + " °C"))
 			except:
 				fen.ui.Temp.setText(_fromUtf8("N/A"))
-				print "Text to send:" + str(out)
 		else:
 			fen.ui.Temp.setText(_fromUtf8("N/A"))
 
@@ -119,7 +118,6 @@ def majGpu(numGpu,fen):
 			except:
 				fen.ui.UPCIE.setText(_fromUtf8("N/A"))
 				fen.ui.UGPU.setText(_fromUtf8("N/A"))
-				print "Text to send:" + str(out)
 		else:
 			fen.ui.UPCIE.setText(_fromUtf8("N/A"))
 			fen.ui.UGPU.setText(_fromUtf8("N/A"))
@@ -131,7 +129,6 @@ def majGpu(numGpu,fen):
 				fen.ui.UMem.setText(_fromUtf8("Utilisation Memoire\n" + str(out.split(':')[-1].split('.')[0]) + " Mo"))
 			except:
 				fen.ui.UMem.setText(_fromUtf8("N/A"))
-				print "Text to send:" + str(out)
 		else:
 			fen.ui.UMem.setText(_fromUtf8("N/A"))
 		
@@ -157,7 +154,8 @@ class ShipHolderApplication(QMainWindow):
 	nbGpu = -1
 	nbGpuNvidia = -1
 	optimus = 0
-	nvidiuxVersion = 0.962
+	nvidiuxVersionStr = "0.96d"
+	nvidiuxVersion = 0.96
 	change = 0
 	isFermiArch = []
 	form = ""
@@ -189,7 +187,7 @@ class ShipHolderApplication(QMainWindow):
 		tabigpu.append(self.updateTime)
 		tabigpu.append(self.startWithSystem)
 		tabigpu.append(self.valueStart)
-		self.form = Ui_Pref(2,self.nvidiuxVersion,tabigpu,self)
+		self.form = Ui_Pref(2,self.nvidiuxVersionStr,tabigpu,self)
 		self.form.show()
 		
 	def applyNewClock(self):
@@ -300,7 +298,7 @@ class ShipHolderApplication(QMainWindow):
 		tabigpu.append(self.updateTime)
 		tabigpu.append(self.startWithSystem)
 		tabigpu.append(self.valueStart)
-		self.form = Ui_Pref(1,self.nvidiuxVersion,tabigpu,self)
+		self.form = Ui_Pref(1,self.nvidiuxVersionStr,tabigpu,self)
 		self.form.show()
 		
 	def changeFanSpeed(self,value):
@@ -494,22 +492,10 @@ class ShipHolderApplication(QMainWindow):
 					print "Text to send:" + str(out)
 					self.showError(39,"Échec","Échec chargement des parametres Gpu",self.error)
 					sys.exit(1)
-			
-			cmd = "nvidia-settings --query [gpu:" + str(i) + "]/GPUCurrentClockFreqsString"
-			if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
-				out, err = sub.Popen(cmd ,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
 				try:
 					self.tabGpu[i].freqShader = int(out.split('processorclockmax=')[1].split(',')[0])
 				except:
-					print "Text to send:" + str(out)
-					self.showError(40,"Échec","Échec chargement des parametres Gpu",self.error)
-					sys.exit(1)
-			else:
-				self.showError(34,"Échec","Échec chargement des parametres Gpu",self.error)
-			
-			cmd = "nvidia-settings --query [gpu:" + str(i) + "]/GPUCurrentClockFreqsString"
-			if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
-				out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+					self.tabGpu[i].freqShader = self.tabGpu[i].freqGpu #get an empty response on most gt6,7,8XX generation... => shadder = gpu clock
 				try:
 					self.tabGpu[i].freqMem = int(out.split('memTransferRatemax=')[1].split(',')[0])
 				except:
@@ -671,7 +657,7 @@ class ShipHolderApplication(QMainWindow):
 		
 		majGpu(0,self)
 		self.ui.SliderShader.setEnabled(0)
-		self.ui.about.setText("Version " + str(self.nvidiuxVersion))
+		self.ui.about.setText("Version " + self.nvidiuxVersionStr)
 		
 	def killTMonitor(self):
 		self.threadMonitor.stop()
@@ -721,7 +707,7 @@ class ShipHolderApplication(QMainWindow):
 		tabigpu.append(self.updateTime)
 		tabigpu.append(self.startWithSystem)
 		tabigpu.append(self.valueStart)
-		self.form = Ui_Pref(0,self.nvidiuxVersion,tabigpu,self)
+		self.form = Ui_Pref(0,self.nvidiuxVersionStr,tabigpu,self)
 		self.form.show()
 	
 	def loadProfile(self,path="",defaultOnly=False):
@@ -1085,7 +1071,7 @@ class ShipHolderApplication(QMainWindow):
 		self.ui.SliderShader.setSliderPosition(self.tabGpu[self.numGpu].freqShader)
 		
 	def verifyGpu(self,gpuName):#-1:unknow 0:ok 1:not ok
-		verified = ["GeForce GT 420M","GeForce GTX 460M","GeForce GTX 460","GeForce GTX 470","GeForce GTX 560M","GeForce GTX 560 Ti","GeForce GTX 570","GeForce GTX 580","GeForce GT 620","GeForce GT 630","GeForce GTX 660","GeForce GTX 770"]
+		verified = ["GeForce GT 420M","GeForce GTX 460M","GeForce GTX 460","GeForce GTX 470","GeForce GTX 560M","GeForce GTX 560 Ti","GeForce GTX 570","GeForce GTX 580","GeForce GT 620","GeForce GT 630","GeForce GTX 650","GeForce GTX 660","GeForce GTX 770"]
 		notWork = ["GeForce GTX TITAN Z","GeForce GTX TITAN Black","GeForce GTX TITAN","GeForce GTX 690","GeForce GTX 590",
 		"GeForce GT 340", "GeForce GT 330", "GeForce GT 320", "GeForce 315", "GeForce 310","GeForce GTS 360M", "GeForce GTS 350M", "GeForce GT 335M", "GeForce GT 330M","GeForce GT 325M", "GeForce GT 320M", "GeForce 320M", "GeForce 315M", "GeForce 310M", "GeForce 305M",
 		"GeForce GTX 295", "GeForce GTX 285","GeForce GTX 280", "GeForce GTX 275", "GeForce GTX 260", "GeForce GTS 250", "GeForce GTS 240", "GeForce GT 230", "GeForce GT 240", "GeForce GT 220", "GeForce G210", "GeForce 210", "GeForce 205",

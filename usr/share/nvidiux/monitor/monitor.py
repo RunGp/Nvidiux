@@ -55,7 +55,13 @@ def color(value):
 		return "white"
 	
 def loop():
-	if gpu1.ABS >= 580:
+	if gpu1.ABS >= 575:
+		#~ tempchart.xview_moveto((gpu1.ABS - 575 ) / 5 * 0.00050)
+		#~ for i in range (1,6):
+			#~ tempchartText = tempchart.create_text(2, 381 - i * 76, anchor="nw",fill = "grey")
+			#~ tempchart.itemconfig(tempchartText, text = str(int(i * 24)) + "°C")
+			#~ tempchart.insert(tempchartText, 12, "")
+			#~ tempchart.create_line(gpu1.ABS, i * 76,gpu1.ABS + 580, i * 76,fill = "grey")
 		fanchart.delete("all")
 		tempchart.delete("all")
 		gpuchart.delete("all")
@@ -261,8 +267,12 @@ else:
 mainframe=Frame(tkRT)
 mainframe.pack()
 
+
 tempchart=Canvas(mainframe,width=580,height=380,bg="black")
+tempchart.config(scrollregion=[0,0,10000,380])
 tempchart.grid(column=0,row=4)
+
+
 Label(mainframe,textvariable = templabel).grid(column=0,row=3)
 
 fanchart=Canvas(mainframe,width=580,height=380,bg="black")
