@@ -154,7 +154,7 @@ class ShipHolderApplication(QMainWindow):
 	nbGpu = -1
 	nbGpuNvidia = -1
 	optimus = 0
-	nvidiuxVersionStr = "0.96d"
+	nvidiuxVersionStr = "0.96e"
 	nvidiuxVersion = 0.96
 	change = 0
 	isFermiArch = []
@@ -264,7 +264,6 @@ class ShipHolderApplication(QMainWindow):
 		self.ui.buttonConfigureMonitor.connect(self.ui.buttonConfigureMonitor,SIGNAL("released()"),self.configureMonitor)
 		self.ui.buttonConfigure.connect(self.ui.buttonConfigure,SIGNAL("released()"),self.loadPrefWindow)
 		self.ui.buttonApply.connect(self.ui.buttonApply,SIGNAL("released()"),self.applyNewClock)
-		#~ self.ui.SliderShader.connect(self.ui.SliderShader, SIGNAL("sliderMoved(int)"),self.updateshader)
 		self.ui.SliderMem.connect(self.ui.SliderMem, SIGNAL("sliderMoved(int)"),self.updateMem)
 		self.ui.SliderGpu.connect(self.ui.SliderGpu, SIGNAL("sliderMoved(int)"),self.updateGpu)
 		self.ui.SliderFan.connect(self.ui.SliderFan, SIGNAL("sliderMoved(int)"),self.changeFanSpeed)
@@ -403,7 +402,7 @@ class ShipHolderApplication(QMainWindow):
 			
 		else:
 			self.showError(29,"Échec","Impossible de determiner la version des drivers",self.error)
-		if self.versionPilote > 352.09:
+		if self.versionPilote > 352.21:
 			info = "Driver non testé\n"
 		if self.versionPilote <= 337.12:
 			self.ui.SliderMem.setEnabled(False)
@@ -790,19 +789,32 @@ class ShipHolderApplication(QMainWindow):
 		
 	def overclock(self,mode):
 		success = False
+		overclock = False
 		i = 0
-		for gpu in self.tabGpu:
-			offsetGpu = int(self.tabGpu[i].freqGpu) - int(self.tabGpu[i].defaultFreqGpu)
-			offsetMem = int(self.tabGpu[i].freqMem) - int(self.tabGpu[i].defaultFreqMem)
+		maxNivPerf = 2
+		cmd = "nvidia-settings --query [gpu:" + str(i) + "]/GPUPerfModes"
+		if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
+			out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
 			try:
-				cmd = "nvidia-settings -a \"[gpu:" + str(i) + "]/GPUGraphicsClockOffset[2]=" + str(offsetGpu) + "\" -a \"[gpu:" + str(i) + "]/GPUMemoryTransferRateOffset[2]=" + str(offsetMem) + "\" >> /dev/null 2>&1" # ;echo $?
-				if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
-					success = True
-				else:
-					success = False
-					break
+				maxNivPerf = int(out.split("perf=")[-1].split(",")[0])
+				overclock = True
 			except:
-				self.showError(-1,"Erreur","Erreur interne overclock/downclock impossible",self.warning)						
+				maxNivPerf = 2
+		else:
+			success = False
+		if overclock:
+			for gpu in self.tabGpu:
+				offsetGpu = int(self.tabGpu[i].freqGpu) - int(self.tabGpu[i].defaultFreqGpu)
+				offsetMem = int(self.tabGpu[i].freqMem) - int(self.tabGpu[i].defaultFreqMem)
+				try:
+					cmd = "nvidia-settings -a \"[gpu:" + str(i) + "]/GPUGraphicsClockOffset[ " + str(maxNivPerf) + "]=" + str(offsetGpu) + "\" -a \"[gpu:" + str(i) + "]/GPUMemoryTransferRateOffset[" + str(maxNivPerf) + "]=" + str(offsetMem) + "\" >> /dev/null 2>&1"
+					if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
+						success = True
+					else:
+						success = False
+						break
+				except:
+					self.showError(-1,"Erreur","Erreur interne overclock/downclock impossible",self.warning)						
 		if success:
 			if mode == "1":
 				self.showError(0,"Effectué","Changement effectué",self.info)
