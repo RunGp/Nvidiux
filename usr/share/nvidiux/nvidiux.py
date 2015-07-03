@@ -187,7 +187,7 @@ class ShipHolderApplication(QMainWindow):
 		tabigpu.append(self.updateTime)
 		tabigpu.append(self.startWithSystem)
 		tabigpu.append(self.valueStart)
-		self.form = Ui_Pref(2,self.nvidiuxVersionStr,tabigpu,self)
+		self.form = Ui_Pref(2,self.nvidiuxVersionStr,self.nvidiuxVersion,tabigpu,self)
 		self.form.show()
 		
 	def applyNewClock(self):
@@ -297,7 +297,7 @@ class ShipHolderApplication(QMainWindow):
 		tabigpu.append(self.updateTime)
 		tabigpu.append(self.startWithSystem)
 		tabigpu.append(self.valueStart)
-		self.form = Ui_Pref(1,self.nvidiuxVersionStr,tabigpu,self)
+		self.form = Ui_Pref(1,self.nvidiuxVersionStr,self.nvidiuxVersion,tabigpu,self)
 		self.form.show()
 		
 	def changeFanSpeed(self,value):
@@ -706,7 +706,7 @@ class ShipHolderApplication(QMainWindow):
 		tabigpu.append(self.updateTime)
 		tabigpu.append(self.startWithSystem)
 		tabigpu.append(self.valueStart)
-		self.form = Ui_Pref(0,self.nvidiuxVersionStr,tabigpu,self)
+		self.form = Ui_Pref(0,self.nvidiuxVersionStr,self.nvidiuxVersion,tabigpu,self)
 		self.form.show()
 	
 	def loadProfile(self,path="",defaultOnly=False):
@@ -1083,7 +1083,7 @@ class ShipHolderApplication(QMainWindow):
 		self.ui.SliderShader.setSliderPosition(self.tabGpu[self.numGpu].freqShader)
 		
 	def verifyGpu(self,gpuName):#-1:unknow 0:ok 1:not ok
-		verified = ["GeForce GT 420M","GeForce GTX 460M","GeForce GTX 460","GeForce GTX 470","GeForce GTX 560M","GeForce GTX 560 Ti","GeForce GTX 570","GeForce GTX 580","GeForce GT 620","GeForce GT 630","GeForce GTX 650","GeForce GTX 660","GeForce GTX 770"]
+		verified = ["GeForce GT 420M","GeForce GTX 460M","GeForce GTX 460","GeForce GTX 470","GeForce GTX 560M","GeForce GTX 560 Ti","GeForce GTX 570","GeForce GTX 580","GeForce GT 620","GeForce GT 630","GeForce GTX 650","GeForce GTX 660","GeForce GTX 750","GeForce GTX 750 TI","GeForce GTX 770"]
 		notWork = ["GeForce GTX TITAN Z","GeForce GTX TITAN Black","GeForce GTX TITAN","GeForce GTX 690","GeForce GTX 590",
 		"GeForce GT 340", "GeForce GT 330", "GeForce GT 320", "GeForce 315", "GeForce 310","GeForce GTS 360M", "GeForce GTS 350M", "GeForce GT 335M", "GeForce GT 330M","GeForce GT 325M", "GeForce GT 320M", "GeForce 320M", "GeForce 315M", "GeForce 310M", "GeForce 305M",
 		"GeForce GTX 295", "GeForce GTX 285","GeForce GTX 280", "GeForce GTX 275", "GeForce GTX 260", "GeForce GTS 250", "GeForce GTS 240", "GeForce GT 230", "GeForce GT 240", "GeForce GT 220", "GeForce G210", "GeForce 210", "GeForce 205",

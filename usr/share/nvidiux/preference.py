@@ -54,10 +54,11 @@ class Ui_Pref(QWidget):
 	home = ""
 	mainWindows = None
 	
-	def __init__(self,loadTab,version,tabigpu,mainW,parent=None):
+	def __init__(self,loadTab,versionStr,version,tabigpu,mainW,parent=None):
 		super (Ui_Pref, self).__init__(parent)
 		self.loadTab = loadTab
 		self.version = version
+		self.versionStr = versionStr
 		self.nbGpuNvidia = tabigpu[0]
 		self.tabGpu = tabigpu[1]
 		self.autoUpdateValue = tabigpu[2]
@@ -238,7 +239,7 @@ class Ui_Pref(QWidget):
 		font.setWeight(75)
 		font.setStyleStrategy(QtGui.QFont.PreferAntialias)
 		self.labelInfo.setFont(font)
-		self.labelInfo.setText(_fromUtf8("Permet d'underclocker ou d'overclocker votre gpu nvidia\nVersion " + self.version + "\n(C) 2014 Payet Guillaume\nNvidiux n'est en aucun cas affilié à Nvidia"))
+		self.labelInfo.setText(_fromUtf8("Permet d'underclocker ou d'overclocker votre gpu nvidia\nVersion " + self.versionStr + "\n(C) 2014 Payet Guillaume\nNvidiux n'est en aucun cas affilié à Nvidia"))
 		self.textBrowser = QtGui.QTextBrowser(self.tabAbout)
 		self.textBrowser.setGeometry(QtCore.QRect(10, 280, 580, 240))
 		txtFile = open('/usr/share/nvidiux/gpl-3.0.txt', 'r')
@@ -345,7 +346,7 @@ class Ui_Pref(QWidget):
 	def loadProfile(self,path = ""):
 		if path == "":
 			profileFileName = QtGui.QFileDialog.getOpenFileName(self,'Ouvrir profil',"","*.ndi") 
-			if profileFileName == "":
+			if profileFileName == "" or profileFileName == None:
 				return None
 		else:
 			profileFileName = path

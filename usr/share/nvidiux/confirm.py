@@ -63,7 +63,7 @@ class ConfirmWindow(QWidget):
 		self.texteula = QPlainTextEdit(self)
 		self.texteula.move(0,150)
 		self.texteula.resize(520,270)
-		self.texteula.setPlainText(_fromUtf8("FR Version\nAttention cette pratique peut annuler la garantie du produit et reste à l'entière responsabilité de l'utilisateur du logiciel. Ni le concepteur du logiciel ni la communauté gnu ne pourra pas être tenu responsable de toutes mauvaises manipulations ayant entrainé un quelconque dégât direct ou en conséquence de l'utilisation de Nvidiux.\nNvidiux n'est en aucun cas affilié à Nvidia.\nEN Version\nThe author and community are not responsible of bad use and no liability for damages, direct or consequential, which may result from the use of Nvidiux.\nNvidiux is in no way affiliated to Nvidia."))
+		self.texteula.setPlainText(_fromUtf8("FR Version\nAttention cette pratique peut annuler la garantie du produit et reste à l'entière responsabilité de l'utilisateur du logiciel. Ni le concepteur du logiciel ni la communauté gnu ne pourra pas être tenu responsable de toutes mauvaises manipulations ayant entrainé un quelconque dégât direct ou en conséquence de l'utilisation de Nvidiux.\nNvidiux n'est en aucun cas affilié à Nvidia.\n----------------------------------------------------------------------------------------------------\nEN Version\nThe author and community are not responsible of bad use and no liability for damages, direct or consequential, which may result from the use of Nvidiux.\nNvidiux is in no way affiliated to Nvidia."))
 		self.texteula.setReadOnly(True)
 		self.buttonCancel.connect(self.buttonCancel, SIGNAL("released()"),self.quitapp)
 		self.buttonConfirm.connect(self.buttonConfirm, SIGNAL("released()"),self.confirm)
