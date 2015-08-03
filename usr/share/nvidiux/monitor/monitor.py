@@ -52,10 +52,29 @@ class ElementConfGpu():
 	show = False
 
 	def __init__(self, idGpu,color, show):
-		self.idGpu = int(idGpu)
-		self.color[0] = int(color.split(':')[0])
-		self.color[1] = int(color.split(':')[1])
-		self.color[2] = int(color.split(':')[2])
+		try:
+			if int(idGpu) > 0:
+				self.idGpu = int(idGpu)
+			else:
+				self.idGpu = 1
+			if int(color.split(':')[0]) >= 0 and int(color.split(':')[0]) <= 255:
+				self.color[0] = int(color.split(':')[0])
+			else:
+				self.color[0] = 255
+			if int(color.split(':')[1]) >= 0 and int(color.split(':')[1]) <= 255:
+				self.color[1] = int(color.split(':')[1])
+			else:
+				self.color[1] = 255
+			if int(color.split(':')[2]) >= 0 and int(color.split(':')[2]) <= 255:
+				self.color[2] = int(color.split(':')[2])
+			else:
+				self.color[2] = 255
+		except:
+			self.idGpu = 1
+			self.color[0] = 255
+			self.color[1] = 0
+			self.color[2] = 0
+			
 		if show == "True":
 			self.show = True
 		else:
@@ -66,7 +85,7 @@ class ElementConfGpu():
 	def getId(self):
 		return self.idGpu
 	def getColor(self):
-		return self.color
+		return "#%02x%02x%02x" % (self.color[0],self.color[1],self.color[2])
 	def getColorStr(self):
 		return str(self.color[0]) + ":" + str(self.color[1]) + ":" + str(self.color[2])
 	def getShow(self):
@@ -74,7 +93,7 @@ class ElementConfGpu():
 
 def color(value):
 	if value == 0:
-		return "red"
+		return confGpu[0].getColor()
 	elif value == 1:
 		return "blue"
 	elif value == 2:
@@ -127,7 +146,7 @@ def loop():
 		memchart.delete("all")
 		gpu1.ABS = 0
 
-	if gpu1.ABS == 0:
+	if gpu1.ABS == 0: # draw line
 		for i in range (1,6):
 			fanchart.create_line(0, i * 76,580, i * 76,fill = "grey")
 			fanchartText = fanchart.create_text(2, 381 - i * 76, anchor="nw",fill = "grey")
@@ -153,6 +172,8 @@ def loop():
 			if nbGpuNvidia == 1:
 				gpu1.templabel = "Temp : " + str(out.split(':')[-1].split('.')[0]) + "°C"
 				templabel.set(gpu1.templabel)
+			else:
+				templabel.set("Multi GPU")
 		else:
 			sys.exit(0)
 		newPointTemp = 380 - int(int(out.split(':')[-1].split('.')[0]) * 380 / 125)
@@ -167,6 +188,8 @@ def loop():
 			if nbGpuNvidia == 1:
 				gpu1.fanlabel = "Fan : " + str(out.split(': ')[1].split('.')[0]) + "%"
 				fanlabel.set(gpu1.fanlabel)
+			else:
+				fanlabel.set("Multi GPU")
 		else:
 			sys.exit(0)
 		
@@ -182,11 +205,12 @@ def loop():
 			if nbGpuNvidia == 1:
 				gpu1.gpulabel = "Core : " + str(out.split('=')[1].split(',')[0]) + "%"
 				gpulabel.set(gpu1.gpulabel)
+			else:
+				gpulabel.set("Multi GPU")
 		else:
 			sys.exit(0)
 		newPointGpu = int( 380 - int(out.split('=')[1].split(',')[0]) * 380 / 100)
 		gpuchart.create_line(gpu1.ABS,gpu1.oldPointGpu,gpu1.ABS + 5,newPointGpu,fill=color(i))
-		
 	gpu1.oldPointGpu = newPointGpu	
 	
 	for i in range(0,nbGpuNvidia):
@@ -196,6 +220,8 @@ def loop():
 			if nbGpuNvidia == 1:
 				gpu1.memlabel = "Mem : " + str(out.split(':')[-1].split('.')[0]) + " Mo"
 				memlabel.set(gpu1.memlabel)
+			else:
+				memlabel.set("Multi GPU")
 		else:
 			sys.exit(0)
 		newPointMem = int(380 - int(out.split(':')[-1].split('.')[0]) * 380 / gpu1.totalMem)
@@ -216,19 +242,9 @@ def loop():
 				sys.exit(1)
 		else:
 			self.showError(31,"Échec","Échec chargement des parametres Gpu",self.error)
-		#~ cmd = "nvidia-settings --query [gpu:0]/GPU3DClockFreqs"
-		#~ if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
-			#~ out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-			#~ self.tabGpu[i].freqGpu = out.split(': ')[1].split(',')[0]
-		#~ else:
-			#~ cmd = "nvidia-settings --query [gpu:0]/GPUCurrentClockFreqs"
-			#~ if not sub.call(cmd + " | head -1",stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
-				#~ out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-				#~ coreclklabel.set("Core : " + out.split(': ')[1].split(',')[0] + "Mhz")
-			#~ else:
-				#~ sys.exit(1)
 	else:
 		coreclklabel.set("Multi GPU")
+		
 			
 	gpu1.ABS = gpu1.ABS + 5
 	gpu1.time = gpu1.time + interval
@@ -237,6 +253,7 @@ def loop():
 	else:
 		timeLabel.set("Temps écoulé : " + str(int(gpu1.time / 1000)) + " secondes")
 	tkRT.after(interval,loop)
+
 
 
 interval = 1000
@@ -271,21 +288,21 @@ else:
 itemlist = ndiFile.getElementsByTagName('gpu')
 error = True
 errorCode = 0
-listgpu = []
-gpu =[]
+listGpu = []
+gpuInfo = [] #idGpu,color, show
 if len(itemlist) > 0:
 	for item in itemlist:
 		if item.hasChildNodes():
 			for value in item.childNodes:
 				if value.nodeType == minidom.Node.ELEMENT_NODE:
-					gpu.append(value.firstChild.nodeValue)
+					gpuInfo.append(value.firstChild.nodeValue)
 				error = False
-			listgpu.append(gpu)
-			gpu = []	
-
+			listGpu.append(gpuInfo)
+			gpuInfo = []
 confGpu = []
-for gpu in listgpu:
-	confGpu.append(ElementConfGpu(gpu[0],gpu[1],gpu[2]))
+for gpuInfo in listGpu:
+	confGpu.append(ElementConfGpu(gpuInfo[0],gpuInfo[1],gpuInfo[2])) #3 inf for each gpu (idGpu,color, show)
+	
 
 		
 cmd = "nvidia-settings --query [gpu:0]/NvidiaDriverVersion"

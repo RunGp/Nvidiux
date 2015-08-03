@@ -328,14 +328,26 @@ class Ui_Pref(QWidget):
 		self.tabMoniteur = QtGui.QWidget()
 		self.tabMoniteur.setObjectName(_fromUtf8("tabMoniteur"))
 		self.tabWidget.addTab(self.tabMoniteur, _fromUtf8(""))
-		#~ self.checkBoxUpdateMon = QtGui.QCheckBox(self.tabMoniteur)
-		#~ self.checkBoxUpdateMon.setGeometry(QtCore.QRect(10, 20, 340, 20))
-		#~ self.checkBoxUpdateMon.setObjectName(_fromUtf8("checkBoxUpdateMon"))
-		#~ self.labelUpdateMon = QtGui.QLabel(self.tabMoniteur)
-		#~ self.labelUpdateMon.setGeometry(QtCore.QRect(40, 20, 340, 20))
-		#~ self.labelUpdateMon.setObjectName(_fromUtf8("UpdateMon"))
-		#~ self.checkBoxUpdateMon.setEnabled(False)
-		#~ self.labelUpdateMon.setText("Rafraichissement continu")
+		
+		
+		self.checkBoxUpdateMon = QtGui.QCheckBox(self.tabMoniteur)
+		self.checkBoxUpdateMon.setGeometry(QtCore.QRect(10, 20, 340, 20))
+		self.checkBoxUpdateMon.setObjectName(_fromUtf8("checkBoxUpdateMon"))
+		self.labelUpdateMon = QtGui.QLabel(self.tabMoniteur)
+		self.labelUpdateMon.setGeometry(QtCore.QRect(40, 20, 340, 20))
+		self.labelUpdateMon.setObjectName(_fromUtf8("UpdateMon"))
+		self.checkBoxUpdateMon.setEnabled(False)
+		self.labelUpdateMon.setText("Rafraichissement continu")
+		
+		#~ self.colorBox = QtGui.QColorDialog(self.tabMoniteur)
+		#~ self.colorBox.setObjectName(_fromUtf8("colorBox"))
+		#~ self.buttonColor = QtGui.QPushButton(self.tabMoniteur)
+		#~ self.buttonColor.setGeometry(QtCore.QRect(80, 80, 80, 80))
+		#~ self.buttonColor.setObjectName(_fromUtf8("buttonColor"))
+		#~ self.buttonColor.setEnabled(True)
+		
+		
+		
 		#~ self.spinBoxMon = QtGui.QSpinBox(self.tabMoniteur)
 		#~ self.spinBoxMon.setGeometry(QtCore.QRect(100, 100, 100, 25))
 		#~ self.spinBoxMon.setAccelerated(True)
@@ -391,9 +403,15 @@ class Ui_Pref(QWidget):
 		self.spinBox.connect(self.spinBox,QtCore.SIGNAL("valueChanged(int)"),self.changeTime)
 		self.buttonParcSys.connect(self.buttonParcSys,SIGNAL("released()"),self.enableCronStartup)
 		self.checkBoxSys.connect(self.checkBoxSys,QtCore.SIGNAL("clicked(bool)"),self.checkSys)
+		#~ self.buttonColor.connect(self.buttonColor,QtCore.SIGNAL("clicked(bool)"),self.showColor)
+		
 		
 		self.retranslateUi()
 		self.tabWidget.setCurrentIndex(self.loadTab)
+	
+	def showColor(self):
+		pColor = self.colorBox.getColor()
+		print pColor
 		
 	def showError(self,errorCode,title,errorMsg,etype):
 		if etype == self.error:

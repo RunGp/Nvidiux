@@ -17,8 +17,11 @@ simply install the deb file here : https://github.com/RunGp/Nvidiux/releases wit
 or in command line use
 
 wget https://github.com/RunGp/Nvidiux/releases/download/0.97/nvidiux.deb
+
 sudo dpkg -i nvidiux.deb
+
 sudo apt-get install -f (for dependancy:,python 2.7,python-qt4,gksu,vainfo,python-tk,python-psutil)
+
 and launch nvidiux
 
 Work on ubuntu 12.04+ and derivative 
@@ -45,7 +48,9 @@ Installation :
 ou taper les commandes dans votre terminal:
 
 wget https://github.com/RunGp/Nvidiux/releases/download/0.97/nvidiux.deb
+
 sudo dpkg -i nvidiux.deb
+
 sudo apt-get install -f (for dependancy:,python 2.7,python-qt4,gksu,vainfo,python-tk,python-psutil)
 
 testé sous
