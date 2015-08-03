@@ -25,10 +25,27 @@ fi
 
 if [ $XDG_CURRENT_DESKTOP = "Kde" ] || [ $XDG_CURRENT_DESKTOP = "KDE" ]
 then
-	kdesudo python2 /usr/share/nvidiux/root_script/$1
+	if [ ${1#*.} = "py" ]
+	then 
+		kdesudo python2 /usr/share/nvidiux/root_script/$1 $2
+	elif [ ${1#*.} = "sh" ]
+	then
+		kdesudo bash /usr/share/nvidiux/root_script/$1 $2
+	else
+		exit 252
+	
+	fi
 	exit $?
 else
-	gksudo python2 /usr/share/nvidiux/root_script/$1
+	if [ ${1#*.} = "py" ]
+	then 
+		gksudo python2 /usr/share/nvidiux/root_script/$1 $2
+	elif [ ${1#*.} = "sh" ]
+	then
+		gksudo bash /usr/share/nvidiux/root_script/$1 $2
+	else
+		exit 252
+	fi
 	exit $?
 fi
 	

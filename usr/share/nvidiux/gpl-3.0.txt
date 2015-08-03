@@ -1,5 +1,5 @@
 Ce Programme est distribué sous la licence GPL V3
-FR version ici : http://rg.rodage.com//gpl-3.0.fr.txt                    
+FR version ici : http://org.rodage.com//gpl-3.0.fr.txt                   
 
 	GNU GENERAL PUBLIC LICENSE
                  Version 3, 29 June 2007

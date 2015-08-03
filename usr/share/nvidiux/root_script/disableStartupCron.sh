@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-#!/usr/bin/python2
+#!/bin/bash
 
 # Copyright 2014 Payet Guillaume
 #
@@ -14,16 +13,10 @@
 #
 # You should have received a copy of the GNU General Public License along
 # with this program. If not, see <http://www.gnu.org/licenses/>.
+if [ $# -lt 1 ]
+then
+	exit 254
+fi
 
-import shutil
-import os
-import sys
-if not os.path.isfile("/etc/rc.local") or not os.path.isfile("/tmp/nvidiuxOk.rcfile"):
-	sys.exit(1)
-if os.getuid() != 0:
-	sys.exit(2)
-
-shutil.move("/etc/rc.local","/etc/rc.local.bak")
-shutil.copy("/tmp/nvidiuxOk.rcfile","/etc/rc.local")
-sys.exit(0)
-
+crontab -l | grep -v "@reboot $1/.nvidiux/startup.sh" | crontab -
+exit $?

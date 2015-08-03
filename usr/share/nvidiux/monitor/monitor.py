@@ -21,6 +21,8 @@ import os, sys
 import subprocess as sub
 import threading
 import time
+from os.path import expanduser
+from xml.dom import minidom
 
 
 class GpuInfoMonitor():
@@ -43,6 +45,32 @@ class GpuInfoMonitor():
 	memclklabel = ""
 	coreclklabel = ""
 	shaderclklabel = ""
+	
+class ElementConfGpu():
+	idGpu = 0
+	color = [0,0,0]
+	show = False
+
+	def __init__(self, idGpu,color, show):
+		self.idGpu = int(idGpu)
+		self.color[0] = int(color.split(':')[0])
+		self.color[1] = int(color.split(':')[1])
+		self.color[2] = int(color.split(':')[2])
+		if show == "True":
+			self.show = True
+		else:
+			self.show = False	
+	def info():
+		print "Gpu" + str(idGpu) +")\nColor red:" + str(self.color[0]) + "blue:" + str(self.color[1]) + "green:" + str(self.color[2]) + "\nShow:" + str(self.show)
+		
+	def getId(self):
+		return self.idGpu
+	def getColor(self):
+		return self.color
+	def getColorStr(self):
+		return str(self.color[0]) + ":" + str(self.color[1]) + ":" + str(self.color[2])
+	def getShow(self):
+		return self.show
 
 def color(value):
 	if value == 0:
@@ -53,6 +81,37 @@ def color(value):
 		return "yellow"
 	else:
 		return "white"
+		
+def saveConf(listgpu,versionMonitor):
+	fileToSave = minidom.Document()
+	racine = fileToSave.createElement("nvidiux")
+	fileToSave.appendChild(racine)
+	version = fileToSave.createElement('version')
+	text = fileToSave.createTextNode(str(versionMonitor))
+	version.appendChild(text)
+	racine.appendChild(version)
+	for gpu in listgpu:
+		gpuElem = fileToSave.createElement('gpu')
+		idGpu = fileToSave.createElement('id')
+		text = fileToSave.createTextNode(str(gpu.getId()))
+		idGpu.appendChild(text)
+		gpuElem.appendChild(idGpu)
+		colorGpu = fileToSave.createElement('color')
+		text = fileToSave.createTextNode(str(gpu.getColorStr()))
+		colorGpu.appendChild(text)
+		gpuElem.appendChild(colorGpu)
+		showGpu = fileToSave.createElement('show')
+		text = fileToSave.createTextNode(str(gpu.getShow()))
+		showGpu.appendChild(text)
+		gpuElem.appendChild(showGpu)
+		racine.appendChild(gpuElem)
+	try:	
+		filexml = open(expanduser("~") + "/.nvidiux/monitor.xml", "w")
+		filexml.write(fileToSave.toprettyxml())
+		filexml.close()
+	except:
+		return 1
+	return 0
 	
 def loop():
 	if gpu1.ABS >= 575:
@@ -144,27 +203,33 @@ def loop():
 	gpu1.oldPointMem = newPointMem
 	
 	if nbGpuNvidia == 1:
-		cmd = "nvidia-settings --query [gpu:0]/GPU3DClockFreqs"
+		cmd = "nvidia-settings --query [gpu:0]/GPUCurrentClockFreqsString"
 		if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 			out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-			self.tabGpu[i].freqGpu = out.split(': ')[1].split(',')[0]
-		else:
-			cmd = "nvidia-settings --query [gpu:0]/GPUCurrentClockFreqs"
-			if not sub.call(cmd + " | head -1",stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
-				out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-				coreclklabel.set("Core : " + out.split(': ')[1].split(',')[0] + "Mhz")
-			else:
+			try:
+				coreclklabel.set("Core :" + out.split('nvclockmax=')[1].split(',')[0] + "Mhz")
+			except:
 				sys.exit(1)
+			try:
+				memclklabel.set("Mem : " + str(out.split('memTransferRatemax=')[1].split(',')[0]) + "Mhz")
+			except:
+				sys.exit(1)
+		else:
+			self.showError(31,"Échec","Échec chargement des parametres Gpu",self.error)
+		#~ cmd = "nvidia-settings --query [gpu:0]/GPU3DClockFreqs"
+		#~ if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
+			#~ out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+			#~ self.tabGpu[i].freqGpu = out.split(': ')[1].split(',')[0]
+		#~ else:
+			#~ cmd = "nvidia-settings --query [gpu:0]/GPUCurrentClockFreqs"
+			#~ if not sub.call(cmd + " | head -1",stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
+				#~ out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+				#~ coreclklabel.set("Core : " + out.split(': ')[1].split(',')[0] + "Mhz")
+			#~ else:
+				#~ sys.exit(1)
 	else:
 		coreclklabel.set("Multi GPU")
-		
-	#~ cmd = "nvidia-settings --query [gpu:0]/GPUPerfModes | grep memTransferRatemax= | tail -1"
-	#~ if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
-		#~ out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-		#~ memclklabel.set("Mem : " + str(out.split(',')[1].split('=')[1]) + "Mhz")
-	#~ else:
-		#~ sys.exit(1)
-		
+			
 	gpu1.ABS = gpu1.ABS + 5
 	gpu1.time = gpu1.time + interval
 	if int(gpu1.time / 1000) <= 1:
@@ -188,7 +253,41 @@ shaderclklabel = StringVar()
 timeLabel = StringVar()
 gpu1 = GpuInfoMonitor()
 gpu1.time = 0
+monitorVersion = 0.97
 
+try:
+	profileFile = open(expanduser("~") + "/.nvidiux/monitor.xml", "r")
+	ndiFile = minidom.parse(profileFile)
+except:
+	print "pas de fichier"
+	
+versionElement = ndiFile.getElementsByTagName('version')
+if versionElement == []:
+	error = True
+	print "pb version"
+else:
+	monitorVersion = str(versionElement)
+	
+itemlist = ndiFile.getElementsByTagName('gpu')
+error = True
+errorCode = 0
+listgpu = []
+gpu =[]
+if len(itemlist) > 0:
+	for item in itemlist:
+		if item.hasChildNodes():
+			for value in item.childNodes:
+				if value.nodeType == minidom.Node.ELEMENT_NODE:
+					gpu.append(value.firstChild.nodeValue)
+				error = False
+			listgpu.append(gpu)
+			gpu = []	
+
+confGpu = []
+for gpu in listgpu:
+	confGpu.append(ElementConfGpu(gpu[0],gpu[1],gpu[2]))
+
+		
 cmd = "nvidia-settings --query [gpu:0]/NvidiaDriverVersion"
 if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 	out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
@@ -209,23 +308,20 @@ if nbGpuNvidia == 1:
 else:
 	gpuName.set("Multi Gpu")
 
-cmd = "nvidia-settings --query [gpu:0]/GPU3DClockFreqs"
+
+cmd = "nvidia-settings --query [gpu:0]/GPUCurrentClockFreqsString"
 if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 	out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-	self.tabGpu[i].freqGpu = out.split(': ')[1].split(',')[0]
-else:
-	cmd = "nvidia-settings --query [gpu:0]/GPUCurrentClockFreqs"
-	if not sub.call(cmd + " | head -1",stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
-		out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-		coreclklabel.set("Core :" + out.split(': ')[1].split(',')[0] + "Mhz")
-	else:
+	try:
+		coreclklabel.set("Core :" + out.split('nvclockmax=')[1].split(',')[0] + "Mhz")
+	except:
 		sys.exit(1)
-cmd = "nvidia-settings --query [gpu:0]/GPUPerfModes | grep memTransferRatemax= | tail -1"
-if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
-	out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-	memclklabel.set("Mem : " + str(out.split(',')[1].split('=')[1]) + "Mhz")
+	try:
+		memclklabel.set("Mem : " + str(out.split('memTransferRatemax=')[1].split(',')[0]) + "Mhz")
+	except:
+		sys.exit(1)
 else:
-	sys.exit(1)
+	self.showError(31,"Échec","Échec chargement des parametres Gpu",self.error)
 
 timeLabel.set("Temps écoulé : 0 seconde")
 

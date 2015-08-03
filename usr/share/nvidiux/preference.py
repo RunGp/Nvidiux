@@ -20,6 +20,7 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from xml.dom import minidom
 from os.path import expanduser
+import getpass
 import subprocess as sub
 import shutil
 import os
@@ -73,29 +74,17 @@ class Ui_Pref(QWidget):
 		self.mainWindows.saveNvidiuxConf()
 	
 	def checkSys(self,value):
-		if os.path.isfile("/etc/rc.local"):
-			if value:
+		if os.path.isfile("/usr/bin/crontab") and os.path.isfile("/usr/bin/sudo"):
+			if value: # enable sys button
 				self.buttonParcSys.setEnabled(True)
-			else:
+			else: #disable sysButton
 				self.buttonParcSys.setEnabled(False)
-				if self.startWithSystem:
-					if not self.delRcEntry():
-						cmd = "bash /usr/share/nvidiux/toRoot.sh resetRc.py >> /dev/null 2>&1"
-						result = sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True)
-						if int(result) > 0:
-							self.checkBoxSys.setChecked(True)
-							return self.showError(40,"Erreur non gérée","Erreur non gérée ResetRC\nAssurez vous d'avoir taper le bon mot de passe",self.error)
-					else:
-						cmd = "bash /usr/share/nvidiux/toRoot.sh delRc.py >> /dev/null 2>&1"
-						result = sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True)
-						if int(result) == 0:
-							self.labelGpuSys.setText(_fromUtf8("Profil au demarrage désactivé"))
-							self.startWithSystem = False
-							self.valueStart = "0:0"
-							self.mainWindows.setStartSystem(self.startWithSystem,self.valueStart)
-						else:
-							self.checkBoxSys.setChecked(True)
-							return self.showError(41,"Erreur non gérée","Erreur non gérée DelRC\nAssurez vous d'avoir taper le bon mot de passe",self.error)
+				if self.startWithSystem: #disable cron
+					if not self.disableCronStartup():
+						self.showError(33,"Échec","Impossible de continuer",self.error)
+						self.buttonParcSys.setEnabled(True)
+						self.checkBoxSys.setChecked(True)
+							
 		else:
 			self.showError(32,"Échec","Impossible de continuer",self.error)
 			self.checkBoxSys.setChecked(False)
@@ -123,7 +112,151 @@ class Ui_Pref(QWidget):
 	
 	def changeTime(self,value):
 		self.mainWindows.setTimeUpdate(value)
+		
+	def disableCronStartup(self):
+		startUpFilePath = expanduser("~") + "/.nvidiux/startup.sh"
+		cmd = "bash /usr/share/nvidiux/toRoot.sh disableStartupCron.sh " + expanduser("~") + " >> /dev/null 2>&1"
+		result = sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True)
+		if int(result) == 0:
+			self.labelGpuSys.setText(_fromUtf8("Chargement profil au démarage désactivé"))
+			self.startWithSystem = False
+			self.valueStart = "0:0"
+			self.mainWindows.setStartSystem(self.startWithSystem,self.valueStart)
+			if os.path.isfile(startUpFilePath):
+				os.remove(startUpFilePath)
+			return True
+		elif int(result) == 255:
+			self.showError(38,"Erreur Credential","Votre mot de passe est incorrect",self.error)
+			return False
+		else:
+			self.showError(40,"Erreur non gérée","Erreur non gérée",self.error)
+			return False
+		return True
+		
+	def enableCronStartup(self):
+		tab,fileToLoad = self.loadProfile()
+		if tab == None:
+			return None
+		startUpFilePath = expanduser("~") + "/.nvidiux/startup.sh"
+		if os.path.isfile(startUpFilePath):
+			os.remove(startUpFilePath)
+		fileSh = open(startUpFilePath, "w")
+		disp = ":0"
+		if os.environ['DISPLAY'] != None:
+			disp = os.environ['DISPLAY']
+		script = "#!/bin/bash\nsleep 60\n"
+		i = 0
+		for gpu in tab:
+			offsetGpu = int(tab[i][1]) - int(self.tabGpu[i].defaultFreqGpu)
+			offsetMem = int(tab[i][3]) - int(self.tabGpu[i].defaultFreqMem)
+			cmd = "sudo -u " + getpass.getuser() + " nvidia-settings -a \"[gpu:" + str(i) + "]/GPUGraphicsClockOffset[2]=" + str(offsetGpu) + "\" -a \"[gpu:" + str(i) + "]/GPUMemoryTransferRateOffset[2]=" + str(offsetMem) + "\" -c " + disp + " >> /dev/null 2>&1 \n"
+			script = script + cmd
+			i+=1
+		script += "exit $?\n"
+		fileSh.write(script)
+		fileSh.close()
+		os.chmod(startUpFilePath,0775)
+		cmd = "bash /usr/share/nvidiux/toRoot.sh enableStartupCron.sh " + expanduser("~") + " >> /dev/null 2>&1"
+		result = sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True)
+		if int(result) == 0:
+			self.labelGpuSys.setText(_fromUtf8("Le profil:" + fileToLoad + "\nsera chargé à chaque démarrage du systeme"))
+			self.startWithSystem = True
+			self.valueStart = str(offsetGpu) + ":" + str(offsetMem)
+			self.mainWindows.setStartSystem(self.startWithSystem,self.valueStart)
+			self.mainWindows.saveNvidiuxConf()
 			
+		elif int(result) == 255:
+			self.showError(37,"Erreur Credential","Votre mot de passe est incorrect",self.error)
+			return None
+		else:
+			self.showError(39,"Erreur non gérée","Erreur non gérée",self.error)
+			
+	def loadProfileNvi(self):
+		tab,fileToLoad = self.loadProfile()
+		if fileToLoad != None:
+			self.labelGpuNvi.setText("Fichier:"+ fileToLoad)
+		else:
+			return None
+		try:
+			if os.path.isfile(fileToLoad):
+				shutil.copy(fileToLoad,self.home + "/.nvidiux/Startup.ndi")
+		except:
+			self.showError(29,"Échec","Impossible de modifier la configuration",self.warning)
+				
+	def loadProfile(self,path = ""):
+		if path == "":
+			profileFileName = QtGui.QFileDialog.getOpenFileName(self,'Ouvrir profil',"","*.ndi") 
+			if profileFileName == "" or profileFileName == None:
+				return None
+		else:
+			profileFileName = path
+		try:
+			profileFile = open(profileFileName, "r")
+			ndiFile = minidom.parse(profileFile)
+		except:
+			return self.showError(-1,"Fichier endommagé","Impossible de charger ce fichier de configuration",self.warning)
+			
+		versionElement = ndiFile.getElementsByTagName('version')	
+		itemlist = ndiFile.getElementsByTagName('gpu')
+		error = True
+		errorCode = 0
+		listgpu = []
+		gpu =[]
+		if len(itemlist) > 0:
+			for item in itemlist:
+				if item.hasChildNodes():
+					for value in item.childNodes:
+						if value.nodeType == minidom.Node.ELEMENT_NODE:
+							gpu.append(value.firstChild.nodeValue)
+						error = False
+					listgpu.append(gpu)
+					gpu = []	
+		if versionElement == []:
+			error = True
+			self.showError(errorCode ,"Échec","Échec chargement du profil",19)
+			return None	
+		if not error:
+			if float(self.version) < float(versionElement[0].firstChild.nodeValue):
+				reply = QtGui.QMessageBox.question(self, _fromUtf8("Version"),_fromUtf8("Le profil est pour une version plus recente de Nvidiux\nCharger tous de même ?"), QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
+				if reply == QtGui.QMessageBox.No:
+					errorCode = 11
+			i = 0
+			if self.nbGpuNvidia == len(listgpu):
+				try:
+					for tempgpu in listgpu:
+						if str(self.tabGpu[i].nameGpu) != str(tempgpu[0]):
+							errorCode = 12
+						if int(tempgpu[1]) < int((self.tabGpu[i].defaultFreqGpu)) * 0.80 or int(tempgpu[1]) > int((self.tabGpu[i].defaultFreqGpu)) * 1.3:
+							errorCode = 13
+						if int(tempgpu[2]) < int((self.tabGpu[i].defaultFreqShader)) * 0.80 or int(tempgpu[2]) > int((self.tabGpu[i].defaultFreqShader)) * 1.3:
+							errorCode = 14
+						if int(tempgpu[3]) < int((self.tabGpu[i].defaultFreqMem)) * 0.80 or int(tempgpu[3]) > int((self.tabGpu[i].defaultFreqMem)) * 1.3:
+							errorCode = 15
+						i = i + 1
+				except:
+					self.showError(21,"Échec","Échec chargement du profil",self.error)
+			else:
+				error = 16
+		if errorCode != 0:
+			self.showError(errorCode ,"Échec","Échec chargement du profil",self.error)
+			return None
+		i = 0
+		return listgpu,profileFileName
+	
+	def retranslateUi(self):
+		self.setWindowTitle(_translate("Form", "Préférences", None))
+		self.buttonParcNvi.setText(_translate("Form", "Parcourir", None))
+		self.checkBoxNvi.setText(_translate("Form", "Appliquer ce profil au demarrage de nvidiux", None))
+		self.buttonParcSys.setText(_translate("Form", "Parcourir", None))
+		self.checkBoxSys.setText(_translate("Form", "Appliquer ce profil au demarrage du systeme", None))
+		#~ self.labelGpuSys.setText(_translate("Form", "Aucun profil", None))
+		self.checkBoxTime.setText(_translate("Form", "Actualiser les données toutes les", None))
+		self.spinBox.setSuffix(_translate("Form", " secondes", None))
+		#~ self.spinBoxMon.setSuffix(_translate("Form", " secondes", None))
+		self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabConf), _translate("Form", "Nvidiux", None))
+		self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabMoniteur), _translate("Form", "Moniteur", None))
+		self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabAbout), _translate("Form", "A Propos", None))
+		
 	def setupUi(self):
 		self.setObjectName(_fromUtf8("Form"))
 		self.resize(600, 540)
@@ -163,13 +296,14 @@ class Ui_Pref(QWidget):
 		self.labelGpuSys.setGeometry(QtCore.QRect(60, 120, 500, 80))
 		self.labelGpuSys.setObjectName(_fromUtf8("labelGpuSys"))
 		
-		if os.path.isfile("/etc/rc.local"):
+		if os.path.isfile("/usr/bin/crontab") and os.path.isfile("/usr/bin/sudo"):
 			self.checkBoxSys.setEnabled(True)
 		else:
 			self.checkBoxSys.setEnabled(False)
+			
 		if self.startWithSystem:
 			self.checkBoxSys.setChecked(True)
-			self.labelGpuSys.setText(_fromUtf8("Profil chargé:" + str(self.valueStart)))
+			self.labelGpuSys.setText(_fromUtf8("Profil chargé"))
 		else:
 			self.checkBoxSys.setChecked(False)
 			
@@ -255,172 +389,11 @@ class Ui_Pref(QWidget):
 		self.checkBoxNvi.connect(self.checkBoxNvi,QtCore.SIGNAL("clicked(bool)"),self.checkNvi)
 		self.checkBoxTime.connect(self.checkBoxTime,QtCore.SIGNAL("clicked(bool)"),self.checkTime)
 		self.spinBox.connect(self.spinBox,QtCore.SIGNAL("valueChanged(int)"),self.changeTime)
-		self.buttonParcSys.connect(self.buttonParcSys,SIGNAL("released()"),self.verifyRcConf)
+		self.buttonParcSys.connect(self.buttonParcSys,SIGNAL("released()"),self.enableCronStartup)
 		self.checkBoxSys.connect(self.checkBoxSys,QtCore.SIGNAL("clicked(bool)"),self.checkSys)
 		
 		self.retranslateUi()
 		self.tabWidget.setCurrentIndex(self.loadTab)
-	
-	def delRcEntry(self):
-		try:
-			contenu = ""	
-			chaine = "nvidia-settings"
-			fichier = open("/etc/rc.local","r")
-			for ligne in fichier:
-				if not(chaine in ligne):
-					contenu += ligne
-			fichier.close()
-			fichier = open('/tmp/nvidiux.rcfile', 'w')
-			fichier.write(contenu)
-			fichier.close()
-			return True
-		except:
-			return False
-	
-	def verifyRcConf(self):
-		if os.path.isfile("/etc/rc.local"):
-			tab,fileToLoad = self.loadProfile()
-			if tab == None:
-				return None
-			if self.delRcEntry():
-				try:
-					contenu = ""
-					fichier = open("/tmp/nvidiux.rcfile","r")
-					for ligne in fichier:
-						if not("exit" in ligne):
-							contenu += ligne
-					fichier.close()
-					i = 0
-					for gpu in self.tabGpu:
-						offsetGpu = int(tab[i][1]) - int(self.tabGpu[i].defaultFreqGpu)
-						offsetMem = int(tab[i][3]) - int(self.tabGpu[i].defaultFreqMem)
-						cmd = "nvidia-settings -a \"[gpu:" + str(i) + "]/GPUGraphicsClockOffset[2]=" + str(offsetGpu) + "\" -a \"[gpu:" + str(i) + "]/GPUMemoryTransferRateOffset[2]=" + str(offsetMem) + "\" >> /dev/null 2>&1 \n"
-						contenu = contenu + cmd
-						i+=1
-					contenu += "exit 0\n"
-					fichierW = open('/tmp/nvidiuxOk.rcfile', 'w')
-					fichierW.write(contenu)
-					fichierW.close()
-					cmd = "bash /usr/share/nvidiux/toRoot.sh changeRc.py >> /dev/null 2>&1"
-					result = sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True)
-					if int(result) == 0:
-						self.labelGpuSys.setText("Fichier au demarrage\n" + fileToLoad)
-						self.startWithSystem = True
-						self.valueStart = str(offsetGpu) + ":" + str(offsetMem)
-						self.mainWindows.setStartSystem(self.startWithSystem,self.valueStart)
-						self.mainWindows.saveNvidiuxConf()	
-					elif int(result) == 255:
-						self.showError(37,"Erreur Credential","Votre mot de passe est incorrect",self.error)
-						return None
-					elif int(result) >= 1 and int(result) <= 2:
-						self.showError(38,"Erreur Configuration","Erreur Interne annulation\ncode mineur:" + str(result),self.error)
-						return None
-					else:
-						self.showError(39,_fromUtf8("Erreur non gérée"),_fromUtf8("Erreur non gérée DelRC"),self.error)
-						return None
-				except:
-					self.buttonParcSys.setChecked(False)
-					self.buttonParcSys.setEnabled(False)
-					self.showError(36,"Échec","Echec modification configuration",self.error)
-			else:
-				self.showError(34,"Échec","Echec modification configuration",self.error)
-				self.buttonParcSys.setChecked(False)
-				self.buttonParcSys.setEnabled(False)
-		else:
-			self.showError(35,"Échec","Echec modification configuration",self.error)
-			self.buttonParcSys.setChecked(False)
-			self.buttonParcSys.setEnabled(False)
-		
-	def loadProfileNvi(self):
-		tab,fileToLoad = self.loadProfile()
-		if fileToLoad != None:
-			self.labelGpuNvi.setText("Fichier:"+ fileToLoad)
-		else:
-			return None
-		try:
-			if os.path.isfile(fileToLoad):
-				shutil.copy(fileToLoad,self.home + "/.nvidiux/Startup.ndi")
-		except:
-			self.showError(29,"Échec","Impossible de modifier la configuration",self.warning)
-				
-	def loadProfile(self,path = ""):
-		if path == "":
-			profileFileName = QtGui.QFileDialog.getOpenFileName(self,'Ouvrir profil',"","*.ndi") 
-			if profileFileName == "" or profileFileName == None:
-				return None
-		else:
-			profileFileName = path
-		try:
-			profileFile = open(profileFileName, "r")
-			ndiFile = minidom.parse(profileFile)
-		except:
-			return self.showError(-1,"Fichier endommagé","Impossible de charger ce fichier de configuration",self.warning)
-			
-		versionElement = ndiFile.getElementsByTagName('version')	
-		itemlist = ndiFile.getElementsByTagName('gpu')
-		error = True
-		errorCode = 0
-		listgpu = []
-		gpu =[]
-		if len(itemlist) > 0:
-			for item in itemlist:
-				if item.hasChildNodes():
-					for value in item.childNodes:
-						if value.nodeType == minidom.Node.ELEMENT_NODE:
-							gpu.append(value.firstChild.nodeValue)
-						error = False
-					listgpu.append(gpu)
-					gpu = []	
-		if versionElement == []:
-			error = True
-			self.showError(errorCode ,"Échec","Échec chargement du profil",19)
-			return None	
-		if not error:
-			if float(self.version) < float(versionElement[0].firstChild.nodeValue):
-				reply = QtGui.QMessageBox.question(self, _fromUtf8("Version"),_fromUtf8("Le profil est pour une version plus recente de Nvidiux\nCharger tous de même ?"), QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
-				if reply == QtGui.QMessageBox.No:
-					errorCode = 11
-			i = 0
-			if self.nbGpuNvidia == len(listgpu):
-				try:
-					for tempgpu in listgpu:
-						if str(self.tabGpu[i].nameGpu) != str(tempgpu[0]):
-							errorCode = 12
-						if int(tempgpu[1]) < int((self.tabGpu[i].defaultFreqGpu)) * 0.80 or int(tempgpu[1]) > int((self.tabGpu[i].defaultFreqGpu)) * 1.3:
-							errorCode = 13
-						if int(tempgpu[2]) < int((self.tabGpu[i].defaultFreqShader)) * 0.80 or int(tempgpu[2]) > int((self.tabGpu[i].defaultFreqShader)) * 1.3:
-							errorCode = 14
-						if int(tempgpu[3]) < int((self.tabGpu[i].defaultFreqMem)) * 0.80 or int(tempgpu[3]) > int((self.tabGpu[i].defaultFreqMem)) * 1.3:
-							errorCode = 15
-						i = i + 1
-				except:
-					self.showError(21,"Échec","Échec chargement du profil",self.error)
-			else:
-				error = 16
-		if errorCode != 0:
-			self.showError(errorCode ,"Échec","Échec chargement du profil",self.error)
-			return None
-		i = 0
-		#~ tabinf = list()
-		#~ tabinf.append(str(tempgpu[1]))
-		#~ tabinf.append(str(tempgpu[2]))
-		#~ tabinf.append(str(tempgpu[3]))
-		#~ tabinf.append(profileFileName)
-		return listgpu,profileFileName
-	
-	def retranslateUi(self):
-		self.setWindowTitle(_translate("Form", "Préférences", None))
-		self.buttonParcNvi.setText(_translate("Form", "Parcourir", None))
-		self.checkBoxNvi.setText(_translate("Form", "Appliquer ce profil au demarrage de nvidiux", None))
-		self.buttonParcSys.setText(_translate("Form", "Parcourir", None))
-		self.checkBoxSys.setText(_translate("Form", "Appliquer ce profil au demarrage du systeme", None))
-		#~ self.labelGpuSys.setText(_translate("Form", "Aucun profil", None))
-		self.checkBoxTime.setText(_translate("Form", "Actualiser les données toutes les", None))
-		self.spinBox.setSuffix(_translate("Form", " secondes", None))
-		#~ self.spinBoxMon.setSuffix(_translate("Form", " secondes", None))
-		self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabConf), _translate("Form", "Nvidiux", None))
-		self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabMoniteur), _translate("Form", "Moniteur", None))
-		self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabAbout), _translate("Form", "A Propos", None))
 		
 	def showError(self,errorCode,title,errorMsg,etype):
 		if etype == self.error:
