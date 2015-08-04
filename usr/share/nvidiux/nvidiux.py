@@ -43,6 +43,9 @@ class Gpuinfo():
 	defaultFreqShader = 0
 	defaultFreqGpu = 0
 	defaultFreqMem = 0
+	resetFreqShader = 0
+	resetFreqGpu = 0
+	resetFreqMem = 0
 	freqShader = 0
 	freqGpu = 0
 	freqMem = 0 
@@ -154,7 +157,7 @@ class ShipHolderApplication(QMainWindow):
 	nbGpu = -1
 	nbGpuNvidia = -1
 	optimus = 0
-	nvidiuxVersionStr = "0.97"
+	nvidiuxVersionStr = "0.97b"
 	nvidiuxVersion = 0.97
 	change = 0
 	isFermiArch = []
@@ -277,6 +280,7 @@ class ShipHolderApplication(QMainWindow):
 		self.ui.actionConfigureMonitor.connect(self.ui.actionConfigureMonitor, SIGNAL("triggered()"),self.configureMonitor)
 		self.ui.actionAbout.connect(self.ui.actionAbout, SIGNAL("triggered()"),self.about)
 		self.ui.listWidgetGpu.itemClicked.connect(self.changeGpu)
+		print "nvidiux " + self.nvidiuxVersionStr
 
 		cmd = "vainfo | wc -l"
 		if int(sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()[0].replace('\n','')) > 6:
@@ -323,7 +327,7 @@ class ShipHolderApplication(QMainWindow):
 					return self.showError(21,"Droit insuffisant","Impossible d'ecrire le fichier !",self.error)
 				self.loadProfile(home + "/.nvidiux/" + gpuName + ".ndi",True)		
 			if os.path.isfile(home + "/.nvidiux/Startup.ndi"):
-				self.loadProfile(home +"/.nvidiux/Startup.ndi",False)	
+				self.loadProfile(home +"/.nvidiux/Startup.ndi",False,"3")	
 		except:
 			return self.showError(20,"Erreur","Erreur Chargement configuration",self.error)					
 		
@@ -414,7 +418,8 @@ class ShipHolderApplication(QMainWindow):
 			self.ui.Message.setText(_fromUtf8("Driver non supporté (trop ancien)!\nOverclock desactivé"))
 			QMessageBox.information(self, _fromUtf8("Driver"),_fromUtf8("Driver non supporté:trop ancien\nOverclock desactivé\nIl vous faut la version 337.19 ou plus recent pour overclocker"))
 		if os.path.isfile(expanduser("~") + "/.nvidiux/conf.xml"):
-			self.loadNvidiuxConf()
+			self.loadNvidiuxConf()	
+				
 		for i in range(0, self.nbGpuNvidia):
 			try:
 				self.tabGpu.append(Gpuinfo())
@@ -429,7 +434,7 @@ class ShipHolderApplication(QMainWindow):
 			except:
 				self.showError(34,"Échec","Échec chargement des parametres Gpu",self.error)
 				sys.exit(1)
-			
+				
 			cmd =  "nvidia-settings -a [gpu:" + str(i) + "]/GPUPowerMizerMode=1"
 			sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True)
 			cmd = "nvidia-settings --query [gpu:" + str(i) + "]/videoRam"
@@ -456,9 +461,7 @@ class ShipHolderApplication(QMainWindow):
 					sys.exit(1)
 			else:
 				self.tabGpu[i].cudaCores = "N/A"
-			
-			
-				
+	
 			cmd = "nvidia-settings --query [gpu:" + str(i) + "]/NvidiaDriverVersion"
 			if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 				out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
@@ -487,22 +490,27 @@ class ShipHolderApplication(QMainWindow):
 				out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
 				try:
 					self.tabGpu[i].freqGpu = int(out.split('nvclockmax=')[1].split(',')[0])
+					self.tabGpu[i].defaultFreqGpu = int(out.split('nvclockmax=')[1].split(',')[0])
 				except:
 					print "Text to send:" + str(out)
 					self.showError(39,"Échec","Échec chargement des parametres Gpu",self.error)
 					sys.exit(1)
 				try:
 					self.tabGpu[i].freqShader = int(out.split('processorclockmax=')[1].split(',')[0])
+					self.tabGpu[i].defaultFreqShader = int(out.split('processorclockmax=')[1].split(',')[0])
 				except:#get an empty response sometimes on 6,7,8XX generation... => shadder = gpu clock
-					self.tabGpu[i].freqShader = self.tabGpu[i].freqGpu 
+					self.tabGpu[i].freqShader = self.tabGpu[i].freqGpu
+					self.tabGpu[i].defaultFreqShader = self.tabGpu[i].freqGpu  
 				try:
 					self.tabGpu[i].freqMem = int(out.split('memTransferRatemax=')[1].split(',')[0])
+					self.tabGpu[i].defaultFreqMem = int(out.split('memTransferRatemax=')[1].split(',')[0])
 				except:
 					print "Text to send:" + str(out)
 					self.showError(36,"Échec","Échec chargement des parametres Gpu",self.error)
 					sys.exit(1)
 			else:
 				self.showError(31,"Échec","Échec chargement des parametres Gpu",self.error)
+			 
 
 			if int(self.tabGpu[i].freqShader) == int(self.tabGpu[i].freqGpu) * 2 or int(self.tabGpu[i].freqShader) == int(self.tabGpu[i].freqGpu) * 2 + 1:
 				self.isFermiArch.append(True);
@@ -549,7 +557,7 @@ class ShipHolderApplication(QMainWindow):
 					self.ui.SliderFan.setEnabled(False)
 					self.ui.checkBoxFan.setChecked(False)
 					self.ui.checkBoxFan.setEnabled(False)
-					self.ui.labelFanVitesse.setText("incompatible(version non supporte)")
+					self.ui.labelFanVitesse.setText("incompatible")
 			else:
 				self.ui.SliderFan.setEnabled(False)
 				self.ui.checkBoxFan.setChecked(False)
@@ -558,28 +566,32 @@ class ShipHolderApplication(QMainWindow):
 			
 			cmd =  "nvidia-settings -a [gpu:" + str(i) + "]/GPUPowerMizerMode=0"
 			sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True)
-		
+			
 		try:
 			for gpu in self.tabGpu:
-				self.defineDefaultFreqGpu(gpu.nameGpu)
 				returnCode = self.verifyGpu(gpu.nameGpu)
 				if returnCode == -1:
 					info = info + "Ce gpu " + str(gpu.nameGpu) + " n'est pas dans la liste blanche\nn'hesitez pas à confirmer son fonctionnement"
 				if returnCode == 1:
-					info = info + "Ce gpu " + str(gpu.nameGpu) + " n'est pas compatible (Overclock désactivé !)"
+					info = info + "Ce gpu " + str(gpu.nameGpu) + " n'est pas supporté (Overclock désactivé !)"
 					self.ui.SliderMem.setEnabled(0)
 					self.ui.SliderGpu.setEnabled(0)
 					self.ui.SliderShader.setEnabled(0)
 					self.ui.buttonReset.setEnabled(0)
 					self.ui.buttonApply.setEnabled(0)
 					self.ui.Message.setText(_fromUtf8("Gpu( "+ str(gpu.nameGpu) + ")non supporté\nOverclock desactivé"))
+				self.defineDefaultFreqGpu(gpu.nameGpu)
 			if info != "":
 					QMessageBox.information(self, _fromUtf8("Information"),_fromUtf8(info))	
 		except:
 			self.showError(41,"Échec","Échec chargement des parametres Gpu",self.error)
 			sys.exit(1)
 			
-		self.ui.label_Img.setPixmap(QtGui.QPixmap("/usr/share/nvidiux/img/drivers_nvidia_linux.png"))	
+
+		if os.path.isfile("/usr/share/nvidiux/img/Gpu/" + self.tabGpu[i].nameGpu + ".png") and self.nbGpuNvidia == 1:
+			self.ui.label_Img.setPixmap(QtGui.QPixmap("/usr/share/nvidiux/img/Gpu/" + self.tabGpu[0].nameGpu + ".png"))
+		else:	
+			self.ui.label_Img.setPixmap(QtGui.QPixmap("/usr/share/nvidiux/img/drivers_nvidia_linux.png"))	
 		self.ui.SliderShader.setMinimum(int(self.tabGpu[self.numGpu].defaultFreqShader) * 0.80)
 		self.ui.SliderShader.setMaximum(int(self.tabGpu[self.numGpu].defaultFreqShader) * 1.3)
 		self.ui.SliderShader.setSliderPosition(int(self.tabGpu[self.numGpu].freqShader))
@@ -664,7 +676,7 @@ class ShipHolderApplication(QMainWindow):
 		self.form = Ui_Pref(0,self.nvidiuxVersionStr,self.nvidiuxVersion,tabigpu,self)
 		self.form.show()
 	
-	def loadProfile(self,path="",defaultOnly=False):
+	def loadProfile(self,path = "",defaultOnly = False,otherCode = 2):
 		if path == "":
 			profileFileName = QtGui.QFileDialog.getOpenFileName(self,'Ouvrir profil',"","*.ndi") 
 			if profileFileName == '':
@@ -735,11 +747,11 @@ class ShipHolderApplication(QMainWindow):
 				self.ui.SliderGpu.setSliderPosition(self.tabGpu[self.numGpu].freqGpu)
 				self.ui.SliderShader.setSliderPosition(self.tabGpu[self.numGpu].freqShader)
 				self.ui.SliderMem.setSliderPosition(self.tabGpu[self.numGpu].freqMem)
-				self.overclock("2")
+				self.overclock(str(otherCode))
 			else:
-				self.tabGpu[i].defaultFreqGpu = int(tempgpu[1])
-				self.tabGpu[i].defaultFreqShader = int(tempgpu[2])
-				self.tabGpu[i].defaultFreqMem = int(tempgpu[3])
+				self.tabGpu[i].resetFreqGpu = int(tempgpu[1])
+				self.tabGpu[i].resetFreqShader = int(tempgpu[2])
+				self.tabGpu[i].resetFreqMem = int(tempgpu[3])
 		return 0
 		
 	def overclock(self,mode):
@@ -759,8 +771,8 @@ class ShipHolderApplication(QMainWindow):
 			success = False
 		if overclock:
 			for gpu in self.tabGpu:
-				offsetGpu = int(self.tabGpu[i].freqGpu) - int(self.tabGpu[i].defaultFreqGpu)
-				offsetMem = int(self.tabGpu[i].freqMem) - int(self.tabGpu[i].defaultFreqMem)
+				offsetGpu = int(self.tabGpu[i].freqGpu) - int(self.tabGpu[i].resetFreqGpu)
+				offsetMem = int(self.tabGpu[i].freqMem) - int(self.tabGpu[i].resetFreqMem)
 				try:
 					cmd = "nvidia-settings -a \"[gpu:" + str(i) + "]/GPUGraphicsClockOffset[ " + str(maxNivPerf) + "]=" + str(offsetGpu) + "\" -a \"[gpu:" + str(i) + "]/GPUMemoryTransferRateOffset[" + str(maxNivPerf) + "]=" + str(offsetMem) + "\" >> /dev/null 2>&1"
 					if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
@@ -771,15 +783,19 @@ class ShipHolderApplication(QMainWindow):
 				except:
 					self.showError(-1,"Erreur","Erreur interne overclock/downclock impossible",self.warning)						
 		if success:
-			if mode == "1":
-				self.showError(0,"Effectué","Changement effectué",self.info)
-				self.ui.Message.setText(_fromUtf8("Changement effectué"))
-				
-			elif mode == "2":
-				self.ui.Message.setText(_fromUtf8("Auto overclock effectué \n (Voir configuration)"))
-			else:
+			if mode == "0": #Reset
 				self.showError(0,"Effectué","Reset effectué",self.info)
 				self.ui.Message.setText(_fromUtf8("Reset effectué"))
+			elif mode == "1": #Normal
+				self.showError(0,"Effectué","Changement effectué",self.info)
+				self.ui.Message.setText(_fromUtf8("Overclock effectué"))
+			elif mode == "2": #On Load Profile
+				self.ui.Message.setText(_fromUtf8("Overclock effectué"))
+			elif mode == "3": #Auto Startup
+				self.ui.Message.setText(_fromUtf8("Auto overclock effectué"))
+			else:
+				self.ui.Message.setText(_fromUtf8(""))
+				
 			self.change = 0
 			self.ui.label_Dfreq_Gpu.setText(str(self.tabGpu[self.numGpu].freqGpu) + _fromUtf8("Mhz →"))
 			self.ui.label_Dfreq_Shader.setText(str(self.tabGpu[self.numGpu].freqShader) + _fromUtf8("Mhz →"))
@@ -814,17 +830,17 @@ class ShipHolderApplication(QMainWindow):
 			
 	def reset(self):
 		for i in range(0, self.nbGpuNvidia):
-			self.tabGpu[i].freqShader = self.tabGpu[i].defaultFreqShader 
-			self.tabGpu[i].freqGpu = self.tabGpu[i].defaultFreqGpu
-			self.tabGpu[i].freqMem = self.tabGpu[i].defaultFreqMem
-			self.updateGpu(int(self.tabGpu[i].defaultFreqGpu))
-			self.updateMem(int(self.tabGpu[i].defaultFreqMem))
-			self.ui.SliderGpu.setSliderPosition(int(self.tabGpu[i].defaultFreqGpu))
-			self.ui.SliderShader.setSliderPosition(int(self.tabGpu[i].defaultFreqShader))
-			self.ui.SliderMem.setSliderPosition(int(self.tabGpu[i].defaultFreqMem))
-			self.ui.label_Dfreq_Gpu.setText(str(self.tabGpu[i].defaultFreqGpu) + _fromUtf8("Mhz →"))
-			self.ui.label_Dfreq_Shader.setText(str(self.tabGpu[i].defaultFreqShader) + _fromUtf8("Mhz →"))
-			self.ui.label_Dfreq_Mem.setText(str(self.tabGpu[i].defaultFreqMem) + _fromUtf8("Mhz →"))
+			self.tabGpu[i].freqShader = self.tabGpu[i].resetFreqShader 
+			self.tabGpu[i].freqGpu = self.tabGpu[i].resetFreqGpu
+			self.tabGpu[i].freqMem = self.tabGpu[i].resetFreqMem
+			self.updateGpu(int(self.tabGpu[i].resetFreqGpu))
+			self.updateMem(int(self.tabGpu[i].resetFreqMem))
+			self.ui.SliderGpu.setSliderPosition(int(self.tabGpu[i].resetFreqGpu))
+			self.ui.SliderShader.setSliderPosition(int(self.tabGpu[i].resetFreqShader))
+			self.ui.SliderMem.setSliderPosition(int(self.tabGpu[i].resetFreqMem))
+			self.ui.label_Dfreq_Gpu.setText(str(self.tabGpu[i].resetFreqGpu) + _fromUtf8("Mhz →"))
+			self.ui.label_Dfreq_Shader.setText(str(self.tabGpu[i].resetFreqShader) + _fromUtf8("Mhz →"))
+			self.ui.label_Dfreq_Mem.setText(str(self.tabGpu[i].resetFreqMem) + _fromUtf8("Mhz →"))
 		self.overclock("0")
 		self.change = 0
 		self.ui.Message.setText(_fromUtf8("Reset effectué"))
@@ -982,6 +998,7 @@ class ShipHolderApplication(QMainWindow):
 			name.appendChild(text)
 			
 			freq = fileToSave.createElement('gpufreq')
+			
 			text = fileToSave.createTextNode(str(tempgpu.freqGpu))
 			freq.appendChild(text)
 			

@@ -1,10 +1,11 @@
 # Nvidiux beta version 0.97
 En version
+
 Nvidiux is a graphical python tool to overclock or underclock your nvidia gpu  (generation 4XX  5XX  6XX 7XX)
 il also provide :
-- fan control 
+- Fan control 
 - Auto overclock at startup
-- Graphical monitoring for 4 params (temp,gpu load,speed fan (%)graphic memory use (%))
+- Graphical monitoring for 4 params (temp,gpu load,speed fan (%) and graphic memory use (%))
 
 ![alt tag](http://pix.toile-libre.org/upload/original/1438594970.png)
 
@@ -30,8 +31,9 @@ debian 7.0+
 
 arch (manual installation dependancy:python 2.7,python-qt4,gksu,vainfo,python-tk,python2-psutil)
 
-FR Version
-Plus d'information (Francais) : http://forum.ubuntu-fr.org/viewtopic.php?id=1589261
+=============================================================
+
+FR Version: Plus d'information (Francais) : http://forum.ubuntu-fr.org/viewtopic.php?id=1589261
 
 Nvidiux est un outil graphique pour overclocker/underclocker facilement votre gpu nvidia (generation 4XX ou plus recent)
 Il permet aussi 
