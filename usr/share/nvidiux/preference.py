@@ -54,12 +54,16 @@ class Ui_Pref(QWidget):
 	updateTime = 1
 	home = ""
 	mainWindows = None
+	language = None
+	app = None
 	
-	def __init__(self,loadTab,versionStr,version,tabigpu,mainW,parent=None):
+	def __init__(self,loadTab,versionStr,version,TabLang,tabigpu,mainW,parent=None):
 		super (Ui_Pref, self).__init__(parent)
 		self.loadTab = loadTab
 		self.version = version
 		self.versionStr = versionStr
+		self.language = TabLang[0]
+		self.app = TabLang[1]
 		self.nbGpuNvidia = tabigpu[0]
 		self.tabGpu = tabigpu[1]
 		self.autoUpdateValue = tabigpu[2]
@@ -84,7 +88,6 @@ class Ui_Pref(QWidget):
 						self.showError(33,"Échec","Impossible de continuer",self.error)
 						self.buttonParcSys.setEnabled(True)
 						self.checkBoxSys.setChecked(True)
-							
 		else:
 			self.showError(32,"Échec","Impossible de continuer",self.error)
 			self.checkBoxSys.setChecked(False)
@@ -110,9 +113,6 @@ class Ui_Pref(QWidget):
 		else:
 			self.showError(50,"Échec","Erreur Interne",self.error)
 	
-	def changeTime(self,value):
-		self.mainWindows.setTimeUpdate(value)
-		
 	def disableCronStartup(self):
 		startUpFilePath = expanduser("~") + "/.nvidiux/startup.sh"
 		cmd = "bash /usr/share/nvidiux/toRoot.sh disableStartupCron.sh " + expanduser("~") + " >> /dev/null 2>&1"
@@ -244,18 +244,33 @@ class Ui_Pref(QWidget):
 		return listgpu,profileFileName
 	
 	def retranslateUi(self):
+		self.labelUpdateMon.setText(_translate("Form", "Rafraichissement continu", None))
+		self.labelInfo.setText(_translate("Form", "Permet d'underclocker ou d'overclocker votre gpu nvidia\n(C) 2014 Payet Guillaume\nNvidiux n'est en aucun cas affilié à Nvidia", None))
 		self.setWindowTitle(_translate("Form", "Préférences", None))
 		self.buttonParcNvi.setText(_translate("Form", "Parcourir", None))
 		self.checkBoxNvi.setText(_translate("Form", "Appliquer ce profil au demarrage de nvidiux", None))
 		self.buttonParcSys.setText(_translate("Form", "Parcourir", None))
 		self.checkBoxSys.setText(_translate("Form", "Appliquer ce profil au demarrage du systeme", None))
-		#~ self.labelGpuSys.setText(_translate("Form", "Aucun profil", None))
-		self.checkBoxTime.setText(_translate("Form", "Actualiser les données toutes les", None))
+		self.labelGpuSys.setText(_translate("Form", "Aucun profil", None))
+		self.checkBoxTime.setText(_translate("Form", "Actualiser les donnees toutes les", None))
 		self.spinBox.setSuffix(_translate("Form", " secondes", None))
-		#~ self.spinBoxMon.setSuffix(_translate("Form", " secondes", None))
+		#self.spinBoxMon.setSuffix(_translate("Form", " secondes", None))
 		self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabConf), _translate("Form", "Nvidiux", None))
 		self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabMoniteur), _translate("Form", "Moniteur", None))
 		self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabAbout), _translate("Form", "A Propos", None))
+		self.labelInfo.setText(self.labelInfo.text() + "\nVersion:" + self.versionStr)
+	
+	def setTime(self,value):
+		self.mainWindows.setTimeUpdate(value)
+		
+	def setlanguage(self,lang):
+		tabLang = ["fr_FR","en_EN"]
+		language = tabLang[lang]
+		self.mainWindows.setLanguage(language)
+		prefTranslator = QtCore.QTranslator()
+		if prefTranslator.load("/usr/share/nvidiux/nvidiux_" + language):
+			self.app.installTranslator(prefTranslator)
+			self.retranslateUi()
 		
 	def setupUi(self):
 		self.setObjectName(_fromUtf8("Form"))
@@ -323,8 +338,22 @@ class Ui_Pref(QWidget):
 		self.spinBox.setValue(self.updateTime)
 		self.spinBox.setObjectName(_fromUtf8("spinBox"))
 		
-		self.tabWidget.addTab(self.tabConf, _fromUtf8(""))
+		self.labelLang = QtGui.QLabel(self.tabConf)
+		self.labelLang.setGeometry(QtCore.QRect(18, 225, 200, 80))
+		self.labelLang.setObjectName(_fromUtf8("labelLang"))
+		self.labelLang.setText(_translate("Form","Langue",None))
 		
+		self.ComboLang=QComboBox(self.tabConf)
+		self.ComboLang.setObjectName("List language")
+		self.ComboLang.setGeometry(QtCore.QRect(90, 248, 200, 30))
+		self.ComboLang.addItem("Francais")
+		self.ComboLang.addItem("English")
+		if self.language == "fr_FR":
+			self.ComboLang.setCurrentIndex(0)
+		else:
+			self.ComboLang.setCurrentIndex(1)
+		
+		self.tabWidget.addTab(self.tabConf, _fromUtf8(""))
 		self.tabMoniteur = QtGui.QWidget()
 		self.tabMoniteur.setObjectName(_fromUtf8("tabMoniteur"))
 		self.tabWidget.addTab(self.tabMoniteur, _fromUtf8(""))
@@ -345,9 +374,6 @@ class Ui_Pref(QWidget):
 		#~ self.buttonColor.setGeometry(QtCore.QRect(80, 80, 80, 80))
 		#~ self.buttonColor.setObjectName(_fromUtf8("buttonColor"))
 		#~ self.buttonColor.setEnabled(True)
-		
-		
-		
 		#~ self.spinBoxMon = QtGui.QSpinBox(self.tabMoniteur)
 		#~ self.spinBoxMon.setGeometry(QtCore.QRect(100, 100, 100, 25))
 		#~ self.spinBoxMon.setAccelerated(True)
@@ -385,28 +411,44 @@ class Ui_Pref(QWidget):
 		font.setWeight(75)
 		font.setStyleStrategy(QtGui.QFont.PreferAntialias)
 		self.labelInfo.setFont(font)
-		self.labelInfo.setText(_fromUtf8("Permet d'underclocker ou d'overclocker votre gpu nvidia\nVersion " + self.versionStr + "\n(C) 2014 Payet Guillaume\nNvidiux n'est en aucun cas affilié à Nvidia"))
+		self.labelInfo.setText(_translate("Form", "Permet d'underclocker ou d'overclocker votre gpu nvidia\n(C) 2014 Payet Guillaume\nNvidiux n'est en aucun cas affilié à Nvidia",None))
 		self.textBrowser = QtGui.QTextBrowser(self.tabAbout)
 		self.textBrowser.setGeometry(QtCore.QRect(10, 280, 580, 240))
-		txtFile = open('/usr/share/nvidiux/gpl-3.0.txt', 'r')
-		if txtFile != None:
+		if os.path.isfile("/usr/share/nvidiux/licences/gpl-3.0_" + self.language + ".txt"):
+			txtFile = open("/usr/share/nvidiux/licences/gpl-3.0_" + self.language + ".txt", "r")
+			self.textBrowser.setText(_fromUtf8(txtFile.read()))
+		elif os.path.isfile("/usr/share/nvidiux/licences/gpl-3.0.txt"):
+			txtFile = open('/usr/share/nvidiux/licences/gpl-3.0.txt', 'r')
 			self.textBrowser.setText(_fromUtf8(txtFile.read()))
 		else:
-			self.textBrowser.setText(_fromUtf8("Programme distribué sous license GPL V3\nVoir http://www.gnu.org/licenses/gpl-3.0.txt"))
-		self.retranslateUi()
-
+			self.textBrowser.setText(_fromUtf8("Programme distribué sous license GPL V3\nVoir http://www.gnu.org/licenses/gpl-3.0.txt"))	
 		self.tabWidget.addTab(self.tabAbout, _fromUtf8(""))
-		
 		self.buttonParcNvi.connect(self.buttonParcNvi,SIGNAL("released()"),self.loadProfileNvi)
 		self.checkBoxNvi.connect(self.checkBoxNvi,QtCore.SIGNAL("clicked(bool)"),self.checkNvi)
 		self.checkBoxTime.connect(self.checkBoxTime,QtCore.SIGNAL("clicked(bool)"),self.checkTime)
-		self.spinBox.connect(self.spinBox,QtCore.SIGNAL("valueChanged(int)"),self.changeTime)
+		self.spinBox.connect(self.spinBox,QtCore.SIGNAL("valueChanged(int)"),self.setTime)
 		self.buttonParcSys.connect(self.buttonParcSys,SIGNAL("released()"),self.enableCronStartup)
 		self.checkBoxSys.connect(self.checkBoxSys,QtCore.SIGNAL("clicked(bool)"),self.checkSys)
+		self.ComboLang.connect(self.ComboLang,QtCore.SIGNAL("currentIndexChanged(int)"),self.setlanguage)
 		#~ self.buttonColor.connect(self.buttonColor,QtCore.SIGNAL("clicked(bool)"),self.showColor)
 		
+		self.setWindowTitle(_translate("Form", "Préférences", None))
+		self.buttonParcNvi.setText(_translate("Form", "Parcourir", None))
+		self.checkBoxNvi.setText(_translate("Form", "Appliquer ce profil au demarrage de nvidiux", None))
+		self.buttonParcSys.setText(_translate("Form", "Parcourir", None))
+		self.checkBoxSys.setText(_translate("Form", "Appliquer ce profil au demarrage du systeme", None))
+		self.labelGpuSys.setText(_translate("Form", "Aucun profil", None))
+		self.checkBoxTime.setText(_translate("Form", "Actualiser les donnees toutes les", None))
+		self.spinBox.setSuffix(_translate("Form", " secondes", None))
+		#self.spinBoxMon.setSuffix(_translate("Form", " secondes", None))
+		self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabConf), _translate("Form", "Nvidiux", None))
+		self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabMoniteur), _translate("Form", "Moniteur", None))
+		self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabAbout), _translate("Form", "A Propos", None))
 		
-		self.retranslateUi()
+		prefTranslator = QtCore.QTranslator()
+		if prefTranslator.load("/usr/share/nvidiux/nvidiux_" + self.language):
+			self.app.installTranslator(prefTranslator)
+			self.retranslateUi()
 		self.tabWidget.setCurrentIndex(self.loadTab)
 	
 	def showColor(self):

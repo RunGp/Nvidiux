@@ -34,11 +34,12 @@ except AttributeError:
         return QtGui.QApplication.translate(context, text, disambig)
 
 class ConfirmWindow(QWidget):
-	def __init__(self,text,size=10,parent=None):
+	def __init__(self,text,tabLang,size=10,parent=None):
 		super (ConfirmWindow, self).__init__(parent)
 		self.size = size
+		self.language = tabLang[0]
+		self.app = tabLang[1]
 		self.createWidgets(text)
-		
 	
 	def createWidgets(self,text):
 		
@@ -63,11 +64,20 @@ class ConfirmWindow(QWidget):
 		self.texteula = QPlainTextEdit(self)
 		self.texteula.move(0,150)
 		self.texteula.resize(520,270)
-		self.texteula.setPlainText(_fromUtf8("FR Version\nAttention cette pratique peut annuler la garantie du produit et reste à l'entière responsabilité de l'utilisateur du logiciel. Ni le concepteur du logiciel ni la communauté gnu ne pourra pas être tenu responsable de toutes mauvaises manipulations ayant entrainé un quelconque dégât direct ou en conséquence de l'utilisation de Nvidiux.\nNvidiux n'est en aucun cas affilié à Nvidia.\n----------------------------------------------------------------------------------------------------\nEN Version\nThe author and community are not responsible of bad use and no liability for damages, direct or consequential, which may result from the use of Nvidiux.\nNvidiux is in no way affiliated to Nvidia."))
+		if self.language == "en_EN":
+			self.texteula.setPlainText(_fromUtf8("The author and community are not responsible of bad use and no liability for damages, direct or consequential, which may result from the use of Nvidiux.\nNvidiux is in no way affiliated to Nvidia."))
+		else:
+			self.texteula.setPlainText(_fromUtf8("FR Version\nAttention cette pratique peut annuler la garantie du produit et reste à l'entière responsabilité de l'utilisateur du logiciel. Ni le concepteur du logiciel ni la communauté gnu ne pourra pas être tenu responsable de toutes mauvaises manipulations ayant entrainé un quelconque dégât direct ou en conséquence de l'utilisation de Nvidiux.\nNvidiux n'est en aucun cas affilié à Nvidia"))
+		
+		
 		self.texteula.setReadOnly(True)
 		self.buttonCancel.connect(self.buttonCancel, SIGNAL("released()"),self.quitapp)
 		self.buttonConfirm.connect(self.buttonConfirm, SIGNAL("released()"),self.confirm)
 		self.checkBox.connect(self.checkBox, SIGNAL("clicked(bool)"),self.acceptEula)
+		ConfirmTranslator = QtCore.QTranslator()
+		if ConfirmTranslator.load("/usr/share/nvidiux/nvidiux_" + self.language):
+			self.app.installTranslator(ConfirmTranslator)
+			self.retranslateUi()
 		
 	def quitapp(self):
 		self.close()

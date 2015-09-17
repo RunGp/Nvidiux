@@ -37,7 +37,14 @@ try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
     def _fromUtf8(s):
-        return s
+        return s    
+try:
+    _encoding = QtGui.QApplication.UnicodeUTF8
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig, _encoding)
+except AttributeError:
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig)
 
 class Gpuinfo():
 	defaultFreqShader = 0
@@ -140,7 +147,9 @@ def majGpu(numGpu,fen):
 			if not sub.call(cmd ,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 				out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
 				try:
-					fen.ui.labelFanVitesse.setText("Auto(" + str(int(out.split('.')[0].split(':')[-1])) + "%)")
+					value = int(out.split('.')[0].split(':')[-1])
+					fen.ui.labelFanVitesse.setText("Auto(" + str(value) + "%)")
+					fen.ui.SliderFan.setSliderPosition(value)
 				except:
 					fen.ui.labelFanVitesse.setText(_fromUtf8("???%"))
 			else:
@@ -151,13 +160,13 @@ def checkMonitor(pid,fen):
 		fen.ui.actionStartMonitor.setText("Start")
 		fen.killTMonitor()
 				
-class ShipHolderApplication(QMainWindow):
+class NvidiuxApp(QMainWindow):
 	numGpu = 0
 	tabGpu = []
 	nbGpu = -1
 	nbGpuNvidia = -1
 	optimus = 0
-	nvidiuxVersionStr = "0.97b"
+	nvidiuxVersionStr = "0.97c"
 	nvidiuxVersion = 0.97
 	change = 0
 	isFermiArch = []
@@ -176,25 +185,29 @@ class ShipHolderApplication(QMainWindow):
 	valueStart = "0:0"
 	versionPilote = "331.31"
 	argv = []
+	language = QLocale.system().name()
 	
 	def __init__(self,argv,parent=None):
-		super (ShipHolderApplication, self).__init__(parent)
+		super (NvidiuxApp, self).__init__(parent)
 		self.argv = argv
 		self.createWidgets()
 		
 	def about(self):
-		tabigpu = list()
-		tabigpu.append(self.nbGpuNvidia)
-		tabigpu.append(self.tabGpu)
-		tabigpu.append(self.autoUpdate)
-		tabigpu.append(self.updateTime)
-		tabigpu.append(self.startWithSystem)
-		tabigpu.append(self.valueStart)
-		self.form = Ui_Pref(2,self.nvidiuxVersionStr,self.nvidiuxVersion,tabigpu,self)
+		tabGpu = list()
+		tabLang = list()
+		tabGpu.append(self.nbGpuNvidia)
+		tabGpu.append(self.tabGpu)
+		tabGpu.append(self.autoUpdate)
+		tabGpu.append(self.updateTime)
+		tabGpu.append(self.startWithSystem)
+		tabGpu.append(self.valueStart)
+		tabLang.append(self.language)
+		tabLang.append(app)
+		self.form = Ui_Pref(2,self.nvidiuxVersionStr,self.nvidiuxVersion,tabLang,tabGpu,self)
 		self.form.show()
 		
 	def applyNewClock(self):
-		text = "Confirmation( "
+		text = "Confirmation("
 		i = 0
 		size = 0
 		for gpu in self.tabGpu:
@@ -206,7 +219,10 @@ class ShipHolderApplication(QMainWindow):
 			size = 12
 		else:
 			size = 10
-		self.form = ConfirmWindow(_fromUtf8(text),size)
+		tabLang = list()
+		tabLang.append(self.language)
+		tabLang.append(app)	
+		self.form = ConfirmWindow(_fromUtf8(text),tabLang,size)
 		self.connect(self.form, SIGNAL("accept(PyQt_PyObject)"), self.overclock)
 		self.form.show()
 		
@@ -214,7 +230,7 @@ class ShipHolderApplication(QMainWindow):
 		self.numGpu = int(item.text().split(':')[0]) - 1
 		if self.autoUpdate:
 			self.threadInfoGpu.stop()
-			self.threadInfoGpu = Mythread(1, majGpu, [self.numGpu], {"fen":myApp})
+			self.threadInfoGpu = Mythread(1, majGpu, [self.numGpu], {"fen":nvidiuxApp})
 			self.threadInfoGpu.setDaemon(True)
 			self.threadInfoGpu.start()
 		self.ui.lcdShader.display(self.tabGpu[self.numGpu].freqShader)
@@ -294,14 +310,17 @@ class ShipHolderApplication(QMainWindow):
 				self.loadProfile(self.argv[1])
 	
 	def configureMonitor(self):
-		tabigpu = list()
-		tabigpu.append(self.nbGpuNvidia)
-		tabigpu.append(self.tabGpu)
-		tabigpu.append(self.autoUpdate)
-		tabigpu.append(self.updateTime)
-		tabigpu.append(self.startWithSystem)
-		tabigpu.append(self.valueStart)
-		self.form = Ui_Pref(1,self.nvidiuxVersionStr,self.nvidiuxVersion,tabigpu,self)
+		tabGpu = list()
+		tabLang = list()
+		tabGpu.append(self.nbGpuNvidia)
+		tabGpu.append(self.tabGpu)
+		tabGpu.append(self.autoUpdate)
+		tabGpu.append(self.updateTime)
+		tabGpu.append(self.startWithSystem)
+		tabGpu.append(self.valueStart)
+		tabLang.append(self.language)
+		tabLang.append(app)
+		self.form = Ui_Pref(1,self.nvidiuxVersionStr,self.nvidiuxVersion,tabLang,tabGpu,self)
 		self.form.show()
 		
 	def changeFanSpeed(self,value):
@@ -406,7 +425,7 @@ class ShipHolderApplication(QMainWindow):
 			
 		else:
 			self.showError(29,"Échec","Impossible de determiner la version des drivers",self.error)
-		if self.versionPilote > 352.30:
+		if self.versionPilote > 355.11:
 			info = "Driver non testé\n"
 		if self.versionPilote <= 337.12:
 			self.ui.SliderMem.setEnabled(False)
@@ -415,6 +434,10 @@ class ShipHolderApplication(QMainWindow):
 			self.ui.buttonApply.setEnabled(False)
 			self.ui.SliderFan.setEnabled(False)
 			self.ui.checkBoxFan.setEnabled(False)
+			self.ui.buttonLoadProfile.setEnabled(False)
+			self.ui.buttonSaveProfile.setEnabled(False)
+			self.ui.actionLoadProfile.setEnabled(False)
+			self.ui.actionSaveProfile.setEnabled(False)
 			self.ui.Message.setText(_fromUtf8("Driver non supporté (trop ancien)!\nOverclock desactivé"))
 			QMessageBox.information(self, _fromUtf8("Driver"),_fromUtf8("Driver non supporté:trop ancien\nOverclock desactivé\nIl vous faut la version 337.19 ou plus recent pour overclocker"))
 		if os.path.isfile(expanduser("~") + "/.nvidiux/conf.xml"):
@@ -446,7 +469,6 @@ class ShipHolderApplication(QMainWindow):
 					print "Text to send:" + str(out)
 					self.showError(35,"Échec","Échec chargement des parametres Gpu",self.error)
 					sys.exit(1)
-					
 			else:
 				self.tabGpu[i].videoRam = "N/A"
 			
@@ -574,20 +596,23 @@ class ShipHolderApplication(QMainWindow):
 					info = info + "Ce gpu " + str(gpu.nameGpu) + " n'est pas dans la liste blanche\nn'hesitez pas à confirmer son fonctionnement"
 				if returnCode == 1:
 					info = info + "Ce gpu " + str(gpu.nameGpu) + " n'est pas supporté (Overclock désactivé !)"
-					self.ui.SliderMem.setEnabled(0)
-					self.ui.SliderGpu.setEnabled(0)
-					self.ui.SliderShader.setEnabled(0)
-					self.ui.buttonReset.setEnabled(0)
-					self.ui.buttonApply.setEnabled(0)
-					self.ui.Message.setText(_fromUtf8("Gpu( "+ str(gpu.nameGpu) + ")non supporté\nOverclock desactivé"))
+					self.ui.SliderMem.setEnabled(False)
+					self.ui.SliderGpu.setEnabled(False)
+					self.ui.SliderShader.setEnabled(False)
+					self.ui.buttonReset.setEnabled(False)
+					self.ui.buttonApply.setEnabled(False)
+					self.ui.buttonLoadProfile.setEnabled(False)
+					self.ui.buttonSaveProfile.setEnabled(False)
+					self.ui.actionLoadProfile.setEnabled(False)
+					self.ui.actionSaveProfile.setEnabled(False)
+					self.ui.Message.setText(_fromUtf8("Gpu("+ str(gpu.nameGpu) + ")non supporté"))
 				self.defineDefaultFreqGpu(gpu.nameGpu)
 			if info != "":
-					QMessageBox.information(self, _fromUtf8("Information"),_fromUtf8(info))	
+					QMessageBox.information(self,_translate("nvidiux","Information",None),_fromUtf8(info))	
 		except:
 			self.showError(41,"Échec","Échec chargement des parametres Gpu",self.error)
 			sys.exit(1)
 			
-
 		if os.path.isfile("/usr/share/nvidiux/img/Gpu/" + self.tabGpu[i].nameGpu + ".png") and self.nbGpuNvidia == 1:
 			self.ui.label_Img.setPixmap(QtGui.QPixmap("/usr/share/nvidiux/img/Gpu/" + self.tabGpu[0].nameGpu + ".png"))
 		else:	
@@ -619,8 +644,6 @@ class ShipHolderApplication(QMainWindow):
 			if len(list(set(self.tabGpu[i].nameGpu))) == 1:
 				self.ui.checkBoxSli.setChecked(1)
 				self.isSli = True
-		
-		
 		majGpu(0,self)
 		self.ui.SliderShader.setEnabled(0)
 		self.ui.about.setText("Version " + self.nvidiuxVersionStr)
@@ -636,6 +659,7 @@ class ShipHolderApplication(QMainWindow):
 			versionElement = confFile.getElementsByTagName("version")
 			update = confFile.getElementsByTagName("update")
 			time = confFile.getElementsByTagName("updateinterval")
+			lang = confFile.getElementsByTagName("lang")
 			start = confFile.getElementsByTagName("start-system")
 			valueStart = confFile.getElementsByTagName("valuestart")
 			
@@ -660,20 +684,24 @@ class ShipHolderApplication(QMainWindow):
 				self.startWithSystem = False
 			else:
 				raise DataError("corrupt Data")
+			self.language = lang[0].firstChild.nodeValue
 			self.valueStart = str(valueStart[0].firstChild.nodeValue)
 		except:
 			print "error load config file"
 		return True
 
 	def loadPrefWindow(self):
-		tabigpu = list()
-		tabigpu.append(self.nbGpuNvidia)
-		tabigpu.append(self.tabGpu)
-		tabigpu.append(self.autoUpdate)
-		tabigpu.append(self.updateTime)
-		tabigpu.append(self.startWithSystem)
-		tabigpu.append(self.valueStart)
-		self.form = Ui_Pref(0,self.nvidiuxVersionStr,self.nvidiuxVersion,tabigpu,self)
+		tabGpu = list()
+		tabLang = list()
+		tabGpu.append(self.nbGpuNvidia)
+		tabGpu.append(self.tabGpu)
+		tabGpu.append(self.autoUpdate)
+		tabGpu.append(self.updateTime)
+		tabGpu.append(self.startWithSystem)
+		tabGpu.append(self.valueStart)
+		tabLang.append(self.language)
+		tabLang.append(app)
+		self.form = Ui_Pref(0,self.nvidiuxVersionStr,self.nvidiuxVersion,tabLang,tabGpu,self)
 		self.form.show()
 	
 	def loadProfile(self,path = "",defaultOnly = False,otherCode = 2):
@@ -774,7 +802,8 @@ class ShipHolderApplication(QMainWindow):
 				offsetGpu = int(self.tabGpu[i].freqGpu) - int(self.tabGpu[i].resetFreqGpu)
 				offsetMem = int(self.tabGpu[i].freqMem) - int(self.tabGpu[i].resetFreqMem)
 				try:
-					cmd = "nvidia-settings -a \"[gpu:" + str(i) + "]/GPUGraphicsClockOffset[ " + str(maxNivPerf) + "]=" + str(offsetGpu) + "\" -a \"[gpu:" + str(i) + "]/GPUMemoryTransferRateOffset[" + str(maxNivPerf) + "]=" + str(offsetMem) + "\" >> /dev/null 2>&1"
+					cmd = "nvidia-settings -a \"[gpu:" + str(i) + "]/GPUGraphicsClockOffset[" + str(maxNivPerf) + "]=" + str(offsetGpu) + "\" -a \"[gpu:" + str(i) + "]/GPUMemoryTransferRateOffset[" + str(maxNivPerf) + "]=" + str(offsetMem) + "\" >> /dev/null 2>&1"
+					print cmd
 					if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 						success = True
 					else:
@@ -844,7 +873,6 @@ class ShipHolderApplication(QMainWindow):
 		self.overclock("0")
 		self.change = 0
 		self.ui.Message.setText(_fromUtf8("Reset effectué"))
-		
 	
 	def resizeEvent(self, event):
 		self.showNormal()
@@ -852,6 +880,13 @@ class ShipHolderApplication(QMainWindow):
 	def setStartSystem(self,start,value):
 		self.startWithSystem = start
 		self.valueStart = value
+		
+	def setLanguage(self,language):
+		self.language = language
+		nvidiuxTranslator = QtCore.QTranslator()
+		if nvidiuxTranslator.load("/usr/share/nvidiux/nvidiux_" + language):
+			app.installTranslator(nvidiuxTranslator)
+		self.ui.retranslateUi(self)
 	
 	def setAutoUpdate(self):
 		try:
@@ -860,7 +895,7 @@ class ShipHolderApplication(QMainWindow):
 				self.threadInfoGpu.stop()
 			else:
 				self.autoUpdate = True
-				self.threadInfoGpu = Mythread(self.updateTime, majGpu, [0], {"fen":myApp})
+				self.threadInfoGpu = Mythread(self.updateTime, majGpu, [0], {"fen":nvidiuxApp})
 				self.threadInfoGpu.setDaemon(True)
 				self.threadInfoGpu.start()
 			return True
@@ -870,7 +905,7 @@ class ShipHolderApplication(QMainWindow):
 	def setTimeUpdate(self,value):
 		self.updateTime = int(value)
 		self.threadInfoGpu.stop()
-		self.threadInfoGpu = Mythread(self.updateTime, majGpu, [0], {"fen":myApp})
+		self.threadInfoGpu = Mythread(self.updateTime, majGpu, [0], {"fen":nvidiuxApp})
 		self.threadInfoGpu.setDaemon(True)
 		self.threadInfoGpu.start()
 	
@@ -891,7 +926,6 @@ class ShipHolderApplication(QMainWindow):
 				self.ui.SliderFan.setEnabled(True)
 				self.ui.SliderFan.setSliderPosition(int(self.tabGpu[self.numGpu].fanSpeed))
 				self.ui.labelFanVitesse.setText(str(self.tabGpu[self.numGpu].fanSpeed)+ "%")
-	
 		else:
 			cmd = "nvidia-settings -a [gpu:" + str(self.numGpu) + "]/GPUFanControlState=0"
 			if sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
@@ -912,11 +946,10 @@ class ShipHolderApplication(QMainWindow):
 			self.threadMonitor.stop()
 			self.pidMonitor = 0
 		else:
-
 			proc = sub.Popen(['python2', '/usr/share/nvidiux/monitor/monitor.py', "&"])
 			self.pidMonitor = proc.pid
 			
-			self.threadMonitor = ThreadCheckMonitor([proc.pid], {"fen":myApp})
+			self.threadMonitor = ThreadCheckMonitor([proc.pid], {"fen":nvidiuxApp})
 			self.threadMonitor.start()
 			self.ui.buttonStartMonitor.setText("Stop")
 			self.ui.actionStartMonitor.setText("Stop")
@@ -949,6 +982,10 @@ class ShipHolderApplication(QMainWindow):
 		text = fileToSave.createTextNode(str(self.nvidiuxVersion))
 		version.appendChild(text)
 		racine.appendChild(version)
+		lang = fileToSave.createElement('lang')
+		text = fileToSave.createTextNode(str(self.language))
+		lang.appendChild(text)
+		racine.appendChild(lang)
 		update = fileToSave.createElement('update')
 		text = fileToSave.createTextNode(str(self.autoUpdate))
 		update.appendChild(text)
@@ -998,7 +1035,6 @@ class ShipHolderApplication(QMainWindow):
 			name.appendChild(text)
 			
 			freq = fileToSave.createElement('gpufreq')
-			
 			text = fileToSave.createTextNode(str(tempgpu.freqGpu))
 			freq.appendChild(text)
 			
@@ -1054,9 +1090,9 @@ class ShipHolderApplication(QMainWindow):
 		self.ui.lcdShader.display(self.tabGpu[self.numGpu].freqShader)
 		self.ui.SliderShader.setSliderPosition(self.tabGpu[self.numGpu].freqShader)
 		
-	def verifyGpu(self,gpuName):#-1:unknow 0:ok 1:not ok
+	def verifyGpu(self,gpuName):#-1:unknow 0:ok 1:not ok 
 		verified = ["GeForce GT 420M","GeForce GTX 460M","GeForce GTX 460","GeForce GTX 470","GeForce GTX 560M","GeForce GTX 560 Ti","GeForce GTX 570","GeForce GTX 580","GeForce GT 620","GeForce GT 630","GeForce GTX 650","GeForce GTX 660","GeForce GTX 750","GeForce GTX 750 TI","GeForce GTX 770"]
-		notWork = ["GeForce GTX TITAN Z","GeForce GTX TITAN Black","GeForce GTX TITAN","GeForce GTX 690","GeForce GTX 590",
+		notWork = ["GeForce GTX TITAN Z","GeForce GTX TITAN Black","GeForce GTX TITAN","GeForce GTX 690","GeForce GTX 590","GeForce GT 430",
 		"GeForce GT 340", "GeForce GT 330", "GeForce GT 320", "GeForce 315", "GeForce 310","GeForce GTS 360M", "GeForce GTS 350M", "GeForce GT 335M", "GeForce GT 330M","GeForce GT 325M", "GeForce GT 320M", "GeForce 320M", "GeForce 315M", "GeForce 310M", "GeForce 305M",
 		"GeForce GTX 295", "GeForce GTX 285","GeForce GTX 280", "GeForce GTX 275", "GeForce GTX 260", "GeForce GTS 250", "GeForce GTS 240", "GeForce GT 230", "GeForce GT 240", "GeForce GT 220", "GeForce G210", "GeForce 210", "GeForce 205",
 		"GeForce GTX 285M", "GeForce GTX 280M", "GeForce GTX 260M", "GeForce GTS 260M", "GeForce GTS 250M", "GeForce GT 240M", "GeForce GT 230M", "GeForce GT 220M", "GeForce G210M", "GeForce G205M",
@@ -1074,17 +1110,18 @@ class ShipHolderApplication(QMainWindow):
 			
 if __name__ == "__main__":
 	app = QApplication(sys.argv)
-	locale = QLocale.system().name()
-	translator=QTranslator()
-	#translator.load(QString("qt_") + locale,LibraryInfo.location(QLibraryInfo.TranslationsPath))
-	myApp = ShipHolderApplication(sys.argv)
-	threadMonitor = ThreadCheckMonitor([0], {"fen":myApp})
+	nvidiuxApp = NvidiuxApp(sys.argv)
+	threadMonitor = ThreadCheckMonitor([0], {"fen":nvidiuxApp})
 	threadInfoGpu = None
-	if myApp.autoUpdate:
-		threadInfoGpu = Mythread(myApp.updateTime, majGpu, [0], {"fen":myApp})
+	if nvidiuxApp.autoUpdate:
+		threadInfoGpu = Mythread(nvidiuxApp.updateTime, majGpu, [0], {"fen":nvidiuxApp})
 		threadInfoGpu.setDaemon(True)
 		threadInfoGpu.start()
-	myApp.setThread(threadMonitor,threadInfoGpu)
-	app.installTranslator(translator)
-	myApp.show()
+	nvidiuxApp.setThread(threadMonitor,threadInfoGpu)
+	
+	nvidiuxTranslator = QtCore.QTranslator()
+	if nvidiuxTranslator.load("/usr/share/nvidiux/nvidiux_" + nvidiuxApp.language):
+		app.installTranslator(nvidiuxTranslator)
+		nvidiuxApp.ui.retranslateUi(nvidiuxApp)
+	nvidiuxApp.show()
 	sys.exit(app.exec_())

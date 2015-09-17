@@ -22,7 +22,6 @@ try:
 except AttributeError:
     def _fromUtf8(s):
         return s
-
 try:
     _encoding = QtGui.QApplication.UnicodeUTF8
     def _translate(context, text, disambig):
@@ -36,10 +35,10 @@ class Ui_MainWindow(object):
         MainWindow.setObjectName(_fromUtf8("MainWindow"))
         MainWindow.resize(800, 544)
         MainWindow.setMaximumSize(QtCore.QSize(800, 554))
-        self.centralwidget = QtGui.QWidget(MainWindow)
+        self.centralwidget = QtGui.QWidget()
         self.centralwidget.setStyleSheet(_fromUtf8(""))
         self.centralwidget.setObjectName(_fromUtf8("centralwidget"))
-        
+        #~ 
         self.title = QtGui.QLabel(self.centralwidget)
         self.title.setGeometry(QtCore.QRect(16, 0, 180, 80))
         font = QtGui.QFont()
@@ -305,7 +304,6 @@ class Ui_MainWindow(object):
         self.buttonApply.setDefault(False)
         self.buttonApply.setObjectName(_fromUtf8("buttonApply"))
         
-        
         self.labelFan = QtGui.QLabel(self.groupBoxOverclock)
         self.labelFan.setGeometry(QtCore.QRect(28, 265, 60, 30))
         font = QtGui.QFont()
@@ -501,13 +499,13 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(_translate("MainWindow", "Nvidiux", None))
-        self.Memoire.setText(_translate("MainWindow", "Mémoire", None))
+        self.Memoire.setText(_translate("MainWindow", "Memoire", None))
         self.VitesseShader.setText(_translate("MainWindow", "Shader", None))
         self.VitesseGpu.setText(_translate("MainWindow", "Gpu", None))
         self.title.setText(_translate("MainWindow", "Nvidiux", None))
         self.buttonReset.setText(_translate("MainWindow", "Reset", None))
         self.buttonApply.setText(_translate("MainWindow", "Appliquer", None))
-        self.about.setText(_translate("MainWindow", "Version XXX", None))
+        #self.about.setText(_translate("MainWindow", "Version XXX", None))
         self.buttonAbout.setText(_translate("MainWindow", "i", None))
         self.labelFanVitesse.setText(_translate("MainWindow", "Auto",None))
         self.labelFan.setText(_translate("MainWindow", "Fan", None))
@@ -517,7 +515,7 @@ class Ui_MainWindow(object):
         self.buttonLoadProfile.setText(_translate("MainWindow", "Charger", None))
         self.buttonSaveProfile.setText(_translate("MainWindow", "Enregister", None))
         self.labelProfile.setText(_translate("MainWindow", "Profil", None))
-        self.nomGpu.setText(_translate("MainWindow", "Nom gpu", None))
+        #~ self.nomGpu.setText(_translate("MainWindow", "Nom gpu", None))
         self.labelMhzGpu.setText(_translate("MainWindow", "Mhz", None))
         self.labelMhzShader.setText(_translate("MainWindow", "Mhz", None))
         self.labelMhzMem.setText(_translate("MainWindow", "Mhz", None))
@@ -525,26 +523,24 @@ class Ui_MainWindow(object):
         self.checkBoxSli.setText(_translate("MainWindow", "Sli", None))
         self.checkBoxVaapi.setText(_translate("MainWindow", "Vaapi", None))
         self.checkBoxVSync.setText(_translate("MainWindow", "VSync", None))
-        self.PiloteVersion.setText(_translate("MainWindow", "Version pilote", None))
-        self.OpenGlSupport.setText(_translate("MainWindow", "OpenGl Support", None))
-        self.MemGpu.setText(_translate("MainWindow", "Mem Gpu", None))
-        self.CudaCore.setText(_translate("MainWindow", "Cudacore", None))
+        #~ self.PiloteVersion.setText(_translate("MainWindow", "Version pilote", None))
+        #~ self.OpenGlSupport.setText(_translate("MainWindow", "OpenGl Support", None))
+        #~ self.MemGpu.setText(_translate("MainWindow", "Mem Gpu", None))
+        #~ self.CudaCore.setText(_translate("MainWindow", "Cudacore", None))
         self.UGPU.setText(_translate("MainWindow", "Gpu utilisation", None))
         self.UMem.setText(_translate("MainWindow", "Mem utilisation", None))
         self.UPCIE.setText(_translate("MainWindow", "Pcie utili", None))
         self.Temp.setText(_translate("MainWindow", "Temp", None))
-        self.label_Img.setText(_translate("MainWindow", "Img", None))
-        self.label_Dfreq_Gpu.setText(_translate("MainWindow", "Gpu", None))
-        self.label_Dfreq_Shader.setText(_translate("MainWindow", "Shader", None))
-        self.label_Dfreq_Mem.setText(_translate("MainWindow", "Mem", None))
+        #~ self.label_Img.setText(_translate("MainWindow", "Img", None))
+        #self.label_Dfreq_Gpu.setText(_translate("MainWindow", "Gpu", None))
+        #self.label_Dfreq_Shader.setText(_translate("MainWindow", "Shader", None))
+        #self.label_Dfreq_Mem.setText(_translate("MainWindow", "Mem", None))
         self.menuFichier.setTitle(_translate("MainWindow", "Fichier", None))
         self.menuMonitor.setTitle(_translate("MainWindow", "Moniteur", None))
         self.actionQuitter.setText(_translate("MainWindow", "Quitter", None))
         self.actionStartMonitor.setText(_translate("MainWindow", "Start", None))
         self.actionConfigureMonitor.setText(_translate("MainWindow", "Configurer", None))
         self.actionAbout.setText(_translate("MainWindow", "A Propos", None))
-        self.actionPref.setText(_translate("MainWindow", "Préférences", None))
+        self.actionPref.setText(_translate("MainWindow", "Preferences", None))
         self.actionLoadProfile.setText(_translate("MainWindow", "Charger", None))
         self.actionSaveProfile.setText(_translate("MainWindow", "Enregistrer", None))
-       
-        

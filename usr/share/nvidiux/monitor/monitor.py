@@ -271,47 +271,20 @@ timeLabel = StringVar()
 gpu1 = GpuInfoMonitor()
 gpu1.time = 0
 monitorVersion = 0.97
-
-try:
-	profileFile = open(expanduser("~") + "/.nvidiux/monitor.xml", "r")
-	ndiFile = minidom.parse(profileFile)
-except:
-	print "pas de fichier"
-	
-versionElement = ndiFile.getElementsByTagName('version')
-if versionElement == []:
-	error = True
-	print "pb version"
-else:
-	monitorVersion = str(versionElement)
-	
-itemlist = ndiFile.getElementsByTagName('gpu')
-error = True
-errorCode = 0
+monitorVersionStr = "0.97C"
 listGpu = []
 gpuInfo = [] #idGpu,color, show
-if len(itemlist) > 0:
-	for item in itemlist:
-		if item.hasChildNodes():
-			for value in item.childNodes:
-				if value.nodeType == minidom.Node.ELEMENT_NODE:
-					gpuInfo.append(value.firstChild.nodeValue)
-				error = False
-			listGpu.append(gpuInfo)
-			gpuInfo = []
 confGpu = []
-for gpuInfo in listGpu:
-	confGpu.append(ElementConfGpu(gpuInfo[0],gpuInfo[1],gpuInfo[2])) #3 inf for each gpu (idGpu,color, show)
-	
+error = False
+print "Monitor version:" + monitorVersionStr
 
-		
 cmd = "nvidia-settings --query [gpu:0]/NvidiaDriverVersion"
 if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 	out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
 	versionPilote = float(out.split(':')[-1][1:])
 else:
 	sys.exit(1)
-if versionPilote > 349.00 and versionPilote < 352.00:
+if versionPilote > 349.00 and versionPilote < 349.53:
 	tkMessageBox.showwarning("Erreur Version","Le moniteur n'est pas compatible avec cette version:(%s)" % versionPilote)
         sys.exit(1)
 
@@ -325,6 +298,41 @@ if nbGpuNvidia == 1:
 else:
 	gpuName.set("Multi Gpu")
 
+try:
+	profileFile = open(expanduser("~") + "/.nvidiux/monitor.xml", "r")
+	ndiFile = minidom.parse(profileFile)
+except:
+	i = 1
+	while i <= nbGpuNvidia:
+		confGpu.append(ElementConfGpu(i,"255:0:0","True"))
+		i = i = i + 1
+	saveConf(confGpu,monitorVersion)
+	ndiFile = None
+
+if ndiFile != None:	
+	versionElement = ndiFile.getElementsByTagName('version')
+	if versionElement == []:
+		error = True
+	else:
+		monitorVersion = str(versionElement)
+		
+	itemlist = ndiFile.getElementsByTagName('gpu')
+	errorCode = 0
+	if len(itemlist) > 0:
+		for item in itemlist:
+			if item.hasChildNodes():
+				for value in item.childNodes:
+					if value.nodeType == minidom.Node.ELEMENT_NODE:
+						gpuInfo.append(value.firstChild.nodeValue)
+					error = False
+				listGpu.append(gpuInfo)
+				gpuInfo = []
+
+	for gpuInfo in listGpu:
+		confGpu.append(ElementConfGpu(gpuInfo[0],gpuInfo[1],gpuInfo[2])) #3 inf for each gpu (idGpu,color, show)
+	
+
+		
 
 cmd = "nvidia-settings --query [gpu:0]/GPUCurrentClockFreqsString"
 if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
