@@ -1,4 +1,4 @@
-# Nvidiux beta version 0.97
+# Nvidiux beta version 0.98
 En version
 
 Nvidiux is a graphical python tool to overclock or underclock your nvidia gpu  (generation 4XX  5XX  6XX 7XX)
@@ -17,7 +17,7 @@ For using this tools you must install
 simply install the deb file here : https://github.com/RunGp/Nvidiux/releases with your package manager
 or in command line use
 
-wget https://github.com/RunGp/Nvidiux/releases/download/0.97/nvidiux.deb
+wget https://github.com/RunGp/Nvidiux/releases/download/0.98/nvidiux.deb
 
 sudo dpkg -i nvidiux.deb
 
@@ -49,7 +49,7 @@ Installation :
 	
 ou taper les commandes dans votre terminal:
 
-wget https://github.com/RunGp/Nvidiux/releases/download/0.97/nvidiux.deb
+wget https://github.com/RunGp/Nvidiux/releases/download/0.98/nvidiux.deb
 
 sudo dpkg -i nvidiux.deb
 

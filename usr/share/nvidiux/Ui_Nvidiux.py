@@ -33,12 +33,11 @@ except AttributeError:
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName(_fromUtf8("MainWindow"))
-        MainWindow.resize(800, 544)
-        MainWindow.setMaximumSize(QtCore.QSize(800, 554))
+        MainWindow.resize(810, 550)
+        MainWindow.setMaximumSize(QtCore.QSize(810, 550))
         self.centralwidget = QtGui.QWidget()
         self.centralwidget.setStyleSheet(_fromUtf8(""))
         self.centralwidget.setObjectName(_fromUtf8("centralwidget"))
-        #~ 
         self.title = QtGui.QLabel(self.centralwidget)
         self.title.setGeometry(QtCore.QRect(16, 0, 180, 80))
         font = QtGui.QFont()
@@ -56,13 +55,13 @@ class Ui_MainWindow(object):
         self.about.setAlignment(QtCore.Qt.AlignCenter)
         self.about.setObjectName(_fromUtf8("about"))
         self.buttonAbout = QtGui.QPushButton(self.centralwidget)
-        self.buttonAbout.setGeometry(QtCore.QRect(110, 58, 24, 24))
+        self.buttonAbout.setGeometry(QtCore.QRect(115, 58, 24, 24))
         self.buttonAbout.setAutoDefault(False)
         self.buttonAbout.setDefault(False)
         self.buttonAbout.setFlat(False)
         self.buttonAbout.setObjectName(_fromUtf8("buttonAbout"))
         self.buttonConfigure = QtGui.QPushButton(self.centralwidget)
-        self.buttonConfigure.setGeometry(QtCore.QRect(145, 58, 24, 24))
+        self.buttonConfigure.setGeometry(QtCore.QRect(150, 57, 26, 26))
         self.buttonConfigure.setAutoDefault(False)
         self.buttonConfigure.setDefault(False)
         self.buttonConfigure.setFlat(False)
@@ -108,6 +107,7 @@ class Ui_MainWindow(object):
         font = QtGui.QFont()
         font.setPointSize(12)
         self.labelProfile.setFont(font) 
+        
         self.groupBoxMonitor = QtGui.QGroupBox(self.centralwidget)
         self.groupBoxMonitor.setGeometry(QtCore.QRect(210, 86, 198,65 ))
         self.groupBoxMonitor.setStyleSheet(_fromUtf8("QGroupBox \n"
@@ -148,19 +148,49 @@ class Ui_MainWindow(object):
         font.setPointSize(12)
         self.labelMonitor.setFont(font)
         
-        self.groupBoxInfoGpu = QtGui.QGroupBox(self.centralwidget)
-        self.groupBoxInfoGpu.setGeometry(QtCore.QRect(34, 156, 346,316))
-        self.groupBoxInfoGpu.setStyleSheet(_fromUtf8("QGroupBox \n"
+        self.groupBoxOvervolt = QtGui.QGroupBox(self.centralwidget)
+        self.groupBoxOvervolt.setGeometry(QtCore.QRect(415, 70, 120,81 ))
+        self.groupBoxOvervolt.setStyleSheet(_fromUtf8("QGroupBox \n"
 	"{ \n"
-	"border: 2px solid MediumBlue;\n"
-	"border-radius: 20px;\n"
+	"border: 2px solid SlateGrey;\n"
+	"border-radius: 10px;\n"
 	"}"))
-        self.groupBoxInfoGpu.setTitle(_fromUtf8(""))
-        self.groupBoxInfoGpu.setObjectName(_fromUtf8("groupBoxInfoGpu"))
-       
+        self.groupBoxOvervolt.setTitle(_fromUtf8(""))
+        self.groupBoxOvervolt.setObjectName(_fromUtf8("groupBoxOvervolt"))
+        self.groupBoxOvervolt.setVisible(False)
         
+        font = QtGui.QFont()
+        font.setPointSize(10)
+        font.setBold(True)
+        font.setWeight(40)
+        self.labelOvervolt = QtGui.QLabel(self.groupBoxOvervolt)
+        self.labelOvervolt.setGeometry(QtCore.QRect(10, 2, 100, 20))
+        self.labelOvervolt.setAlignment(QtCore.Qt.AlignCenter)
+        self.labelOvervolt.setObjectName(_fromUtf8("labelOvervolt"))
+        self.labelOvervolt.setFont(font)
+
+        self.spinBoxOvervolt = QtGui.QSpinBox(self.groupBoxOvervolt)
+        self.spinBoxOvervolt.setGeometry(QtCore.QRect(10, 20, 100, 25))
+        self.spinBoxOvervolt.setAccelerated(True)
+        self.spinBoxOvervolt.setPrefix("")
+        
+        self.spinBoxOvervolt.setMinimum(0)
+        self.spinBoxOvervolt.setMaximum(5)
+        self.spinBoxOvervolt.setValue(0)
+        self.spinBoxOvervolt.setObjectName(_fromUtf8("spinBoxOvervolt"))
+		
+        font = QtGui.QFont()
+        font.setPointSize(9)
+        self.buttonOvervolt = QtGui.QPushButton(self.groupBoxOvervolt)
+        self.buttonOvervolt.setGeometry(QtCore.QRect(5, 48, 110, 25))
+        self.buttonOvervolt.setFont(font)
+        self.buttonOvervolt.setAutoDefault(False)
+        self.buttonOvervolt.setDefault(False)
+        self.buttonOvervolt.setFlat(False)
+        self.buttonOvervolt.setObjectName(_fromUtf8("ButtonConfigureProfile"))
+
         self.groupBoxOverclock = QtGui.QGroupBox(self.centralwidget)
-        self.groupBoxOverclock.setGeometry(QtCore.QRect(406, 156, 386,316))
+        self.groupBoxOverclock.setGeometry(QtCore.QRect(416, 156, 386,316))
         self.groupBoxOverclock.setStyleSheet(_fromUtf8("QGroupBox \n"
 	"{ \n"
 	"border: 2px solid MediumBlue;\n"
@@ -168,7 +198,7 @@ class Ui_MainWindow(object):
 	"}"))
         self.groupBoxOverclock.setTitle(_fromUtf8(""))
         self.groupBoxOverclock.setObjectName(_fromUtf8("groupBoxOverclock"))
-        
+
         self.VitesseGpu = QtGui.QLabel(self.groupBoxOverclock)
         self.VitesseGpu.setGeometry(QtCore.QRect(10, 0, 130, 50))
         font = QtGui.QFont()
@@ -205,7 +235,6 @@ class Ui_MainWindow(object):
         self.SliderGpu.setOrientation(QtCore.Qt.Horizontal)
         self.SliderGpu.setObjectName(_fromUtf8("SliderGpu"))
         
-       
         self.VitesseShader = QtGui.QLabel(self.groupBoxOverclock)
         self.VitesseShader.setGeometry(QtCore.QRect(10, 70, 130, 50))
         font = QtGui.QFont()
@@ -337,10 +366,22 @@ class Ui_MainWindow(object):
         self.checkBoxFan.setGeometry(QtCore.QRect(8, 271, 20, 20))
         self.checkBoxFan.setCheckable(True)
         self.checkBoxFan.setChecked(False)
-        self.checkBoxFan.setObjectName(_fromUtf8("checkBoxOptimus"))
+        self.checkBoxFan.setObjectName(_fromUtf8("checkBoxFan"))
+        
+        
+        self.groupBoxInfoGpu = QtGui.QGroupBox(self.centralwidget)
+        self.groupBoxInfoGpu.setGeometry(QtCore.QRect(30, 156, 352,316))
+        self.groupBoxInfoGpu.setStyleSheet(_fromUtf8("QGroupBox \n"
+	"{ \n"
+	"border: 2px solid MediumBlue;\n"
+	"border-radius: 20px;\n"
+	"}"))
+        self.groupBoxInfoGpu.setTitle(_fromUtf8(""))
+        self.groupBoxInfoGpu.setObjectName(_fromUtf8("groupBoxInfoGpu"))
+        
 
-        self.nomGpu = QtGui.QLabel(self.centralwidget)
-        self.nomGpu.setGeometry(QtCore.QRect(0, 155, 400, 40))
+        self.nomGpu = QtGui.QLabel(self.groupBoxInfoGpu)
+        self.nomGpu.setGeometry(QtCore.QRect(25, 2, 300, 30))
         palette = QtGui.QPalette()
         brush = QtGui.QBrush(QtGui.QColor(255, 0, 0))
         brush.setStyle(QtCore.Qt.SolidPattern)
@@ -381,36 +422,37 @@ class Ui_MainWindow(object):
         self.Message.setAlignment(QtCore.Qt.AlignCenter)
         self.Message.setObjectName(_fromUtf8("Message"))
         
-        
-        
-        
-        self.checkBoxOptimus = QtGui.QCheckBox(self.centralwidget)
+        self.checkBoxVaapi = QtGui.QCheckBox(self.groupBoxInfoGpu)
+        self.checkBoxVaapi.setEnabled(False)
+        self.checkBoxVaapi.setGeometry(QtCore.QRect(5, 35, 60, 20))
+        self.checkBoxVaapi.setCheckable(True)
+        self.checkBoxVaapi.setObjectName(_fromUtf8("checkBoxVaapi"))
+        self.checkBoxOptimus = QtGui.QCheckBox(self.groupBoxInfoGpu)
         self.checkBoxOptimus.setEnabled(False)
-        self.checkBoxOptimus.setGeometry(QtCore.QRect(130, 190, 100, 22))
+        self.checkBoxOptimus.setGeometry(QtCore.QRect(70, 35, 76, 20))
         self.checkBoxOptimus.setCheckable(True)
         self.checkBoxOptimus.setChecked(False)
         self.checkBoxOptimus.setObjectName(_fromUtf8("checkBoxOptimus"))
-        self.checkBoxSli = QtGui.QCheckBox(self.centralwidget)
+        self.checkBoxSli = QtGui.QCheckBox(self.groupBoxInfoGpu)
         self.checkBoxSli.setEnabled(False)
-        self.checkBoxSli.setGeometry(QtCore.QRect(220, 190, 50, 22))
+        self.checkBoxSli.setGeometry(QtCore.QRect(150, 35, 50, 20))
         self.checkBoxSli.setCheckable(True)
         self.checkBoxSli.setObjectName(_fromUtf8("checkBoxSli"))
-        self.checkBoxVaapi = QtGui.QCheckBox(self.centralwidget)
-        self.checkBoxVaapi.setEnabled(False)
-        self.checkBoxVaapi.setGeometry(QtCore.QRect(60, 190, 70, 22))
-        self.checkBoxVaapi.setCheckable(True)
-        self.checkBoxVaapi.setObjectName(_fromUtf8("checkBoxVaapi"))
-        self.checkBoxVSync = QtGui.QCheckBox(self.centralwidget)
+        self.checkBoxVSync = QtGui.QCheckBox(self.groupBoxInfoGpu)
         self.checkBoxVSync.setEnabled(True)
-        self.checkBoxVSync.setGeometry(QtCore.QRect(270, 190, 100, 22))
+        self.checkBoxVSync.setGeometry(QtCore.QRect(195, 35, 65, 20))
         self.checkBoxVSync.setCheckable(True)
         self.checkBoxVSync.setChecked(False)
         self.checkBoxVSync.setObjectName(_fromUtf8("checkBoxVSync"))
-        
-        
+        self.checkBoxMPerf = QtGui.QCheckBox(self.groupBoxInfoGpu)
+        self.checkBoxMPerf.setEnabled(True)
+        self.checkBoxMPerf.setGeometry(QtCore.QRect(260, 35, 80, 20))
+        self.checkBoxMPerf.setCheckable(True)
+        self.checkBoxMPerf.setChecked(False)
+        self.checkBoxMPerf.setObjectName(_fromUtf8("checkBoxMPerf"))
         
         self.listWidgetGpu = QtGui.QListWidget(self.centralwidget)
-        self.listWidgetGpu.setGeometry(QtCore.QRect(220, 10, 300, 60))
+        self.listWidgetGpu.setGeometry(QtCore.QRect(210, 10, 200, 60))
         self.listWidgetGpu.setStyleSheet(_fromUtf8("background-color: rgb(207, 255, 233);"))
         self.listWidgetGpu.setObjectName(_fromUtf8("listWidgetGpu"))
         self.PiloteVersion = QtGui.QLabel(self.centralwidget)
@@ -505,17 +547,18 @@ class Ui_MainWindow(object):
         self.title.setText(_translate("MainWindow", "Nvidiux", None))
         self.buttonReset.setText(_translate("MainWindow", "Reset", None))
         self.buttonApply.setText(_translate("MainWindow", "Appliquer", None))
-        #self.about.setText(_translate("MainWindow", "Version XXX", None))
-        self.buttonAbout.setText(_translate("MainWindow", "i", None))
+        self.buttonAbout.setIcon(QtGui.QIcon("/usr/share/nvidiux/img/i.png"))
         self.labelFanVitesse.setText(_translate("MainWindow", "Auto",None))
         self.labelFan.setText(_translate("MainWindow", "Fan", None))
-        self.buttonStartMonitor.setText(_translate("MainWindow", "Start", None))
+        self.buttonStartMonitor.setText(_translate("MainWindow", "Lancer", None))
         self.buttonConfigureMonitor.setText(_translate("MainWindow", "Configurer", None))
+        self.labelOvervolt.setText(_translate("MainWindow", "Overvolt", None))
+        self.buttonOvervolt.setText(_translate("MainWindow", "Overvolt", None))
+        self.spinBoxOvervolt.setSuffix(_translate("MainWindow", " Mv", None))
         self.labelMonitor.setText(_translate("MainWindow", "Moniteur", None))
         self.buttonLoadProfile.setText(_translate("MainWindow", "Charger", None))
         self.buttonSaveProfile.setText(_translate("MainWindow", "Enregister", None))
         self.labelProfile.setText(_translate("MainWindow", "Profil", None))
-        #~ self.nomGpu.setText(_translate("MainWindow", "Nom gpu", None))
         self.labelMhzGpu.setText(_translate("MainWindow", "Mhz", None))
         self.labelMhzShader.setText(_translate("MainWindow", "Mhz", None))
         self.labelMhzMem.setText(_translate("MainWindow", "Mhz", None))
@@ -523,18 +566,15 @@ class Ui_MainWindow(object):
         self.checkBoxSli.setText(_translate("MainWindow", "Sli", None))
         self.checkBoxVaapi.setText(_translate("MainWindow", "Vaapi", None))
         self.checkBoxVSync.setText(_translate("MainWindow", "VSync", None))
-        #~ self.PiloteVersion.setText(_translate("MainWindow", "Version pilote", None))
-        #~ self.OpenGlSupport.setText(_translate("MainWindow", "OpenGl Support", None))
-        #~ self.MemGpu.setText(_translate("MainWindow", "Mem Gpu", None))
-        #~ self.CudaCore.setText(_translate("MainWindow", "Cudacore", None))
+        self.checkBoxMPerf.setText(_translate("MainWindow", "Max Perf", None))
+        self.PiloteVersion.setText(_translate("MainWindow", "Version pilote", None))
+        self.OpenGlSupport.setText(_translate("MainWindow", "OpenGl Support", None))
+        self.MemGpu.setText(_translate("MainWindow", "Mem Gpu", None))
+        self.CudaCore.setText(_translate("MainWindow", "Cudacore", None))
         self.UGPU.setText(_translate("MainWindow", "Gpu utilisation", None))
         self.UMem.setText(_translate("MainWindow", "Mem utilisation", None))
         self.UPCIE.setText(_translate("MainWindow", "Pcie utili", None))
         self.Temp.setText(_translate("MainWindow", "Temp", None))
-        #~ self.label_Img.setText(_translate("MainWindow", "Img", None))
-        #self.label_Dfreq_Gpu.setText(_translate("MainWindow", "Gpu", None))
-        #self.label_Dfreq_Shader.setText(_translate("MainWindow", "Shader", None))
-        #self.label_Dfreq_Mem.setText(_translate("MainWindow", "Mem", None))
         self.menuFichier.setTitle(_translate("MainWindow", "Fichier", None))
         self.menuMonitor.setTitle(_translate("MainWindow", "Moniteur", None))
         self.actionQuitter.setText(_translate("MainWindow", "Quitter", None))

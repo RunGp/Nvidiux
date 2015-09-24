@@ -91,15 +91,12 @@ class ElementConfGpu():
 	def getShow(self):
 		return self.show
 
+def closeEvent():
+	saveConf(confGpu,monitorVersion)
+	tkRT.destroy()
+
 def color(value):
-	if value == 0:
-		return confGpu[0].getColor()
-	elif value == 1:
-		return "blue"
-	elif value == 2:
-		return "yellow"
-	else:
-		return "white"
+	return confGpu[value].getColor()
 		
 def saveConf(listgpu,versionMonitor):
 	fileToSave = minidom.Document()
@@ -129,6 +126,7 @@ def saveConf(listgpu,versionMonitor):
 		filexml.write(fileToSave.toprettyxml())
 		filexml.close()
 	except:
+		print "Fail save monitor conf!"
 		return 1
 	return 0
 	
@@ -254,11 +252,10 @@ def loop():
 		timeLabel.set("Temps écoulé : " + str(int(gpu1.time / 1000)) + " secondes")
 	tkRT.after(interval,loop)
 
-
-
 interval = 1000
 tkRT=Tk()
 tkRT.title("Moniteur Nvidiux")
+tkRT.protocol('WM_DELETE_WINDOW', closeEvent)
 gpuName = StringVar()
 templabel = StringVar()
 fanlabel = StringVar()
@@ -270,8 +267,8 @@ shaderclklabel = StringVar()
 timeLabel = StringVar()
 gpu1 = GpuInfoMonitor()
 gpu1.time = 0
-monitorVersion = 0.97
-monitorVersionStr = "0.97C"
+monitorVersion = 0.98
+monitorVersionStr = "0.98"
 listGpu = []
 gpuInfo = [] #idGpu,color, show
 confGpu = []
@@ -302,20 +299,13 @@ try:
 	profileFile = open(expanduser("~") + "/.nvidiux/monitor.xml", "r")
 	ndiFile = minidom.parse(profileFile)
 except:
-	i = 1
-	while i <= nbGpuNvidia:
+	for i in range(1,nbGpuNvidia):
 		confGpu.append(ElementConfGpu(i,"255:0:0","True"))
-		i = i = i + 1
 	saveConf(confGpu,monitorVersion)
 	ndiFile = None
 
 if ndiFile != None:	
-	versionElement = ndiFile.getElementsByTagName('version')
-	if versionElement == []:
-		error = True
-	else:
-		monitorVersion = str(versionElement)
-		
+	versionElement = ndiFile.getElementsByTagName('version')	
 	itemlist = ndiFile.getElementsByTagName('gpu')
 	errorCode = 0
 	if len(itemlist) > 0:
@@ -331,9 +321,6 @@ if ndiFile != None:
 	for gpuInfo in listGpu:
 		confGpu.append(ElementConfGpu(gpuInfo[0],gpuInfo[1],gpuInfo[2])) #3 inf for each gpu (idGpu,color, show)
 	
-
-		
-
 cmd = "nvidia-settings --query [gpu:0]/GPUCurrentClockFreqsString"
 if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 	out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()

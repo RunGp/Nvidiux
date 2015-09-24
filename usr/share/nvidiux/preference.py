@@ -43,9 +43,11 @@ class Ui_Pref(QWidget):
 	
 	loadTab = 1
 	version = ""
+	versionStr = ""
 	error = -1
 	warning = -2
 	nbGpuNvidia = 0
+	listGpuMonitor = []
 	tabGpu = []
 	info = 0
 	startWithSystem = False
@@ -53,6 +55,7 @@ class Ui_Pref(QWidget):
 	autoUpdateValue = False
 	updateTime = 1
 	home = ""
+	overclockEnabled = True
 	mainWindows = None
 	language = None
 	app = None
@@ -70,26 +73,31 @@ class Ui_Pref(QWidget):
 		self.updateTime = tabigpu[3]
 		self.startWithSystem = tabigpu[4]
 		self.valueStart = tabigpu[5]
+		self.overclockEnabled = tabigpu[6]
+		self.overclockEnabled = True
 		self.home = expanduser("~")
-		self.setupUi()
 		self.mainWindows = mainW
+		self.setupUi()
 		
 	def closeEvent(self, event):
+		self.saveMonitorConf()
 		self.mainWindows.saveNvidiuxConf()
 	
 	def checkSys(self,value):
 		if os.path.isfile("/usr/bin/crontab") and os.path.isfile("/usr/bin/sudo"):
-			if value: # enable sys button
+			if value: #Enable sys button
 				self.buttonParcSys.setEnabled(True)
-			else: #disable sysButton
+			else: #Disable sysButton
 				self.buttonParcSys.setEnabled(False)
-				if self.startWithSystem: #disable cron
+				if self.startWithSystem: #Disable cron
 					if not self.disableCronStartup():
-						self.showError(33,"Échec","Impossible de continuer",self.error)
+						self.showError(33,_translate("Form","Échec",_translate("Form","Impossible de continuer",None),self.error))
 						self.buttonParcSys.setEnabled(True)
 						self.checkBoxSys.setChecked(True)
+				else:
+					self.labelGpuSys.setText(_translate("Form","Chargement profil au démarage désactivé",None))
 		else:
-			self.showError(32,"Échec","Impossible de continuer",self.error)
+			self.showError(32,_translate("Form","Échec",_translate("Form","Impossible de continuer",None),self.error))
 			self.checkBoxSys.setChecked(False)
 	
 	def checkNvi(self,value):
@@ -97,7 +105,7 @@ class Ui_Pref(QWidget):
 			self.buttonParcNvi.setEnabled(True)
 		else:
 			self.buttonParcNvi.setEnabled(False)
-			self.labelGpuNvi.setText(_fromUtf8("Auto chargement profil désactivé"))
+			self.labelGpuNvi.setText(_translate("Form","Auto chargement profil désactivé",None))
 			if os.path.isfile(self.home + "/.nvidiux/Startup.ndi"):
 				os.remove(self.home + "/.nvidiux/Startup.ndi")
 				
@@ -111,14 +119,14 @@ class Ui_Pref(QWidget):
 				self.mainWindows.setTimeUpdate(1)
 			self.autoUpdateValue = value
 		else:
-			self.showError(50,"Échec","Erreur Interne",self.error)
+			self.showError(50,_translate("Form","Échec",None),_translate("Form","Erreur Interne",None),self.error)
 	
 	def disableCronStartup(self):
 		startUpFilePath = expanduser("~") + "/.nvidiux/startup.sh"
 		cmd = "bash /usr/share/nvidiux/toRoot.sh disableStartupCron.sh " + expanduser("~") + " >> /dev/null 2>&1"
 		result = sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True)
 		if int(result) == 0:
-			self.labelGpuSys.setText(_fromUtf8("Chargement profil au démarage désactivé"))
+			self.labelGpuSys.setText(_fromUtf8(_translate("Form","Chargement profil au démarage désactivé",None)))
 			self.startWithSystem = False
 			self.valueStart = "0:0"
 			self.mainWindows.setStartSystem(self.startWithSystem,self.valueStart)
@@ -126,10 +134,10 @@ class Ui_Pref(QWidget):
 				os.remove(startUpFilePath)
 			return True
 		elif int(result) == 255:
-			self.showError(38,"Erreur Credential","Votre mot de passe est incorrect",self.error)
+			self.showError(38,_translate("Form","Erreur Credential",None),_translate("Form","Votre mot de passe est incorrect",None),self.error)
 			return False
 		else:
-			self.showError(40,"Erreur non gérée","Erreur non gérée",self.error)
+			self.showError(40,_translate("Form","Erreur non gérée",None),_translate("Form","Erreur non gérée",None),self.error)
 			return False
 		return True
 		
@@ -159,29 +167,29 @@ class Ui_Pref(QWidget):
 		cmd = "bash /usr/share/nvidiux/toRoot.sh enableStartupCron.sh " + expanduser("~") + " >> /dev/null 2>&1"
 		result = sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True)
 		if int(result) == 0:
-			self.labelGpuSys.setText(_fromUtf8("Le profil:" + fileToLoad + "\nsera chargé à chaque démarrage du systeme"))
+			self.labelGpuSys.setText(_fromUtf8(_translate("Form","Le profil:",None)) + fileToLoad + _translate("Form","\nsera chargé à chaque démarrage du systeme",None))
 			self.startWithSystem = True
 			self.valueStart = str(offsetGpu) + ":" + str(offsetMem)
 			self.mainWindows.setStartSystem(self.startWithSystem,self.valueStart)
 			self.mainWindows.saveNvidiuxConf()
 			
 		elif int(result) == 255:
-			self.showError(37,"Erreur Credential","Votre mot de passe est incorrect",self.error)
+			self.showError(37,_translate("Form","Erreur Credential",None),_translate("Form","Votre mot de passe est incorrect",None),self.error)
 			return None
 		else:
-			self.showError(39,"Erreur non gérée","Erreur non gérée",self.error)
+			self.showError(39,_translate("Form","Erreur non gérée",None),_translate("Form","Erreur non gérée",None),self.error)
 			
 	def loadProfileNvi(self):
 		tab,fileToLoad = self.loadProfile()
 		if fileToLoad != None:
-			self.labelGpuNvi.setText("Fichier:"+ fileToLoad)
+			self.labelGpuNvi.setText(_translate("Form","Fichier:",None) + fileToLoad)
 		else:
 			return None
 		try:
 			if os.path.isfile(fileToLoad):
 				shutil.copy(fileToLoad,self.home + "/.nvidiux/Startup.ndi")
 		except:
-			self.showError(29,"Échec","Impossible de modifier la configuration",self.warning)
+			self.showError(29,_translate("Form","Échec",None),_translate("Form","Impossible de modifier la configuration",None),self.warning)
 				
 	def loadProfile(self,path = ""):
 		if path == "":
@@ -194,7 +202,7 @@ class Ui_Pref(QWidget):
 			profileFile = open(profileFileName, "r")
 			ndiFile = minidom.parse(profileFile)
 		except:
-			return self.showError(-1,"Fichier endommagé","Impossible de charger ce fichier de configuration",self.warning)
+			return self.showError(-1,_translate("Form","Fichier endommagé",None),_translate("Form","Impossible de charger ce fichier de configuration",None),self.warning)
 			
 		versionElement = ndiFile.getElementsByTagName('version')	
 		itemlist = ndiFile.getElementsByTagName('gpu')
@@ -209,15 +217,15 @@ class Ui_Pref(QWidget):
 						if value.nodeType == minidom.Node.ELEMENT_NODE:
 							gpu.append(value.firstChild.nodeValue)
 						error = False
-					listgpu.append(gpu)
+					self.listGpuMonitor.append(gpu)
 					gpu = []	
 		if versionElement == []:
 			error = True
-			self.showError(errorCode ,"Échec","Échec chargement du profil",19)
+			self.showError(errorCode ,_translate("Form","Échec",None),_translate("Form","Échec chargement du profil",None),19)
 			return None	
 		if not error:
 			if float(self.version) < float(versionElement[0].firstChild.nodeValue):
-				reply = QtGui.QMessageBox.question(self, _fromUtf8("Version"),_fromUtf8("Le profil est pour une version plus recente de Nvidiux\nCharger tous de même ?"), QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
+				reply = QtGui.QMessageBox.question(self, _fromUtf8(_translate("Form","Version",None)),_fromUtf8(_translate("Form","Le profil est pour une version plus recente de Nvidiux\nCharger tous de même ?",None)), QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
 				if reply == QtGui.QMessageBox.No:
 					errorCode = 11
 			i = 0
@@ -234,11 +242,11 @@ class Ui_Pref(QWidget):
 							errorCode = 15
 						i = i + 1
 				except:
-					self.showError(21,"Échec","Échec chargement du profil",self.error)
+					self.showError(21,_translate("Form","Échec",None),_translate("Form","Échec chargement du profil",None),self.error)
 			else:
 				error = 16
 		if errorCode != 0:
-			self.showError(errorCode ,"Échec","Échec chargement du profil",self.error)
+			self.showError(errorCode ,_translate("Form","Échec",None),_translate("Form","Échec chargement du profil",None),self.error)
 			return None
 		i = 0
 		return listgpu,profileFileName
@@ -251,31 +259,77 @@ class Ui_Pref(QWidget):
 		self.checkBoxNvi.setText(_translate("Form", "Appliquer ce profil au demarrage de nvidiux", None))
 		self.buttonParcSys.setText(_translate("Form", "Parcourir", None))
 		self.checkBoxSys.setText(_translate("Form", "Appliquer ce profil au demarrage du systeme", None))
-		self.labelGpuSys.setText(_translate("Form", "Aucun profil", None))
 		self.checkBoxTime.setText(_translate("Form", "Actualiser les donnees toutes les", None))
 		self.spinBox.setSuffix(_translate("Form", " secondes", None))
-		#self.spinBoxMon.setSuffix(_translate("Form", " secondes", None))
 		self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabConf), _translate("Form", "Nvidiux", None))
 		self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabMoniteur), _translate("Form", "Moniteur", None))
 		self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabAbout), _translate("Form", "A Propos", None))
 		self.labelInfo.setText(self.labelInfo.text() + "\nVersion:" + self.versionStr)
 	
+	def saveMonitorConf(self):
+
+		fileToSave = minidom.Document()
+		racine = fileToSave.createElement("nvidiux")
+		fileToSave.appendChild(racine)
+		version = fileToSave.createElement('version')
+		text = fileToSave.createTextNode(self.versionStr)
+		version.appendChild(text)
+		racine.appendChild(version)
+		i = 0
+		for gpu in self.tabGpu:
+			gpuElem = fileToSave.createElement('gpu')
+			idGpu = fileToSave.createElement('id')
+			text = fileToSave.createTextNode(str(i))
+			idGpu.appendChild(text)
+			gpuElem.appendChild(idGpu)
+			colorGpu = fileToSave.createElement('color')
+			pColor = self.listButtonColor[i].palette().color(1)
+			text = fileToSave.createTextNode(str(pColor.getRgb()[0]) + ":" + str(pColor.getRgb()[1]) + ":" + str(pColor.getRgb()[2]))
+			colorGpu.appendChild(text)
+			gpuElem.appendChild(colorGpu)
+			showGpu = fileToSave.createElement('show')
+			text = fileToSave.createTextNode(str(self.listCheckBoxGpu[i].isChecked()))
+			showGpu.appendChild(text)
+			gpuElem.appendChild(showGpu)
+			racine.appendChild(gpuElem)
+			i = i + 1
+		try:	
+			filexml = open(expanduser("~") + "/.nvidiux/monitor.xml", "w")
+			filexml.write(fileToSave.toprettyxml())
+			filexml.close()
+		except:
+			return 1
+		return 0
+	
 	def setTime(self,value):
 		self.mainWindows.setTimeUpdate(value)
+		self.updateTime = value
 		
-	def setlanguage(self,lang):
+	def setLanguage(self,lang):
 		tabLang = ["fr_FR","en_EN"]
 		language = tabLang[lang]
 		self.mainWindows.setLanguage(language)
 		prefTranslator = QtCore.QTranslator()
 		if prefTranslator.load("/usr/share/nvidiux/nvidiux_" + language):
 			self.app.installTranslator(prefTranslator)
+			self.mainWindows.setTimeUpdate(self.updateTime)
 			self.retranslateUi()
+		QMessageBox.information(self,_translate("Form","Information",None),_fromUtf8(_translate("Form","Veuillez redemarer nvidiux",None)))
 		
+	def setOvervolt(self,value):
+		if value == True:
+			reply = QtGui.QMessageBox.question(self, _translate("Form","Attention",None),_translate("Form","Fonction reservé aux experts.\nModifier le voltage du gpu peut causer des dommages irréversibles et annule la garantie.\nActiver tous de même cette fonction ?",None), QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
+			if reply == QtGui.QMessageBox.Yes:
+				self.mainWindows.setShowOvervoltButton(value)
+			else:
+				self.checkBoxOverVolt.setChecked(False)
+		else:
+			self.mainWindows.setShowOvervoltButton(value)
+
 	def setupUi(self):
 		self.setObjectName(_fromUtf8("Form"))
-		self.resize(600, 540)
-		self.setFixedSize(600, 540)
+		self.resize(580, 540)
+		self.setFixedSize(580, 540)
 		
 		self.tabWidget = QtGui.QTabWidget(self)
 		self.tabWidget.setGeometry(QtCore.QRect(0, 0, 598, 538))
@@ -284,52 +338,73 @@ class Ui_Pref(QWidget):
 		self.tabConf = QtGui.QWidget()
 		self.tabConf.setObjectName(_fromUtf8("tabConf"))
 		
-		self.buttonParcNvi = QtGui.QPushButton(self.tabConf)
-		self.buttonParcNvi.setGeometry(QtCore.QRect(360, 18, 100, 27))
+		
+		self.groupBoxPrefProfile = QtGui.QGroupBox(self.tabConf)
+		self.groupBoxPrefProfile.setGeometry(QtCore.QRect(10, 130, 465,120 ))
+		self.groupBoxPrefProfile.setStyleSheet(_fromUtf8("QGroupBox \n"
+			"{ \n"
+			"border: 1px solid SlateGrey;\n"
+			"border-radius: 10px;\n"
+			"}"))
+		self.groupBoxPrefProfile.setTitle(_fromUtf8(""))
+		self.groupBoxPrefProfile.setObjectName(_fromUtf8("groupBoxPrefProfile"))
+		
+		
+		self.buttonParcNvi = QtGui.QPushButton(self.groupBoxPrefProfile)
+		self.buttonParcNvi.setGeometry(QtCore.QRect(360, 5, 100, 27))
 		self.buttonParcNvi.setObjectName(_fromUtf8("buttonParcNvi"))
 		self.buttonParcNvi.setEnabled(False)
-		self.checkBoxNvi = QtGui.QCheckBox(self.tabConf)
-		self.checkBoxNvi.setGeometry(QtCore.QRect(10, 20, 340, 20))
+		self.checkBoxNvi = QtGui.QCheckBox(self.groupBoxPrefProfile)
+		self.checkBoxNvi.setGeometry(QtCore.QRect(10, 5, 340, 20))
 		self.checkBoxNvi.setObjectName(_fromUtf8("checkBoxNvi"))
-		self.labelGpuNvi = QtGui.QLabel(self.tabConf)
-		self.labelGpuNvi.setGeometry(QtCore.QRect(60, 40, 500, 80))
+		self.labelGpuNvi = QtGui.QLabel(self.groupBoxPrefProfile)
+		self.labelGpuNvi.setGeometry(QtCore.QRect(35, 25, 400, 30))
 		self.labelGpuNvi.setObjectName(_fromUtf8("labelGpuNvi"))
+		self.checkBoxNvi.setEnabled(self.overclockEnabled)
 		
 		if os.path.isfile(self.home + "/.nvidiux/Startup.ndi"):
 			self.checkBoxNvi.setChecked(True)
 			self.buttonParcNvi.setEnabled(True)
 			self.labelGpuNvi.setText("Auto chargement actif")
 
-		self.buttonParcSys = QtGui.QPushButton(self.tabConf)
-		self.buttonParcSys.setGeometry(QtCore.QRect(360, 98, 100, 27))
+		self.buttonParcSys = QtGui.QPushButton(self.groupBoxPrefProfile)
+		self.buttonParcSys.setGeometry(QtCore.QRect(360, 65, 100, 27))
 		self.buttonParcSys.setObjectName(_fromUtf8("buttonParcSys"))
 		self.buttonParcSys.setEnabled(False)
-		self.checkBoxSys = QtGui.QCheckBox(self.tabConf)
-		self.checkBoxSys.setGeometry(QtCore.QRect(10, 100, 340, 20))
+		self.checkBoxSys = QtGui.QCheckBox(self.groupBoxPrefProfile)
+		self.checkBoxSys.setGeometry(QtCore.QRect(10, 65, 340, 20))
 		self.checkBoxSys.setObjectName(_fromUtf8("checkBoxSys"))
-		self.labelGpuSys = QtGui.QLabel(self.tabConf)
-		self.labelGpuSys.setGeometry(QtCore.QRect(60, 120, 500, 80))
+		self.labelGpuSys = QtGui.QLabel(self.groupBoxPrefProfile)
+		self.labelGpuSys.setGeometry(QtCore.QRect(35, 85, 400, 30))
 		self.labelGpuSys.setObjectName(_fromUtf8("labelGpuSys"))
 		
-		if os.path.isfile("/usr/bin/crontab") and os.path.isfile("/usr/bin/sudo"):
+		if os.path.isfile("/usr/bin/crontab") and os.path.isfile("/usr/bin/sudo") and self.overclockEnabled:
 			self.checkBoxSys.setEnabled(True)
 		else:
-			self.checkBoxSys.setEnabled(False)
-			
+			self.checkBoxSys.setEnabled(False)			
 		if self.startWithSystem:
 			self.checkBoxSys.setChecked(True)
 			self.labelGpuSys.setText(_fromUtf8("Profil chargé"))
 		else:
 			self.checkBoxSys.setChecked(False)
 			
-		
-		self.checkBoxTime = QtGui.QCheckBox(self.tabConf)
-		self.checkBoxTime.setGeometry(QtCore.QRect(10, 200, 340, 20))
+		self.groupBoxPrefGen = QtGui.QGroupBox(self.tabConf)
+		self.groupBoxPrefGen.setGeometry(QtCore.QRect(10, 10, 370,110 ))
+		self.groupBoxPrefGen.setStyleSheet(_fromUtf8("QGroupBox \n"
+			"{ \n"
+			"border: 1px solid SlateGrey;\n"
+			"border-radius: 10px;\n"
+			"}"))
+		self.groupBoxPrefGen.setTitle(_fromUtf8(""))
+		self.groupBoxPrefGen.setObjectName(_fromUtf8("groupBoxPrefGen"))
+	
+		self.checkBoxTime = QtGui.QCheckBox(self.groupBoxPrefGen)
+		self.checkBoxTime.setGeometry(QtCore.QRect(10, 50, 320, 20))
 		self.checkBoxTime.setChecked(self.autoUpdateValue)
 		self.checkBoxTime.setObjectName(_fromUtf8("checkBoxTime"))
 		
-		self.spinBox = QtGui.QSpinBox(self.tabConf)
-		self.spinBox.setGeometry(QtCore.QRect(260, 196, 100, 25))
+		self.spinBox = QtGui.QSpinBox(self.groupBoxPrefGen)
+		self.spinBox.setGeometry(QtCore.QRect(250, 47, 100, 25))
 		self.spinBox.setAccelerated(True)
 		self.spinBox.setPrefix(_fromUtf8(""))
 		self.spinBox.setMinimum(1)
@@ -338,14 +413,14 @@ class Ui_Pref(QWidget):
 		self.spinBox.setValue(self.updateTime)
 		self.spinBox.setObjectName(_fromUtf8("spinBox"))
 		
-		self.labelLang = QtGui.QLabel(self.tabConf)
-		self.labelLang.setGeometry(QtCore.QRect(18, 225, 200, 80))
+		self.labelLang = QtGui.QLabel(self.groupBoxPrefGen)
+		self.labelLang.setGeometry(QtCore.QRect(10, 5, 200, 40))
 		self.labelLang.setObjectName(_fromUtf8("labelLang"))
 		self.labelLang.setText(_translate("Form","Langue",None))
 		
-		self.ComboLang=QComboBox(self.tabConf)
+		self.ComboLang=QComboBox(self.groupBoxPrefGen)
 		self.ComboLang.setObjectName("List language")
-		self.ComboLang.setGeometry(QtCore.QRect(90, 248, 200, 30))
+		self.ComboLang.setGeometry(QtCore.QRect(90, 8, 200, 30))
 		self.ComboLang.addItem("Francais")
 		self.ComboLang.addItem("English")
 		if self.language == "fr_FR":
@@ -358,32 +433,90 @@ class Ui_Pref(QWidget):
 		self.tabMoniteur.setObjectName(_fromUtf8("tabMoniteur"))
 		self.tabWidget.addTab(self.tabMoniteur, _fromUtf8(""))
 		
-		
+		self.checkBoxOverVolt = QtGui.QCheckBox(self.groupBoxPrefGen)
+		self.checkBoxOverVolt.setGeometry(QtCore.QRect(10, 75, 320, 20))
+		self.checkBoxOverVolt.setChecked(False)
+		if self.version >= 346.16:
+			self.checkBoxOverVolt.setEnabled(self.overclockEnabled)
+		else:
+			self.checkBoxOverVolt.setEnabled(False)
+			
+		self.checkBoxOverVolt.setObjectName(_fromUtf8("checkBoxOverVolt"))
 		self.checkBoxUpdateMon = QtGui.QCheckBox(self.tabMoniteur)
-		self.checkBoxUpdateMon.setGeometry(QtCore.QRect(10, 20, 340, 20))
+		self.checkBoxUpdateMon.setGeometry(QtCore.QRect(10, 20, 20, 20))
 		self.checkBoxUpdateMon.setObjectName(_fromUtf8("checkBoxUpdateMon"))
-		self.labelUpdateMon = QtGui.QLabel(self.tabMoniteur)
-		self.labelUpdateMon.setGeometry(QtCore.QRect(40, 20, 340, 20))
-		self.labelUpdateMon.setObjectName(_fromUtf8("UpdateMon"))
 		self.checkBoxUpdateMon.setEnabled(False)
-		self.labelUpdateMon.setText("Rafraichissement continu")
+		self.checkBoxUpdateMon.setChecked(True)
 		
-		#~ self.colorBox = QtGui.QColorDialog(self.tabMoniteur)
-		#~ self.colorBox.setObjectName(_fromUtf8("colorBox"))
-		#~ self.buttonColor = QtGui.QPushButton(self.tabMoniteur)
-		#~ self.buttonColor.setGeometry(QtCore.QRect(80, 80, 80, 80))
-		#~ self.buttonColor.setObjectName(_fromUtf8("buttonColor"))
-		#~ self.buttonColor.setEnabled(True)
+		self.labelUpdateMon = QtGui.QLabel(self.tabMoniteur)
+		self.labelUpdateMon.setGeometry(QtCore.QRect(30, 20, 340, 20))
+		self.labelUpdateMon.setObjectName(_fromUtf8("UpdateMon"))
+		self.labelUpdateMon.setText(_translate("Form", "Rafraichissement continu",None))
 		#~ self.spinBoxMon = QtGui.QSpinBox(self.tabMoniteur)
-		#~ self.spinBoxMon.setGeometry(QtCore.QRect(100, 100, 100, 25))
+		#~ self.spinBoxMon.setGeometry(QtCore.QRect(200, 17, 100, 25))
 		#~ self.spinBoxMon.setAccelerated(True)
-		#~ self.spinBoxMon.setPrefix(_fromUtf8(""))
+		#~ self.spinBoxMon.setPrefix(_fromUtf8("sec"))
 		#~ self.spinBoxMon.setMinimum(1)
 		#~ self.spinBoxMon.setMaximum(60)
 		#~ self.spinBoxMon.setEnabled(False)
 		#~ self.spinBoxMon.setValue(self.updateTime)
 		#~ self.spinBoxMon.setObjectName(_fromUtf8("spinBoxMon"))
 		
+		gpuInfo = []
+		ndiFile = None
+		try:
+			profileFile = open(expanduser("~") + "/.nvidiux/monitor.xml", "r")
+			ndiFile = minidom.parse(profileFile)
+		except:
+			print "Pas de fichier conf monitor"
+			
+		if ndiFile != None:	
+			versionElement = ndiFile.getElementsByTagName('version')	
+			itemlist = ndiFile.getElementsByTagName('gpu')
+			errorCode = 0
+			if len(itemlist) > 0:
+				for item in itemlist:
+					if item.hasChildNodes():
+						for value in item.childNodes:
+							if value.nodeType == minidom.Node.ELEMENT_NODE:
+								gpuInfo.append(value.firstChild.nodeValue)
+							error = False
+						self.listGpuMonitor.append(gpuInfo)
+						gpuInfo = []
+
+		self.groupBoxPrefGpu = QtGui.QGroupBox(self.tabMoniteur)
+		self.groupBoxPrefGpu.setGeometry(QtCore.QRect(10, 50, 220, 50 * self.nbGpuNvidia + 5 ))
+		self.groupBoxPrefGpu.setStyleSheet(_fromUtf8("QGroupBox \n"
+			"{ \n"
+			"border: 1px solid SlateGrey;\n"
+			"border-radius: 10px;\n"
+			"}"))
+		self.groupBoxPrefGpu.setTitle(_fromUtf8(""))
+		self.groupBoxPrefGpu.setObjectName(_fromUtf8("groupBoxPrefGpu"))
+		self.listLabelGpu = list()
+		self.listButtonColor = list()
+		self.listCheckBoxGpu = list()
+		mapperPref = QSignalMapper(self)
+		for i in range(0, self.nbGpuNvidia):
+			self.listLabelGpu.append(QtGui.QLabel(self.groupBoxPrefGpu))
+			self.listLabelGpu[i].setGeometry(QtCore.QRect(10, 5 + i * 50, 150, 20))
+			self.listLabelGpu[i].setText(str(i + 1) + ":" + str(self.tabGpu[i].nameGpu))
+			self.listCheckBoxGpu.append(QtGui.QCheckBox(self.groupBoxPrefGpu))
+			self.listCheckBoxGpu[i].setGeometry(QtCore.QRect(8, 30 + i * 50, 150, 20))
+			if self.listGpuMonitor[i][2] == "False":
+				self.listCheckBoxGpu[i].setChecked(False)
+			else:
+				self.listCheckBoxGpu[i].setChecked(True)
+			self.listCheckBoxGpu[i].setText(_translate("Form", "Afficher ce gpu", None))
+			self.listButtonColor.append(QtGui.QPushButton(self.groupBoxPrefGpu))
+			self.listButtonColor[i].setGeometry(QtCore.QRect(170, 5 + i * 50, 45, 45))
+			self.listButtonColor[i].setEnabled(True)
+			self.listButtonColor[i].setStyleSheet("border-radius: 10px;\nbackground-color:rgb(" + self.listGpuMonitor[i][1].replace(":",",") + ")")
+			self.listButtonColor[i].connect(self.listButtonColor[i],QtCore.SIGNAL("clicked(bool)"),mapperPref,QtCore.SLOT("map()"))
+			mapperPref.setMapping(self.listButtonColor[i],i);
+		
+		self.connect(mapperPref, SIGNAL("mapped(int)"),self.showColor)	
+		self.colorBox = QtGui.QColorDialog(self.groupBoxPrefGpu)
 		self.tabAbout = QtGui.QWidget()
 		self.tabAbout.setObjectName(_fromUtf8("tabAbout"))
 		
@@ -411,9 +544,9 @@ class Ui_Pref(QWidget):
 		font.setWeight(75)
 		font.setStyleStrategy(QtGui.QFont.PreferAntialias)
 		self.labelInfo.setFont(font)
-		self.labelInfo.setText(_translate("Form", "Permet d'underclocker ou d'overclocker votre gpu nvidia\n(C) 2014 Payet Guillaume\nNvidiux n'est en aucun cas affilié à Nvidia",None))
+		self.labelInfo.setText(_translate("Form", "Permet d'underclocker ou d'overclocker votre gpu nvidia\n(C) 2014 Payet Guillaume\nNvidiux n'est en aucun cas affilié à Nvidia",None) + "\nVersion : " + self.versionStr)
 		self.textBrowser = QtGui.QTextBrowser(self.tabAbout)
-		self.textBrowser.setGeometry(QtCore.QRect(10, 280, 580, 240))
+		self.textBrowser.setGeometry(QtCore.QRect(10, 280, 560, 240))
 		if os.path.isfile("/usr/share/nvidiux/licences/gpl-3.0_" + self.language + ".txt"):
 			txtFile = open("/usr/share/nvidiux/licences/gpl-3.0_" + self.language + ".txt", "r")
 			self.textBrowser.setText(_fromUtf8(txtFile.read()))
@@ -423,24 +556,25 @@ class Ui_Pref(QWidget):
 		else:
 			self.textBrowser.setText(_fromUtf8("Programme distribué sous license GPL V3\nVoir http://www.gnu.org/licenses/gpl-3.0.txt"))	
 		self.tabWidget.addTab(self.tabAbout, _fromUtf8(""))
+		
 		self.buttonParcNvi.connect(self.buttonParcNvi,SIGNAL("released()"),self.loadProfileNvi)
 		self.checkBoxNvi.connect(self.checkBoxNvi,QtCore.SIGNAL("clicked(bool)"),self.checkNvi)
 		self.checkBoxTime.connect(self.checkBoxTime,QtCore.SIGNAL("clicked(bool)"),self.checkTime)
 		self.spinBox.connect(self.spinBox,QtCore.SIGNAL("valueChanged(int)"),self.setTime)
 		self.buttonParcSys.connect(self.buttonParcSys,SIGNAL("released()"),self.enableCronStartup)
 		self.checkBoxSys.connect(self.checkBoxSys,QtCore.SIGNAL("clicked(bool)"),self.checkSys)
-		self.ComboLang.connect(self.ComboLang,QtCore.SIGNAL("currentIndexChanged(int)"),self.setlanguage)
-		#~ self.buttonColor.connect(self.buttonColor,QtCore.SIGNAL("clicked(bool)"),self.showColor)
+		self.ComboLang.connect(self.ComboLang,QtCore.SIGNAL("currentIndexChanged(int)"),self.setLanguage)
+		self.checkBoxOverVolt.connect(self.checkBoxOverVolt,QtCore.SIGNAL("clicked(bool)"),self.setOvervolt)
 		
 		self.setWindowTitle(_translate("Form", "Préférences", None))
 		self.buttonParcNvi.setText(_translate("Form", "Parcourir", None))
 		self.checkBoxNvi.setText(_translate("Form", "Appliquer ce profil au demarrage de nvidiux", None))
 		self.buttonParcSys.setText(_translate("Form", "Parcourir", None))
 		self.checkBoxSys.setText(_translate("Form", "Appliquer ce profil au demarrage du systeme", None))
-		self.labelGpuSys.setText(_translate("Form", "Aucun profil", None))
+		
+		self.checkBoxOverVolt.setText(_translate("Form", "Activer overvoltage", None))
 		self.checkBoxTime.setText(_translate("Form", "Actualiser les donnees toutes les", None))
 		self.spinBox.setSuffix(_translate("Form", " secondes", None))
-		#self.spinBoxMon.setSuffix(_translate("Form", " secondes", None))
 		self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabConf), _translate("Form", "Nvidiux", None))
 		self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabMoniteur), _translate("Form", "Moniteur", None))
 		self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabAbout), _translate("Form", "A Propos", None))
@@ -451,10 +585,10 @@ class Ui_Pref(QWidget):
 			self.retranslateUi()
 		self.tabWidget.setCurrentIndex(self.loadTab)
 	
-	def showColor(self):
+	def showColor(self,idButton):
 		pColor = self.colorBox.getColor()
-		print pColor
-		
+		self.listButtonColor[idButton].setStyleSheet("border-radius: 10px;\nbackground-color:rgb(" + str(pColor.getRgb()[0]) + "," + str(pColor.getRgb()[1]) + "," + str(pColor.getRgb()[2]) + ")")
+
 	def showError(self,errorCode,title,errorMsg,etype):
 		if etype == self.error:
 			errorMsg = errorMsg + "\nError Code:" + str(errorCode)

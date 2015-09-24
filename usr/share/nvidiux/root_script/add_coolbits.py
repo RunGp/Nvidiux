@@ -19,12 +19,12 @@ import sys,fileinput,os
 if os.path.isfile("/etc/X11/xorg.conf"):
 	os.popen("cp /etc/X11/xorg.conf /etc/X11/xorg.conf.bak").read()
 	for line in fileinput.input("/etc/X11/xorg.conf",inplace=True): 
-	    print line.replace("\n","").replace("Section \"Device\"", "Section \"Device\"\n    Option         \"Coolbits\" \"12\"")
+	    print line.replace("\n","").replace("Section \"Device\"", "Section \"Device\"\n    Option         \"Coolbits\" \"28\"")
 
 else:
 	print os.popen("nvidia-xconfig").read()
 	os.popen("cp /etc/X11/xorg.conf /etc/X11/xorg.conf.bak").read()
 	for line in fileinput.input("/etc/X11/xorg.conf",inplace=True): 
-	    print line.replace("\n","").replace("Section \"Device\"", "Section \"Device\"\n    Option         \"Coolbits\" \"12\"")
+	    print line.replace("\n","").replace("Section \"Device\"", "Section \"Device\"\n    Option         \"Coolbits\" \"28\"")
 
 os.chmod("/etc/X11/xorg.conf", 0664)
