@@ -44,6 +44,7 @@ class Ui_Pref(QWidget):
 	loadTab = 1
 	version = ""
 	versionStr = ""
+	versionPilote = "331:31"
 	error = -1
 	warning = -2
 	nbGpuNvidia = 0
@@ -74,7 +75,7 @@ class Ui_Pref(QWidget):
 		self.startWithSystem = tabigpu[4]
 		self.valueStart = tabigpu[5]
 		self.overclockEnabled = tabigpu[6]
-		self.overclockEnabled = True
+		self.versionPilote = tabigpu[7]
 		self.home = expanduser("~")
 		self.mainWindows = mainW
 		self.setupUi()
@@ -381,13 +382,14 @@ class Ui_Pref(QWidget):
 		if os.path.isfile("/usr/bin/crontab") and os.path.isfile("/usr/bin/sudo") and self.overclockEnabled:
 			self.checkBoxSys.setEnabled(True)
 		else:
-			self.checkBoxSys.setEnabled(False)			
+			self.checkBoxSys.setEnabled(False)	
+					
 		if self.startWithSystem:
 			self.checkBoxSys.setChecked(True)
 			self.labelGpuSys.setText(_fromUtf8("Profil chargé"))
 		else:
 			self.checkBoxSys.setChecked(False)
-			
+
 		self.groupBoxPrefGen = QtGui.QGroupBox(self.tabConf)
 		self.groupBoxPrefGen.setGeometry(QtCore.QRect(10, 10, 370,110 ))
 		self.groupBoxPrefGen.setStyleSheet(_fromUtf8("QGroupBox \n"
@@ -436,8 +438,18 @@ class Ui_Pref(QWidget):
 		self.checkBoxOverVolt = QtGui.QCheckBox(self.groupBoxPrefGen)
 		self.checkBoxOverVolt.setGeometry(QtCore.QRect(10, 75, 320, 20))
 		self.checkBoxOverVolt.setChecked(False)
-		if self.version >= 346.16:
-			self.checkBoxOverVolt.setEnabled(self.overclockEnabled)
+		if self.versionPilote >= 346.16 and self.overclockEnabled:
+			overvolt = True
+			for i in range(0, self.nbGpuNvidia):
+				if overvolt:
+					cmd = "nvidia-settings --query [gpu:" + str(i) + "]/GPUOverVoltageOffset"
+					out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+					try:
+						if int(out.split('range')[1].split("(inclusive)")[0].split("-")[1]) == 0:
+							overvolt = False
+					except:
+						overvolt = False
+			self.checkBoxOverVolt.setEnabled(overvolt)
 		else:
 			self.checkBoxOverVolt.setEnabled(False)
 			

@@ -166,7 +166,7 @@ class NvidiuxApp(QMainWindow):
 	nbGpu = -1
 	nbGpuNvidia = -1
 	optimus = 0
-	nvidiuxVersionStr = "0.98"
+	nvidiuxVersionStr = "0.98b"
 	nvidiuxVersion = 0.98
 	change = 0
 	isFermiArch = []
@@ -204,6 +204,7 @@ class NvidiuxApp(QMainWindow):
 		tabGpu.append(self.startWithSystem)
 		tabGpu.append(self.valueStart)
 		tabGpu.append(self.overclockEnabled)
+		tabGpu.append(self.versionPilote)
 		tabLang.append(self.language)
 		tabLang.append(app)
 		self.form = Ui_Pref(2,self.nvidiuxVersionStr,self.nvidiuxVersion,tabLang,tabGpu,self)
@@ -324,6 +325,7 @@ class NvidiuxApp(QMainWindow):
 		tabGpu.append(self.startWithSystem)
 		tabGpu.append(self.valueStart)
 		tabGpu.append(self.overclockEnabled)
+		tabGpu.append(self.versionPilote)
 		tabLang.append(self.language)
 		tabLang.append(app)
 		self.form = Ui_Pref(1,self.nvidiuxVersionStr,self.nvidiuxVersion,tabLang,tabGpu,self)
@@ -435,7 +437,6 @@ class NvidiuxApp(QMainWindow):
 		if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 			out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
 			self.versionPilote = float(out.split(':')[-1][1:])
-			
 		else:
 			self.showError(29,_translate("nvidiux","Échec",None),_translate("nvidiux","Impossible de determiner la version des drivers",None),self.error)
 		if self.versionPilote > 355.11:
@@ -712,6 +713,7 @@ class NvidiuxApp(QMainWindow):
 		tabGpu.append(self.startWithSystem)
 		tabGpu.append(self.valueStart)
 		tabGpu.append(self.overclockEnabled)
+		tabGpu.append(self.versionPilote)
 		tabLang.append(self.language)
 		tabLang.append(app)
 		self.form = Ui_Pref(0,self.nvidiuxVersionStr,self.nvidiuxVersion,tabLang,tabGpu,self)
@@ -814,7 +816,7 @@ class NvidiuxApp(QMainWindow):
 					self.ui.checkBoxMPerf.setChecked(True)
 			
 	def overvolt(self):
-		print "Todo overvolt"
+		print "Todo overvolt at:" + self.ui.spinBoxOvervolt.value
 		
 	def overclock(self,mode):
 		success = False
@@ -936,6 +938,18 @@ class NvidiuxApp(QMainWindow):
 			return False
 	
 	def setShowOvervoltButton(self,value):
+		if value:
+			cmd = "nvidia-settings --query [gpu:" + str(self.numGpu) + "]/GPUOverVoltageOffset"
+			out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+			try:
+				valueMaxOvervolt = int(out.split('range')[1].split("(inclusive)")[0].split("-")[1])
+				if valueMaxOvervolt == 0:
+					value = False
+				else:
+					self.ui.spinBoxOvervolt.setMaximum(valueMaxOvervolt)
+			except:
+				value = False
+		
 		self.groupBoxOvervoltVisible = value
 		self.ui.groupBoxOvervolt.setVisible(value)
 			
