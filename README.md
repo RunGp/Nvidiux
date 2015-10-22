@@ -1,35 +1,35 @@
 # Nvidiux beta version 0.98
-En version
+Licence:gpl-3.0 :https://github.com/RunGp/Nvidiux/blob/master/usr/share/nvidiux/gpl-3.0.txt
+English version
 
-Nvidiux is a graphical python tool to overclock or underclock your nvidia gpu  (generation 4XX  5XX  6XX 7XX)
+Nvidiux is a graphical python tool to overclock or underclock your nvidia gpu (generation 4XX  5XX  6XX 7XX)
 il also provide :
 - Fan control 
 - Auto overclock at startup
 - Graphical monitoring for 4 params (temp,gpu load,speed fan (%) and graphic memory use (%))
-- overvolting (soon)
+- Overvolting
 
 For using this tools you must install 
  - nvidia proprietary drivers 331 or later (min 337 to use overclock)
 
-simply install the deb file here : https://github.com/RunGp/Nvidiux/releases with your package manager
+Simply install the deb file here : https://github.com/RunGp/Nvidiux/releases with your package manager
 
 or in command line use :
 - wget https://github.com/RunGp/Nvidiux/releases/download/0.98/nvidiux.deb
 - sudo dpkg -i nvidiux.deb
 - sudo apt-get install -f
-- nvidiux
 
- Dependancy:,python 2.7,python-qt4,gksu,vainfo,python-tk,python-psutil
+ Dependancy:python 2.7,python-qt4,gksu,vainfo,python-tk,python-psutil
 
 Work on : 
-- ubuntu 12.04+ and derivative 
-- debian 7.0+
-- arch (manual installation dependancy:python 2.7,python-qt4,gksu,vainfo,python-tk,python2-psutil)
-- fedora 15 and newer 
+- Ubuntu 12.04+ and derivative 
+- Debian 7.0+
+- Arch (manual installation)
+- Fedora 15 and newer 
 
 =============================================================
 
-FR Version: Plus d'information (Francais) : http://forum.ubuntu-fr.org/viewtopic.php?id=1589261
+FR Version
 
 Nvidiux est un outil graphique pour overclocker/underclocker facilement votre gpu nvidia (generation 4XX ou plus recent)
 Il permet aussi 
@@ -45,25 +45,28 @@ Pour installer vous devez installer :
 Installation :
 	Installez le paquet deb se trouvant ici (https://github.com/RunGp/Nvidiux/releases) avec votre instalateur de paquet favoris
 	
-ou taper les commandes dans votre terminal:
+Ou taper les commandes dans votre terminal:
 
 - wget https://github.com/RunGp/Nvidiux/releases/download/0.98/nvidiux.deb
 - sudo dpkg -i nvidiux.deb
 - sudo apt-get install -f
 
 testé sous:
-- Ubuntu 12.04 +
+- Ubuntu 12.04 + et ses dérivés
 - Debian 7.0 +
-- Arch
+- Arch (installation manuelle)
 - Fedora 15
 
+Plus d'information (Francais) : http://forum.ubuntu-fr.org/viewtopic.php?id=1589261
+
 =============================================================
-Licence:gpl-3.0 :https://github.com/RunGp/Nvidiux/blob/master/usr/share/nvidiux/gpl-3.0.txt
+Image version 0.97 avec l'interface en francais
 
 ![alt tag](http://pix.toile-libre.org/upload/original/1438594970.png)
 
 ![alt tag](http://pix.toile-libre.org/upload/original/1438596113.png)
 
-
-
+=============================================================
+I search linguist for traduce nvidiux on another language
+Licence:gpl-3.0 :https://github.com/RunGp/Nvidiux/blob/master/usr/share/nvidiux/gpl-3.0.txt
 

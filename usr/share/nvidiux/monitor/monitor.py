@@ -239,7 +239,7 @@ def loop():
 			except:
 				sys.exit(1)
 		else:
-			self.showError(31,"Échec","Échec chargement des parametres Gpu",self.error)
+			self.showError(31,"Echec","Echec chargement des parametres Gpu",self.error)
 	else:
 		coreclklabel.set("Multi GPU")
 		
@@ -333,7 +333,7 @@ if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 	except:
 		sys.exit(1)
 else:
-	self.showError(31,"Échec","Échec chargement des parametres Gpu",self.error)
+	self.showError(31,"Echec","Echec chargement des parametres Gpu",self.error)
 
 timeLabel.set("Temps écoulé : 0 seconde")
 

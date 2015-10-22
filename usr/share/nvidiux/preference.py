@@ -57,6 +57,7 @@ class Ui_Pref(QWidget):
 	updateTime = 1
 	home = ""
 	overclockEnabled = True
+	overvoltEnabled = False
 	mainWindows = None
 	language = None
 	app = None
@@ -75,7 +76,8 @@ class Ui_Pref(QWidget):
 		self.startWithSystem = tabigpu[4]
 		self.valueStart = tabigpu[5]
 		self.overclockEnabled = tabigpu[6]
-		self.versionPilote = tabigpu[7]
+		self.overvoltEnabled = tabigpu[7]
+		self.versionPilote = tabigpu[8]
 		self.home = expanduser("~")
 		self.mainWindows = mainW
 		self.setupUi()
@@ -92,13 +94,13 @@ class Ui_Pref(QWidget):
 				self.buttonParcSys.setEnabled(False)
 				if self.startWithSystem: #Disable cron
 					if not self.disableCronStartup():
-						self.showError(33,_translate("Form","Échec",_translate("Form","Impossible de continuer",None),self.error))
+						self.showError(33,_translate("Form","Echec",_translate("Form","Impossible de continuer",None),self.error))
 						self.buttonParcSys.setEnabled(True)
 						self.checkBoxSys.setChecked(True)
 				else:
 					self.labelGpuSys.setText(_translate("Form","Chargement profil au démarage désactivé",None))
 		else:
-			self.showError(32,_translate("Form","Échec",_translate("Form","Impossible de continuer",None),self.error))
+			self.showError(32,_translate("Form","Echec",_translate("Form","Impossible de continuer",None),self.error))
 			self.checkBoxSys.setChecked(False)
 	
 	def checkNvi(self,value):
@@ -120,7 +122,7 @@ class Ui_Pref(QWidget):
 				self.mainWindows.setTimeUpdate(1)
 			self.autoUpdateValue = value
 		else:
-			self.showError(50,_translate("Form","Échec",None),_translate("Form","Erreur Interne",None),self.error)
+			self.showError(50,_translate("Form","Echec",None),_translate("Form","Erreur Interne",None),self.error)
 	
 	def disableCronStartup(self):
 		startUpFilePath = expanduser("~") + "/.nvidiux/startup.sh"
@@ -190,7 +192,7 @@ class Ui_Pref(QWidget):
 			if os.path.isfile(fileToLoad):
 				shutil.copy(fileToLoad,self.home + "/.nvidiux/Startup.ndi")
 		except:
-			self.showError(29,_translate("Form","Échec",None),_translate("Form","Impossible de modifier la configuration",None),self.warning)
+			self.showError(29,_translate("Form","Echec",None),_translate("Form","Impossible de modifier la configuration",None),self.warning)
 				
 	def loadProfile(self,path = ""):
 		if path == "":
@@ -215,14 +217,19 @@ class Ui_Pref(QWidget):
 			for item in itemlist:
 				if item.hasChildNodes():
 					for value in item.childNodes:
-						if value.nodeType == minidom.Node.ELEMENT_NODE:
-							gpu.append(value.firstChild.nodeValue)
+						try:
+							if value.nodeType == minidom.Node.ELEMENT_NODE:
+								gpu.append(value.firstChild.nodeValue)
+						except:
+							error = True
+							self.showError(errorCode ,_translate("nvidiux","Echec",None),_translate("nvidiux","Echec chargement du profil",None),19)
+							return 1
 						error = False
 					self.listGpuMonitor.append(gpu)
 					gpu = []	
 		if versionElement == []:
 			error = True
-			self.showError(errorCode ,_translate("Form","Échec",None),_translate("Form","Échec chargement du profil",None),19)
+			self.showError(errorCode ,_translate("Form","Echec",None),_translate("Form","Echec chargement du profil",None),19)
 			return None	
 		if not error:
 			if float(self.version) < float(versionElement[0].firstChild.nodeValue):
@@ -241,13 +248,15 @@ class Ui_Pref(QWidget):
 							errorCode = 14
 						if int(tempgpu[3]) < int((self.tabGpu[i].defaultFreqMem)) * 0.80 or int(tempgpu[3]) > int((self.tabGpu[i].defaultFreqMem)) * 1.3:
 							errorCode = 15
+						if int(tempgpu[4]) < 0 or int(tempgpu[4]) > self.tabGpu[i].maxOvervolt:
+							errorCode = 15
 						i = i + 1
 				except:
-					self.showError(21,_translate("Form","Échec",None),_translate("Form","Échec chargement du profil",None),self.error)
+					self.showError(21,_translate("Form","Echec",None),_translate("Form","Echec chargement du profil",None),self.error)
 			else:
 				error = 16
 		if errorCode != 0:
-			self.showError(errorCode ,_translate("Form","Échec",None),_translate("Form","Échec chargement du profil",None),self.error)
+			self.showError(errorCode ,_translate("Form","Echec",None),_translate("Form","Echec chargement du profil",None),self.error)
 			return None
 		i = 0
 		return listgpu,profileFileName
@@ -319,13 +328,15 @@ class Ui_Pref(QWidget):
 		
 	def setOvervolt(self,value):
 		if value == True:
-			reply = QtGui.QMessageBox.question(self, _translate("Form","Attention",None),_translate("Form","Fonction reservé aux experts.\nModifier le voltage du gpu peut causer des dommages irréversibles et annule la garantie.\nActiver tous de même cette fonction ?",None), QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
+			reply = QtGui.QMessageBox.question(self, _translate("Form","Attention",None),_translate("Form","Fonction reservé aux experts.\nModifier le voltage du gpu peut causer des dommages irréversibles et annule la garantie.\nNvidiux n'est pas responsable des eventuels dommages due a une utilisation de cette fonction\nActiver tous de même cette fonctionnalité ?",None), QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
 			if reply == QtGui.QMessageBox.Yes:
 				self.mainWindows.setShowOvervoltButton(value)
+				self.overvoltEnabled = True
 			else:
 				self.checkBoxOverVolt.setChecked(False)
 		else:
 			self.mainWindows.setShowOvervoltButton(value)
+			self.overvoltEnabled = False
 
 	def setupUi(self):
 		self.setObjectName(_fromUtf8("Form"))
@@ -450,9 +461,12 @@ class Ui_Pref(QWidget):
 					except:
 						overvolt = False
 			self.checkBoxOverVolt.setEnabled(overvolt)
+			if self.overvoltEnabled:
+				self.checkBoxOverVolt.setChecked(True)
 		else:
 			self.checkBoxOverVolt.setEnabled(False)
-			
+		
+		self.checkBoxOverVolt.setEnabled(True)	
 		self.checkBoxOverVolt.setObjectName(_fromUtf8("checkBoxOverVolt"))
 		self.checkBoxUpdateMon = QtGui.QCheckBox(self.tabMoniteur)
 		self.checkBoxUpdateMon.setGeometry(QtCore.QRect(10, 20, 20, 20))
