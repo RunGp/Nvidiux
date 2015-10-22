@@ -1,5 +1,8 @@
-# Nvidiux beta version 0.98
+# Nvidiux V 0.98
 Licence:gpl-3.0 :https://github.com/RunGp/Nvidiux/blob/master/usr/share/nvidiux/gpl-3.0.txt
+
+=============================================================
+
 English version
 
 Nvidiux is a graphical python tool to overclock or underclock your nvidia gpu (generation 4XX  5XX  6XX 7XX)
@@ -26,6 +29,8 @@ Work on :
 - Debian 7.0+
 - Arch (manual installation)
 - Fedora 15 and newer 
+
+![alt tag](http://pix.toile-libre.org/upload/original/1445524419.png)
 
 =============================================================
 
@@ -68,5 +73,4 @@ Image version 0.97 avec l'interface en francais
 
 =============================================================
 I search linguist for traduce nvidiux on another language
-Licence:gpl-3.0 :https://github.com/RunGp/Nvidiux/blob/master/usr/share/nvidiux/gpl-3.0.txt
 
