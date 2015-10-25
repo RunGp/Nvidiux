@@ -98,7 +98,7 @@ class Ui_Pref(QWidget):
 						self.buttonParcSys.setEnabled(True)
 						self.checkBoxSys.setChecked(True)
 				else:
-					self.labelGpuSys.setText(_translate("Form","Chargement profil au démarage désactivé",None))
+					self.labelGpuSys.setText(_translate("Form","Chargement profil au demarage desactive",None))
 		else:
 			self.showError(32,_translate("Form","Echec",_translate("Form","Impossible de continuer",None),self.error))
 			self.checkBoxSys.setChecked(False)
@@ -108,7 +108,7 @@ class Ui_Pref(QWidget):
 			self.buttonParcNvi.setEnabled(True)
 		else:
 			self.buttonParcNvi.setEnabled(False)
-			self.labelGpuNvi.setText(_translate("Form","Auto chargement profil désactivé",None))
+			self.labelGpuNvi.setText(_translate("Form","Auto chargement profil desactive",None))
 			if os.path.isfile(self.home + "/.nvidiux/Startup.ndi"):
 				os.remove(self.home + "/.nvidiux/Startup.ndi")
 				
@@ -129,7 +129,7 @@ class Ui_Pref(QWidget):
 		cmd = "bash /usr/share/nvidiux/toRoot.sh disableStartupCron.sh " + expanduser("~") + " >> /dev/null 2>&1"
 		result = sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True)
 		if int(result) == 0:
-			self.labelGpuSys.setText(_fromUtf8(_translate("Form","Chargement profil au démarage désactivé",None)))
+			self.labelGpuSys.setText(_fromUtf8(_translate("Form","Chargement profil au demarage desactive",None)))
 			self.startWithSystem = False
 			self.valueStart = "0:0"
 			self.mainWindows.setStartSystem(self.startWithSystem,self.valueStart)
@@ -140,11 +140,13 @@ class Ui_Pref(QWidget):
 			self.showError(38,_translate("Form","Erreur Credential",None),_translate("Form","Votre mot de passe est incorrect",None),self.error)
 			return False
 		else:
-			self.showError(40,_translate("Form","Erreur non gérée",None),_translate("Form","Erreur non gérée",None),self.error)
+			self.showError(40,_translate("Form","Erreur non geree",None),_translate("Form","Erreur non geree",None),self.error)
 			return False
 		return True
 		
 	def enableCronStartup(self):
+		offsetGpu = 0
+		offsetMem = 0
 		tab,fileToLoad = self.loadProfile()
 		if tab == None:
 			return None
@@ -157,11 +159,19 @@ class Ui_Pref(QWidget):
 			disp = os.environ['DISPLAY']
 		script = "#!/bin/bash\nsleep 60\n"
 		i = 0
+		if self.tabGpu[i].overvolt > self.tabGpu[i].maxOvervolt:
+			self.showError(41,_translate("Form","Erreur non geree",None),_translate("Form","Erreur non geree",None),self.error)
+			return 1
+		self.tabGpu[i].overvolt = 10
 		for gpu in tab:
+			if self.tabGpu[i].overvolt > 0 and self.versionPilote >= 346.16 :
+				cmd = "sudo -u " + getpass.getuser() + " nvidia-settings -a \"[gpu:" + str(i) + "]/GPUOVerVoltageOffset=" + str(self.tabGpu[i].overvolt) + "\" -c " + disp + " >> /dev/null 2>&1 \n"
+				script = script + cmd
 			offsetGpu = int(tab[i][1]) - int(self.tabGpu[i].defaultFreqGpu)
 			offsetMem = int(tab[i][3]) - int(self.tabGpu[i].defaultFreqMem)
-			cmd = "sudo -u " + getpass.getuser() + " nvidia-settings -a \"[gpu:" + str(i) + "]/GPUGraphicsClockOffset[2]=" + str(offsetGpu) + "\" -a \"[gpu:" + str(i) + "]/GPUMemoryTransferRateOffset[2]=" + str(offsetMem) + "\" -c " + disp + " >> /dev/null 2>&1 \n"
-			script = script + cmd
+			if offsetGpu != 0 or offsetMem != 0:
+				cmd = "sudo -u " + getpass.getuser() + " nvidia-settings -a \"[gpu:" + str(i) + "]/GPUGraphicsClockOffset[2]=" + str(offsetGpu) + "\" -a \"[gpu:" + str(i) + "]/GPUMemoryTransferRateOffset[2]=" + str(offsetMem) + "\" -c " + disp + " >> /dev/null 2>&1 \n"
+				script = script + cmd
 			i+=1
 		script += "exit $?\n"
 		fileSh.write(script)
@@ -170,7 +180,7 @@ class Ui_Pref(QWidget):
 		cmd = "bash /usr/share/nvidiux/toRoot.sh enableStartupCron.sh " + expanduser("~") + " >> /dev/null 2>&1"
 		result = sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True)
 		if int(result) == 0:
-			self.labelGpuSys.setText(_fromUtf8(_translate("Form","Le profil:",None)) + fileToLoad + _translate("Form","\nsera chargé à chaque démarrage du systeme",None))
+			self.labelGpuSys.setText(_fromUtf8(_translate("Form","Le profil:",None)) + fileToLoad + _translate("Form","\nsera charge à chaque demarrage du systeme",None))
 			self.startWithSystem = True
 			self.valueStart = str(offsetGpu) + ":" + str(offsetMem)
 			self.mainWindows.setStartSystem(self.startWithSystem,self.valueStart)
@@ -178,16 +188,18 @@ class Ui_Pref(QWidget):
 			
 		elif int(result) == 255:
 			self.showError(37,_translate("Form","Erreur Credential",None),_translate("Form","Votre mot de passe est incorrect",None),self.error)
-			return None
+			return -1
 		else:
-			self.showError(39,_translate("Form","Erreur non gérée",None),_translate("Form","Erreur non gérée",None),self.error)
+			self.showError(39,_translate("Form","Erreur non geree",None),_translate("Form","Erreur non geree",None),self.error)
+			return -1
+		return 0
 			
 	def loadProfileNvi(self):
 		tab,fileToLoad = self.loadProfile()
 		if fileToLoad != None:
 			self.labelGpuNvi.setText(_translate("Form","Fichier:",None) + fileToLoad)
 		else:
-			return None
+			return None,None
 		try:
 			if os.path.isfile(fileToLoad):
 				shutil.copy(fileToLoad,self.home + "/.nvidiux/Startup.ndi")
@@ -198,14 +210,14 @@ class Ui_Pref(QWidget):
 		if path == "":
 			profileFileName = QtGui.QFileDialog.getOpenFileName(self,'Ouvrir profil',"","*.ndi") 
 			if profileFileName == "" or profileFileName == None:
-				return None
+				return None,None
 		else:
 			profileFileName = path
 		try:
 			profileFile = open(profileFileName, "r")
 			ndiFile = minidom.parse(profileFile)
 		except:
-			return self.showError(-1,_translate("Form","Fichier endommagé",None),_translate("Form","Impossible de charger ce fichier de configuration",None),self.warning)
+			return self.showError(-1,_translate("Form","Fichier endommage",None),_translate("Form","Impossible de charger ce fichier de configuration",None),self.warning)
 			
 		versionElement = ndiFile.getElementsByTagName('version')	
 		itemlist = ndiFile.getElementsByTagName('gpu')
@@ -225,18 +237,19 @@ class Ui_Pref(QWidget):
 							self.showError(errorCode ,_translate("nvidiux","Echec",None),_translate("nvidiux","Echec chargement du profil",None),19)
 							return 1
 						error = False
-					self.listGpuMonitor.append(gpu)
+					listgpu.append(gpu)
 					gpu = []	
 		if versionElement == []:
 			error = True
 			self.showError(errorCode ,_translate("Form","Echec",None),_translate("Form","Echec chargement du profil",None),19)
-			return None	
+			return None
 		if not error:
 			if float(self.version) < float(versionElement[0].firstChild.nodeValue):
 				reply = QtGui.QMessageBox.question(self, _fromUtf8(_translate("Form","Version",None)),_fromUtf8(_translate("Form","Le profil est pour une version plus recente de Nvidiux\nCharger tous de même ?",None)), QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
 				if reply == QtGui.QMessageBox.No:
 					errorCode = 11
 			i = 0
+			
 			if self.nbGpuNvidia == len(listgpu):
 				try:
 					for tempgpu in listgpu:
@@ -263,8 +276,8 @@ class Ui_Pref(QWidget):
 	
 	def retranslateUi(self):
 		self.labelUpdateMon.setText(_translate("Form", "Rafraichissement continu", None))
-		self.labelInfo.setText(_translate("Form", "Permet d'underclocker ou d'overclocker votre gpu nvidia\n(C) 2014 Payet Guillaume\nNvidiux n'est en aucun cas affilié à Nvidia", None))
-		self.setWindowTitle(_translate("Form", "Préférences", None))
+		self.labelInfo.setText(_translate("Form", "Permet d'underclocker ou d'overclocker votre gpu nvidia\n(C) 2014 Payet Guillaume\nNvidiux n'est en aucun cas affilie à Nvidia", None))
+		self.setWindowTitle(_translate("Form", "Preferences", None))
 		self.buttonParcNvi.setText(_translate("Form", "Parcourir", None))
 		self.checkBoxNvi.setText(_translate("Form", "Appliquer ce profil au demarrage de nvidiux", None))
 		self.buttonParcSys.setText(_translate("Form", "Parcourir", None))
@@ -328,7 +341,7 @@ class Ui_Pref(QWidget):
 		
 	def setOvervolt(self,value):
 		if value == True:
-			reply = QtGui.QMessageBox.question(self, _translate("Form","Attention",None),_translate("Form","Fonction reservé aux experts.\nModifier le voltage du gpu peut causer des dommages irréversibles et annule la garantie.\nNvidiux n'est pas responsable des eventuels dommages due a une utilisation de cette fonction\nActiver tous de même cette fonctionnalité ?",None), QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
+			reply = QtGui.QMessageBox.question(self, _translate("Form","Attention",None),_translate("Form","Fonction reserve aux experts.\nModifier le voltage du gpu peut causer des dommages irreversibles et annule la garantie.\nNvidiux n'est pas responsable des eventuels dommages due a une utilisation de cette fonction\nActiver tous de même cette fonctionnalite ?",None), QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
 			if reply == QtGui.QMessageBox.Yes:
 				self.mainWindows.setShowOvervoltButton(value)
 				self.overvoltEnabled = True
@@ -397,7 +410,7 @@ class Ui_Pref(QWidget):
 					
 		if self.startWithSystem:
 			self.checkBoxSys.setChecked(True)
-			self.labelGpuSys.setText(_fromUtf8("Profil chargé"))
+			self.labelGpuSys.setText(_fromUtf8("Profil charge"))
 		else:
 			self.checkBoxSys.setChecked(False)
 
@@ -478,15 +491,6 @@ class Ui_Pref(QWidget):
 		self.labelUpdateMon.setGeometry(QtCore.QRect(30, 20, 340, 20))
 		self.labelUpdateMon.setObjectName(_fromUtf8("UpdateMon"))
 		self.labelUpdateMon.setText(_translate("Form", "Rafraichissement continu",None))
-		#~ self.spinBoxMon = QtGui.QSpinBox(self.tabMoniteur)
-		#~ self.spinBoxMon.setGeometry(QtCore.QRect(200, 17, 100, 25))
-		#~ self.spinBoxMon.setAccelerated(True)
-		#~ self.spinBoxMon.setPrefix(_fromUtf8("sec"))
-		#~ self.spinBoxMon.setMinimum(1)
-		#~ self.spinBoxMon.setMaximum(60)
-		#~ self.spinBoxMon.setEnabled(False)
-		#~ self.spinBoxMon.setValue(self.updateTime)
-		#~ self.spinBoxMon.setObjectName(_fromUtf8("spinBoxMon"))
 		
 		gpuInfo = []
 		ndiFile = None
@@ -570,7 +574,7 @@ class Ui_Pref(QWidget):
 		font.setWeight(75)
 		font.setStyleStrategy(QtGui.QFont.PreferAntialias)
 		self.labelInfo.setFont(font)
-		self.labelInfo.setText(_translate("Form", "Permet d'underclocker ou d'overclocker votre gpu nvidia\n(C) 2014 Payet Guillaume\nNvidiux n'est en aucun cas affilié à Nvidia",None) + "\nVersion : " + self.versionStr)
+		self.labelInfo.setText(_translate("Form", "Permet d'underclocker ou d'overclocker votre gpu nvidia\n(C) 2014 Payet Guillaume\nNvidiux n'est en aucun cas affilie à Nvidia",None) + "\nVersion : " + self.versionStr)
 		self.textBrowser = QtGui.QTextBrowser(self.tabAbout)
 		self.textBrowser.setGeometry(QtCore.QRect(10, 280, 560, 240))
 		if os.path.isfile("/usr/share/nvidiux/licences/gpl-3.0_" + self.language + ".txt"):
@@ -580,7 +584,7 @@ class Ui_Pref(QWidget):
 			txtFile = open('/usr/share/nvidiux/licences/gpl-3.0.txt', 'r')
 			self.textBrowser.setText(_fromUtf8(txtFile.read()))
 		else:
-			self.textBrowser.setText(_fromUtf8("Programme distribué sous license GPL V3\nVoir http://www.gnu.org/licenses/gpl-3.0.txt"))	
+			self.textBrowser.setText(_fromUtf8("Programme distribue sous license GPL V3\nVoir http://www.gnu.org/licenses/gpl-3.0.txt"))	
 		self.tabWidget.addTab(self.tabAbout, _fromUtf8(""))
 		
 		self.buttonParcNvi.connect(self.buttonParcNvi,SIGNAL("released()"),self.loadProfileNvi)
@@ -592,7 +596,7 @@ class Ui_Pref(QWidget):
 		self.ComboLang.connect(self.ComboLang,QtCore.SIGNAL("currentIndexChanged(int)"),self.setLanguage)
 		self.checkBoxOverVolt.connect(self.checkBoxOverVolt,QtCore.SIGNAL("clicked(bool)"),self.setOvervolt)
 		
-		self.setWindowTitle(_translate("Form", "Préférences", None))
+		self.setWindowTitle(_translate("Form", "Preferences", None))
 		self.buttonParcNvi.setText(_translate("Form", "Parcourir", None))
 		self.checkBoxNvi.setText(_translate("Form", "Appliquer ce profil au demarrage de nvidiux", None))
 		self.buttonParcSys.setText(_translate("Form", "Parcourir", None))

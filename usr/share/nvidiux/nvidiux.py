@@ -169,7 +169,7 @@ class NvidiuxApp(QMainWindow):
 	nbGpu = -1
 	nbGpuNvidia = -1
 	optimus = 0
-	nvidiuxVersionStr = "0.98c"
+	nvidiuxVersionStr = "0.98d"
 	nvidiuxVersion = 0.98
 	change = 0
 	isFermiArch = []
@@ -465,24 +465,22 @@ class NvidiuxApp(QMainWindow):
 			self.ui.actionSaveProfile.setEnabled(False)
 			self.ui.Message.setText(_translate("nvidiux","Driver non supporte (trop ancien)!\nOverclock desactive"),None)
 			QMessageBox.information(self,_translate("nvidiux","Driver",None),_translate("nvidiux","Driver non supporte:trop ancien\nOverclock desactive\nIl vous faut la version 337.19 ou plus recent pour overclocker"),None)
-					
+
+
+		cmd = "lspci -vnn | grep NVIDIA | grep -v Audio | grep NVIDIA"
+		out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()			
 		for i in range(0, self.nbGpuNvidia):
 			try:
 				self.tabGpu.append(Gpuinfo())
-				if i == 0: #si un seul pas de retour ligne
-					cmd = "lspci -vnn | grep NVIDIA | grep -v Audio | head -n " + str(i + 1)
-					out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-				else:
-					cmd = "lspci -vnn | grep NVIDIA | grep -v Audio | head -n " + str(i + 1)
-					out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-					out = out.split('\n')[-1]	
-				self.tabGpu[i].nameGpu = out.split(':')[-2].split('[')[-2].split(']')[0].replace('/','|')
+				self.tabGpu[i].nameGpu =  "GeForce" + out.split('\n')[i].split("GeForce")[-1].split("]")[0]
 			except:
+				print "Text to send:" + str(out)
 				self.showError(34,_translate("nvidiux","Echec",None),_translate("nvidiux","Echec chargement des parametres Gpu",None),self.error)
 				sys.exit(1)
-				
-			cmd =  "nvidia-settings -a [gpu:" + str(i) + "]/GPUPowerMizerMode=1"
-			sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True)
+
+			
+			#cmd =  "nvidia-settings -a [gpu:" + str(i) + "]/GPUPowerMizerMode=1"
+			#sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True)
 			cmd = "nvidia-settings --query [gpu:" + str(i) + "]/videoRam"
 			if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 				out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
@@ -608,10 +606,10 @@ class NvidiuxApp(QMainWindow):
 				self.ui.checkBoxFan.setEnabled(False)
 				self.ui.labelFanVitesse.setText(_translate("nvidiux","incompatible",None))
 			
+			#cmd =  "nvidia-settings -a [gpu:" + str(i) + "]/GPUPowerMizerMode=0"
+			#sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True)
+			
 			if self.versionPilote >= 346.16:
-				cmd =  "nvidia-settings -a [gpu:" + str(i) + "]/GPUPowerMizerMode=0"
-				sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True)
-				
 				cmd = "nvidia-settings --query [gpu:" + str(i) + "]/GPUOverVoltageOffset"
 				out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
 				try:
@@ -836,7 +834,7 @@ class NvidiuxApp(QMainWindow):
 				self.tabGpu[i].freqGpu = int(tempgpu[1])
 				self.tabGpu[i].freqShader = int(tempgpu[2])
 				self.tabGpu[i].freqMem = int(tempgpu[3])
-				self.tabgpu[i].overvolt = int(tempgpu[4])
+				self.tabGpu[i].overvolt = int(tempgpu[4])
 				self.ui.lcdGPU.display(self.tabGpu[self.numGpu].freqGpu)
 				self.ui.lcdMem.display(self.tabGpu[self.numGpu].freqMem)
 				self.ui.lcdShader.display(self.tabGpu[self.numGpu].freqShader)
@@ -914,7 +912,7 @@ class NvidiuxApp(QMainWindow):
 					self.showError(-1,_translate("nvidiux","Erreur",None),_translate("nvidiux","Erreur interne overclock/downclock impossible",None),self.warning)						
 		if success:
 			if mode == "0": #Reset
-				self.showError(0,_translate("nvidiux",None),_translate("nvidiux","Effectue","Reset effectue",None),self.info)
+				self.showError(0,_translate("nvidiux","Effectue",None),_translate("nvidiux","Reset effectue",None),self.info)
 				self.ui.Message.setText(_translate("nvidiux","Reset effectue",None))
 			elif mode == "1": #Normal
 				self.showError(0,_translate("nvidiux","Effectue",None),_translate("nvidiux","Changement effectue",None),self.info)
