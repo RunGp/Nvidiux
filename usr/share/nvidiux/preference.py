@@ -58,26 +58,28 @@ class Ui_Pref(QWidget):
 	home = ""
 	overclockEnabled = True
 	overvoltEnabled = False
+	sameParamGpu = True
 	mainWindows = None
 	language = None
 	app = None
 	
-	def __init__(self,loadTab,versionStr,version,TabLang,tabigpu,mainW,parent=None):
+	def __init__(self,loadTab,versionStr,version,TabLang,tabParam,mainW,parent=None):
 		super (Ui_Pref, self).__init__(parent)
 		self.loadTab = loadTab
 		self.version = version
 		self.versionStr = versionStr
 		self.language = TabLang[0]
 		self.app = TabLang[1]
-		self.nbGpuNvidia = tabigpu[0]
-		self.tabGpu = tabigpu[1]
-		self.autoUpdateValue = tabigpu[2]
-		self.updateTime = tabigpu[3]
-		self.startWithSystem = tabigpu[4]
-		self.valueStart = tabigpu[5]
-		self.overclockEnabled = tabigpu[6]
-		self.overvoltEnabled = tabigpu[7]
-		self.versionPilote = tabigpu[8]
+		self.nbGpuNvidia = tabParam[0]
+		self.tabGpu = tabParam[1]
+		self.autoUpdateValue = tabParam[2]
+		self.updateTime = tabParam[3]
+		self.startWithSystem = tabParam[4]
+		self.valueStart = tabParam[5]
+		self.overclockEnabled = tabParam[6]
+		self.overvoltEnabled = tabParam[7]
+		self.versionPilote = tabParam[8]
+		self.sameParamGpu = tabParam[9]
 		self.home = expanduser("~")
 		self.mainWindows = mainW
 		self.setupUi()
@@ -288,6 +290,9 @@ class Ui_Pref(QWidget):
 		self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabMoniteur), _translate("Form", "Moniteur", None))
 		self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabAbout), _translate("Form", "A Propos", None))
 		self.labelInfo.setText(self.labelInfo.text() + "\nVersion:" + self.versionStr)
+		self.labelLang.setText(_translate("Form","Langue",None))
+		self.labelUpdateMon.setText(_translate("Form", "Rafraichissement continu",None))
+		self.checkBoxSameGpu.setText(_translate("Form", "Appliquer les meme parametres a des gpu identique",None))
 	
 	def saveMonitorConf(self):
 
@@ -328,6 +333,10 @@ class Ui_Pref(QWidget):
 		self.mainWindows.setTimeUpdate(value)
 		self.updateTime = value
 		
+	def setSameParamGpu(self,value):
+		self.sameParamGpu = value
+		self.mainWindows.setSameParamGpu(value)
+		
 	def setLanguage(self,lang):
 		tabLang = ["fr_FR","en_EN"]
 		language = tabLang[lang]
@@ -362,10 +371,8 @@ class Ui_Pref(QWidget):
 		
 		self.tabConf = QtGui.QWidget()
 		self.tabConf.setObjectName(_fromUtf8("tabConf"))
-		
-		
 		self.groupBoxPrefProfile = QtGui.QGroupBox(self.tabConf)
-		self.groupBoxPrefProfile.setGeometry(QtCore.QRect(10, 130, 465,120 ))
+		self.groupBoxPrefProfile.setGeometry(QtCore.QRect(10, 160, 465,120 ))
 		self.groupBoxPrefProfile.setStyleSheet(_fromUtf8("QGroupBox \n"
 			"{ \n"
 			"border: 1px solid SlateGrey;\n"
@@ -380,7 +387,7 @@ class Ui_Pref(QWidget):
 		self.buttonParcNvi.setObjectName(_fromUtf8("buttonParcNvi"))
 		self.buttonParcNvi.setEnabled(False)
 		self.checkBoxNvi = QtGui.QCheckBox(self.groupBoxPrefProfile)
-		self.checkBoxNvi.setGeometry(QtCore.QRect(10, 5, 340, 20))
+		self.checkBoxNvi.setGeometry(QtCore.QRect(10, 5, 350, 20))
 		self.checkBoxNvi.setObjectName(_fromUtf8("checkBoxNvi"))
 		self.labelGpuNvi = QtGui.QLabel(self.groupBoxPrefProfile)
 		self.labelGpuNvi.setGeometry(QtCore.QRect(35, 25, 400, 30))
@@ -397,7 +404,7 @@ class Ui_Pref(QWidget):
 		self.buttonParcSys.setObjectName(_fromUtf8("buttonParcSys"))
 		self.buttonParcSys.setEnabled(False)
 		self.checkBoxSys = QtGui.QCheckBox(self.groupBoxPrefProfile)
-		self.checkBoxSys.setGeometry(QtCore.QRect(10, 65, 340, 20))
+		self.checkBoxSys.setGeometry(QtCore.QRect(10, 65, 350, 20))
 		self.checkBoxSys.setObjectName(_fromUtf8("checkBoxSys"))
 		self.labelGpuSys = QtGui.QLabel(self.groupBoxPrefProfile)
 		self.labelGpuSys.setGeometry(QtCore.QRect(35, 85, 400, 30))
@@ -415,7 +422,7 @@ class Ui_Pref(QWidget):
 			self.checkBoxSys.setChecked(False)
 
 		self.groupBoxPrefGen = QtGui.QGroupBox(self.tabConf)
-		self.groupBoxPrefGen.setGeometry(QtCore.QRect(10, 10, 370,110 ))
+		self.groupBoxPrefGen.setGeometry(QtCore.QRect(10, 10, 465,140 ))
 		self.groupBoxPrefGen.setStyleSheet(_fromUtf8("QGroupBox \n"
 			"{ \n"
 			"border: 1px solid SlateGrey;\n"
@@ -444,6 +451,7 @@ class Ui_Pref(QWidget):
 		self.labelLang.setObjectName(_fromUtf8("labelLang"))
 		self.labelLang.setText(_translate("Form","Langue",None))
 		
+		
 		self.ComboLang=QComboBox(self.groupBoxPrefGen)
 		self.ComboLang.setObjectName("List language")
 		self.ComboLang.setGeometry(QtCore.QRect(90, 8, 200, 30))
@@ -461,6 +469,7 @@ class Ui_Pref(QWidget):
 		
 		self.checkBoxOverVolt = QtGui.QCheckBox(self.groupBoxPrefGen)
 		self.checkBoxOverVolt.setGeometry(QtCore.QRect(10, 75, 320, 20))
+		self.checkBoxOverVolt.setObjectName(_fromUtf8("checkBoxOverVolt"))
 		self.checkBoxOverVolt.setChecked(False)
 		if self.versionPilote >= 346.16 and self.overclockEnabled:
 			overvolt = True
@@ -479,10 +488,14 @@ class Ui_Pref(QWidget):
 		else:
 			self.checkBoxOverVolt.setEnabled(False)
 		
-		self.checkBoxOverVolt.setEnabled(True)	
-		self.checkBoxOverVolt.setObjectName(_fromUtf8("checkBoxOverVolt"))
+		self.checkBoxSameGpu = QtGui.QCheckBox(self.groupBoxPrefGen)
+		self.checkBoxSameGpu.setGeometry(QtCore.QRect(10, 100, 450, 20))
+		self.checkBoxSameGpu.setObjectName(_fromUtf8("checkBoxSameGpu"))
+		self.checkBoxSameGpu.setChecked(self.sameParamGpu)
+		self.checkBoxSameGpu.setText(_translate("Form", "Appliquer les meme parametres a des gpu identique",None))
+		
 		self.checkBoxUpdateMon = QtGui.QCheckBox(self.tabMoniteur)
-		self.checkBoxUpdateMon.setGeometry(QtCore.QRect(10, 20, 20, 20))
+		self.checkBoxUpdateMon.setGeometry(QtCore.QRect(10, 20, 320, 20))
 		self.checkBoxUpdateMon.setObjectName(_fromUtf8("checkBoxUpdateMon"))
 		self.checkBoxUpdateMon.setEnabled(False)
 		self.checkBoxUpdateMon.setChecked(True)
@@ -513,6 +526,16 @@ class Ui_Pref(QWidget):
 							error = False
 						self.listGpuMonitor.append(gpuInfo)
 						gpuInfo = []
+		else:
+			i = 0
+			for gpu in self.tabGpu:
+				gpuInfo.append(str(i))
+				gpuInfo.append("255:255:0")
+				gpuInfo.append("True")
+				self.listGpuMonitor.append(gpuInfo)
+				gpuInfo = []
+				i = i + 1
+			
 
 		self.groupBoxPrefGpu = QtGui.QGroupBox(self.tabMoniteur)
 		self.groupBoxPrefGpu.setGeometry(QtCore.QRect(10, 50, 220, 50 * self.nbGpuNvidia + 5 ))
@@ -547,6 +570,8 @@ class Ui_Pref(QWidget):
 		
 		self.connect(mapperPref, SIGNAL("mapped(int)"),self.showColor)	
 		self.colorBox = QtGui.QColorDialog(self.groupBoxPrefGpu)
+		if ndiFile == None:
+			self.saveMonitorConf()
 		self.tabAbout = QtGui.QWidget()
 		self.tabAbout.setObjectName(_fromUtf8("tabAbout"))
 		
@@ -577,6 +602,7 @@ class Ui_Pref(QWidget):
 		self.labelInfo.setText(_translate("Form", "Permet d'underclocker ou d'overclocker votre gpu nvidia\n(C) 2014 Payet Guillaume\nNvidiux n'est en aucun cas affilie à Nvidia",None) + "\nVersion : " + self.versionStr)
 		self.textBrowser = QtGui.QTextBrowser(self.tabAbout)
 		self.textBrowser.setGeometry(QtCore.QRect(10, 280, 560, 240))
+		self.textBrowser.setAlignment(QtCore.Qt.AlignCenter)
 		if os.path.isfile("/usr/share/nvidiux/licences/gpl-3.0_" + self.language + ".txt"):
 			txtFile = open("/usr/share/nvidiux/licences/gpl-3.0_" + self.language + ".txt", "r")
 			self.textBrowser.setText(_fromUtf8(txtFile.read()))
@@ -595,6 +621,7 @@ class Ui_Pref(QWidget):
 		self.checkBoxSys.connect(self.checkBoxSys,QtCore.SIGNAL("clicked(bool)"),self.checkSys)
 		self.ComboLang.connect(self.ComboLang,QtCore.SIGNAL("currentIndexChanged(int)"),self.setLanguage)
 		self.checkBoxOverVolt.connect(self.checkBoxOverVolt,QtCore.SIGNAL("clicked(bool)"),self.setOvervolt)
+		self.checkBoxSameGpu.connect(self.checkBoxSameGpu,QtCore.SIGNAL("clicked(bool)"),self.setSameParamGpu)
 		
 		self.setWindowTitle(_translate("Form", "Preferences", None))
 		self.buttonParcNvi.setText(_translate("Form", "Parcourir", None))

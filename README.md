@@ -1,4 +1,4 @@
-# Nvidiux V 0.98
+# Nvidiux V 0.99
 Licence:gpl-3.0 :https://github.com/RunGp/Nvidiux/blob/master/usr/share/nvidiux/gpl-3.0.txt
 
 =============================================================
@@ -18,7 +18,7 @@ For using this tools you must install
 Simply install the deb file here : https://github.com/RunGp/Nvidiux/releases with your package manager
 
 or in command line use :
-- wget https://github.com/RunGp/Nvidiux/releases/download/0.98/nvidiux.deb
+- wget https://github.com/RunGp/Nvidiux/releases/download/0.99/nvidiux.deb
 - sudo dpkg -i nvidiux.deb
 - sudo apt-get install -f
 
@@ -27,7 +27,7 @@ or in command line use :
 Work on : 
 - Ubuntu 12.04+ and derivative 
 - Debian 7.0+
-- Arch (manual installation)
+- Arch 
 - Fedora 15 and newer 
 
 ![alt tag](http://pix.toile-libre.org/upload/original/1445524419.png)
@@ -42,7 +42,7 @@ Il permet aussi
 - d'overclocker au demarrage du programme et/ou du systeme
 - controller la vitesse des ventilos du gpu
 - monitorer 4 parametres (temperatures , charge gpu et mémoire,vitesse ventillo)
-- overvoltage (bientot...)
+- overvoltage
 
 Pour installer vous devez installer :
   - Les pilotes nvidia propriétaire version 331 ou plus recent (pour utiliser l'overclock vous devez avoir la version 337 au minimum)
@@ -52,14 +52,14 @@ Installation :
 	
 Ou taper les commandes dans votre terminal:
 
-- wget https://github.com/RunGp/Nvidiux/releases/download/0.98/nvidiux.deb
+- wget https://github.com/RunGp/Nvidiux/releases/download/0.99/nvidiux.deb
 - sudo dpkg -i nvidiux.deb
 - sudo apt-get install -f
 
 testé sous:
 - Ubuntu 12.04 + et ses dérivés
 - Debian 7.0 +
-- Arch (installation manuelle)
+- Arch
 - Fedora 15
 
 Plus d'information (Francais) : http://forum.ubuntu-fr.org/viewtopic.php?id=1589261

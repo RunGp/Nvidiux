@@ -267,13 +267,13 @@ shaderclklabel = StringVar()
 timeLabel = StringVar()
 gpu1 = GpuInfoMonitor()
 gpu1.time = 0
-monitorVersion = 0.98
-monitorVersionStr = "0.98"
+monitorVersion = 0.99
+monitorVersionStr = "0.99"
 listGpu = []
 gpuInfo = [] #idGpu,color, show
 confGpu = []
 error = False
-print "Monitor version:" + monitorVersionStr
+print "Monitor " + monitorVersionStr
 
 cmd = "nvidia-settings --query [gpu:0]/NvidiaDriverVersion"
 if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
