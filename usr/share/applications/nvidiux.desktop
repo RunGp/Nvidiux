@@ -2,7 +2,7 @@
 Type=Application
 Name=Nvidiux
 Exec=nvidiux
-Terminal=true
+Terminal=false
 Comment=Overclock your nvidia card !
 Icon=/usr/share/nvidiux/img/Nvidiux.png
 MimeType=application/ndi

@@ -169,7 +169,7 @@ class NvidiuxApp(QMainWindow):
 	nbGpu = -1
 	nbGpuNvidia = -1
 	optimus = 0
-	nvidiuxVersionStr = "0.99"
+	nvidiuxVersionStr = "0.99b"
 	nvidiuxVersion = 0.99
 	change = 0
 	isFermiArch = []
@@ -393,9 +393,9 @@ class NvidiuxApp(QMainWindow):
 	def iscompatible(self):
 		cmd = "ls -l /usr/lib | grep nvidia"
 		if sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
-			return self.showError(1,self,_translate("nvidiux","Non supporte",_translate("nvidiux","Driver introuvable \nVeuillez installer les pilotes proprietaires",None),self.error))
+			return self.showError(1,_translate("nvidiux","Non supporte",None),_translate("nvidiux","Driver introuvable \nVeuillez installer les pilotes proprietaires",None),self.error)
 		if not os.path.isfile("/usr/bin/nvidia-settings"):
-			return self.showError(2,self,_translate("nvidiux","Non supporte",_translate("nvidiux","Nvidia settings introuvable \nveuillez installer les pilotes proprietaires et nvidia settings",None),self.error))
+			return self.showError(2,_translate("nvidiux","Non supporte",None),_translate("nvidiux","Nvidia settings introuvable \nveuillez installer les pilotes proprietaires et nvidia settings",None),self.error)
 		
 		cmd = "lspci -vnn | egrep 'VGA|3D'"
 		ListeGpu, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
@@ -405,9 +405,9 @@ class NvidiuxApp(QMainWindow):
 		if self.nbGpu >= 2: #MultiGpu
 			if ListeGpu.count('Intel') == 1 and self.nbGpuNvidia == 1 : #optimus
 				if os.popen("prime-supported 2>> /dev/null", "r").read().replace('\n','') != "yes":
-					return self.showError(3,self,_translate("nvidiux","Prime",_translate("nvidiux","Seul prime est supporte pour les configurations optimus",None),self.error))	
+					return self.showError(3,_translate("nvidiux","Prime",None),_translate("nvdiux","Seul prime est supporte pour les configurations optimus",None),self.error)	
 				if os.popen("prime-select query", "r").read().replace('\n','') != "nvidia":
-					return self.showError(-1,self,_translate("nvidiux","Mode intel",_translate("nvidiux","Configuration Prime\nVeuillez passer en mode nvidia svp",None),self.info))
+					return self.showError(-1,_translate("nvidiux","Mode intel",None),_translate("nvdiux","nvidiux","Configuration Prime\nVeuillez passer en mode nvidia svp",None),self.info)
 				self.optimus = 1
 				self.ui.checkBoxOptimus.setChecked(1)
 		if self.nbGpuNvidia == 0:
