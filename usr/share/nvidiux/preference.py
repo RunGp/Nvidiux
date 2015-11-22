@@ -87,6 +87,7 @@ class Ui_Pref(QWidget):
 	def closeEvent(self, event):
 		self.saveMonitorConf()
 		self.mainWindows.saveNvidiuxConf()
+		del(self.listGpuMonitor[:])
 	
 	def checkSys(self,value):
 		if os.path.isfile("/usr/bin/crontab") and os.path.isfile("/usr/bin/sudo"):
@@ -292,7 +293,7 @@ class Ui_Pref(QWidget):
 		self.labelInfo.setText(self.labelInfo.text() + "\nVersion:" + self.versionStr)
 		self.labelLang.setText(_translate("Form","Langue",None))
 		self.labelUpdateMon.setText(_translate("Form", "Rafraichissement continu",None))
-		self.checkBoxSameGpu.setText(_translate("Form", "Appliquer les meme parametres a des gpu identique",None))
+		self.checkBoxSameGpu.setText(_translate("Form", "Appliquer les memes parametres a des gpus identiques",None))
 	
 	def saveMonitorConf(self):
 
@@ -492,7 +493,7 @@ class Ui_Pref(QWidget):
 		self.checkBoxSameGpu.setGeometry(QtCore.QRect(10, 100, 450, 20))
 		self.checkBoxSameGpu.setObjectName(_fromUtf8("checkBoxSameGpu"))
 		self.checkBoxSameGpu.setChecked(self.sameParamGpu)
-		self.checkBoxSameGpu.setText(_translate("Form", "Appliquer les meme parametres a des gpu identique",None))
+		self.checkBoxSameGpu.setText(_translate("Form", "Appliquer les memes parametres a des gpus identiques",None))
 		
 		self.checkBoxUpdateMon = QtGui.QCheckBox(self.tabMoniteur)
 		self.checkBoxUpdateMon.setGeometry(QtCore.QRect(10, 20, 320, 20))
@@ -513,7 +514,7 @@ class Ui_Pref(QWidget):
 		except:
 			print "Pas de fichier conf monitor"
 			
-		if ndiFile != None:	
+		if ndiFile != None:
 			versionElement = ndiFile.getElementsByTagName('version')	
 			itemlist = ndiFile.getElementsByTagName('gpu')
 			errorCode = 0
@@ -524,6 +525,7 @@ class Ui_Pref(QWidget):
 							if value.nodeType == minidom.Node.ELEMENT_NODE:
 								gpuInfo.append(value.firstChild.nodeValue)
 							error = False
+						
 						self.listGpuMonitor.append(gpuInfo)
 						gpuInfo = []
 		else:

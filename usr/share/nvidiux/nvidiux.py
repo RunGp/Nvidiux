@@ -169,7 +169,7 @@ class NvidiuxApp(QMainWindow):
 	nbGpu = -1
 	nbGpuNvidia = -1
 	optimus = 0
-	nvidiuxVersionStr = "0.99b"
+	nvidiuxVersionStr = "0.99d"
 	nvidiuxVersion = 0.99
 	change = 0
 	isFermiArch = []
@@ -383,7 +383,7 @@ class NvidiuxApp(QMainWindow):
 				self.loadProfile(home + "/.nvidiux/" + gpuName + ".ndi",True)
 			else:
 				if self.saveProfile(home + "/.nvidiux/" + gpuName + ".ndi") != 0:
-					return self.showError(21,_translate("nvidiux","Droit insuffisant","Impossible d'ecrire le fichier !",None),self.error)
+					return self.showError(21,_translate("nvidiux","Droit insuffisant",None),_translate("nvidiux","Impossible d'ecrire le fichier !",None),self.error)
 				self.loadProfile(home + "/.nvidiux/" + gpuName + ".ndi",True)		
 			if os.path.isfile(home + "/.nvidiux/Startup.ndi"):
 				self.loadProfile(home +"/.nvidiux/Startup.ndi",False,"3")	
@@ -471,8 +471,8 @@ class NvidiuxApp(QMainWindow):
 			self.versionPilote = float(out.split(':')[-1][1:])
 		else:
 			self.showError(29,_translate("nvidiux","Echec",None),_translate("nvidiux","Impossible de determiner la version des drivers",None),self.error)
-		if self.versionPilote > 355.11:
-			info = "Driver non teste\n"
+		if self.versionPilote > 358.19:
+			info = "Driver non testé\n"
 		if self.versionPilote <= 337.12:
 			self.ui.SliderMem.setEnabled(False)
 			self.ui.SliderGpu.setEnabled(False)
@@ -486,7 +486,6 @@ class NvidiuxApp(QMainWindow):
 			self.ui.actionSaveProfile.setEnabled(False)
 			self.ui.Message.setText(_translate("nvidiux","Driver non supporte (trop ancien)!\nOverclock desactive"),None)
 			QMessageBox.information(self,_translate("nvidiux","Driver",None),_translate("nvidiux","Driver non supporte:trop ancien\nOverclock desactive\nIl vous faut la version 337.19 ou plus recent pour overclocker"),None)
-
 
 		cmd = "lspci -vnn | grep NVIDIA | grep -v Audio | grep GeForce"
 		out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()			
@@ -850,7 +849,7 @@ class NvidiuxApp(QMainWindow):
 							errorCode = 14
 						if int(tempgpu[3]) < int((self.tabGpu[i].defaultFreqMem)) * 0.80 or int(tempgpu[3]) > int((self.tabGpu[i].defaultFreqMem)) * 1.3:
 							errorCode = 15
-						if int(tempgpu[4]) < 0 or int(tempgpu[4]) > self.tabGpu[i].maxOvervolt:
+						if int(tempgpu[4]) < 0 or int(tempgpu[4]) > int(self.tabGpu[i].maxOvervolt):
 							errorCode = 15.1
 						i = i + 1
 				except:
@@ -873,13 +872,13 @@ class NvidiuxApp(QMainWindow):
 				self.ui.SliderGpu.setSliderPosition(self.tabGpu[self.numGpu].freqGpu)
 				self.ui.SliderShader.setSliderPosition(self.tabGpu[self.numGpu].freqShader)
 				self.ui.SliderMem.setSliderPosition(self.tabGpu[self.numGpu].freqMem)
-				if self.versionPilote >= 346.16:
+				if self.versionPilote >= 346.16 and self.tabGpu[i].overvolt > 0:
 					self.ui.labelValueOvervolt.setText(str(self.tabGpu[self.numGpu].overvolt) + _translate("nvidiux","μv",None))
 					self.ui.spinBoxOvervolt.setMaximum(self.tabGpu[self.numGpu].maxOvervolt)
 					if self.overvoltEnabled:
 						self.overvolt()
 					else:
-						QMessageBox.warning(self,_translate("Overvolt désactivé"),_translate("Vous devez activer la foncion d'overvolt \npour appliquer le paramettre d'overvolt de ce profil"))	
+						QMessageBox.warning(self,_translate("nvidiux","Overvolt désactivé",None),_translate("nvidiux","Vous devez activer la foncion d'overvolt \npour appliquer le paramettre d'overvolt de ce profil",None))	
 				self.overclock(str(otherCode))
 			else:
 				self.tabGpu[i].resetFreqGpu = int(tempgpu[1])
@@ -1048,16 +1047,11 @@ class NvidiuxApp(QMainWindow):
 				out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
 				try:
 					self.tabGpu[i].maxOvervolt = int(out.split('range')[1].split("(inclusive)")[0].split("-")[1])
+					self.tabGpu[i].overvolt = int(out.split('range')[1].split("(inclusive)")[0].split("-")[0])
 				except:
 					self.tabGpu[i].maxOvervolt = 0
-				
-				cmd = "nvidia-settings --query [gpu:" + str(i) + "]/GPUCurrentCoreVoltage"
-				out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-				try:
-					self.tabGpu[i].overvolt = int(out.split(".")[0].split(":")[-1])
-				except:
 					self.tabGpu[i].overvolt = 0
-		
+
 		self.ui.spinBoxOvervolt.setMaximum(self.tabGpu[self.numGpu].maxOvervolt)
 		self.ui.labelValueOvervolt.setText(str(self.tabGpu[self.numGpu].overvolt) + _translate("nvidiux","μv",None))
 		self.overvoltEnabled = value
@@ -1220,7 +1214,6 @@ class NvidiuxApp(QMainWindow):
 			mem = fileToSave.createElement('mem')
 			text = fileToSave.createTextNode(str(tempgpu.freqMem))
 			mem.appendChild(text)
-			
 			volt = fileToSave.createElement('volt')
 			text = fileToSave.createTextNode(str(tempgpu.overvolt))
 			volt.appendChild(text)
@@ -1295,7 +1288,7 @@ class NvidiuxApp(QMainWindow):
 		self.change = True
 		
 	def verifyGpu(self,gpuName):#-1:unknow 0:ok 1:not ok 
-		verified = ["GeForce GT 420M","GeForce GTX 460M","GeForce GTX 460","GeForce GTX 470","GeForce GTX 560M","GeForce GTX 560 Ti","GeForce GTX 570","GeForce GTX 580","GeForce GT 620","GeForce GT 630","GeForce GTX 650","GeForce GTX 660","GeForce GTX 750","GeForce GTX 750 TI","GeForce GTX 770","GeForce GTX 780 Ti"]
+		verified = ["GeForce GT 420M","GeForce GTX 460M","GeForce GTX 460","GeForce GTX 470","GeForce GTX 560M","GeForce GTX 560 Ti","GeForce GTX 570","GeForce GTX 580","GeForce GT 620","GeForce GT 630","GeForce GTX 650","GeForce GTX 660","GeForce GT 740","GeForce GTX 750","GeForce GTX 750 TI","GeForce GTX 770","GeForce GTX 780 Ti"]
 		notWork = ["GeForce GTX TITAN Z","GeForce GTX TITAN Black","GeForce GTX TITAN","GeForce GTX 690","GeForce GTX 590","GeForce GT 430",
 		"GeForce GT 340", "GeForce GT 330", "GeForce GT 320", "GeForce 315", "GeForce 310","GeForce GTS 360M", "GeForce GTS 350M", "GeForce GT 335M", "GeForce GT 330M","GeForce GT 325M", "GeForce GT 320M", "GeForce 320M", "GeForce 315M", "GeForce 310M", "GeForce 305M",
 		"GeForce GTX 295", "GeForce GTX 285","GeForce GTX 280", "GeForce GTX 275", "GeForce GTX 260", "GeForce GTS 250", "GeForce GTS 240", "GeForce GT 230", "GeForce GT 240", "GeForce GT 220", "GeForce G210", "GeForce 210", "GeForce 205",
