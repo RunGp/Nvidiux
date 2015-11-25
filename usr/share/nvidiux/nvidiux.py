@@ -169,8 +169,8 @@ class NvidiuxApp(QMainWindow):
 	nbGpu = -1
 	nbGpuNvidia = -1
 	optimus = 0
-	nvidiuxVersionStr = "0.99d"
-	nvidiuxVersion = 0.99
+	nvidiuxVersionStr = "1.00"
+	nvidiuxVersion = 1.00
 	change = 0
 	isFermiArch = []
 	form = ""
@@ -407,7 +407,7 @@ class NvidiuxApp(QMainWindow):
 				if os.popen("prime-supported 2>> /dev/null", "r").read().replace('\n','') != "yes":
 					return self.showError(3,_translate("nvidiux","Prime",None),_translate("nvdiux","Seul prime est supporte pour les configurations optimus",None),self.error)	
 				if os.popen("prime-select query", "r").read().replace('\n','') != "nvidia":
-					return self.showError(-1,_translate("nvidiux","Mode intel",None),_translate("nvdiux","nvidiux","Configuration Prime\nVeuillez passer en mode nvidia svp",None),self.info)
+					return self.showError(-1,_translate("nvidiux","Mode intel",None),_translate("nvdiux","Configuration Prime\nVeuillez passer en mode nvidia svp",None),self.info)
 				self.optimus = 1
 				self.ui.checkBoxOptimus.setChecked(1)
 		if self.nbGpuNvidia == 0:
@@ -634,14 +634,9 @@ class NvidiuxApp(QMainWindow):
 				out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
 				try:
 					self.tabGpu[i].maxOvervolt = int(out.split('range')[1].split("(inclusive)")[0].split("-")[1])
+					self.tabGpu[i].overvolt = int(out.split('range')[1].split("(inclusive)")[0].split("-")[0])
 				except:
 					self.tabGpu[i].maxOvervolt = 0
-				
-				cmd = "nvidia-settings --query [gpu:" + str(i) + "]/GPUCurrentCoreVoltage"
-				out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-				try:
-					self.tabGpu[i].overvolt = int(out.split(".")[0].split(":")[-1])
-				except:
 					self.tabGpu[i].overvolt = 0
 			
 		try:

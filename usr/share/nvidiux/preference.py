@@ -438,7 +438,7 @@ class Ui_Pref(QWidget):
 		self.checkBoxTime.setObjectName(_fromUtf8("checkBoxTime"))
 		
 		self.spinBox = QtGui.QSpinBox(self.groupBoxPrefGen)
-		self.spinBox.setGeometry(QtCore.QRect(250, 47, 100, 25))
+		self.spinBox.setGeometry(QtCore.QRect(270, 46, 120, 25))
 		self.spinBox.setAccelerated(True)
 		self.spinBox.setPrefix(_fromUtf8(""))
 		self.spinBox.setMinimum(1)
@@ -448,7 +448,7 @@ class Ui_Pref(QWidget):
 		self.spinBox.setObjectName(_fromUtf8("spinBox"))
 		
 		self.labelLang = QtGui.QLabel(self.groupBoxPrefGen)
-		self.labelLang.setGeometry(QtCore.QRect(10, 5, 200, 40))
+		self.labelLang.setGeometry(QtCore.QRect(10, 5, 220, 40))
 		self.labelLang.setObjectName(_fromUtf8("labelLang"))
 		self.labelLang.setText(_translate("Form","Langue",None))
 		

@@ -1,4 +1,4 @@
-# Nvidiux V 0.99
+# Nvidiux V 1.00.0
 Licence:gpl-3.0 :https://github.com/RunGp/Nvidiux/blob/master/usr/share/nvidiux/gpl-3.0.txt
 
 =============================================================
@@ -12,29 +12,43 @@ il also provide :
 - Graphical monitoring for 4 params (temp,gpu load,speed fan (%) and graphic memory use (%))
 - Overvolting
 
-For using this tools you must install 
- - nvidia proprietary drivers 331 or later (min 337 to use overclock)
-
-Simply install the deb file here : https://github.com/RunGp/Nvidiux/releases with your package manager
-
-or in command line use :
-- wget https://github.com/RunGp/Nvidiux/releases/download/0.99/nvidiux.deb
-- sudo dpkg -i nvidiux.deb
-- sudo apt-get install -f
-
- Dependancy:python 2.7,python-qt4,gksu,vainfo,python-tk,python-psutil
-
 Work on : 
 - Ubuntu 12.04+ and derivative 
 - Debian 7.0+
-- Arch 
-- Fedora 15 and newer 
+- Arch and Manjaro
+- Fedora 15+
 
-![alt tag](http://pix.toile-libre.org/upload/original/1445524419.png)
+For using this tools you must install 
+ - Nvidia proprietary drivers 331 or later 
+    - For use overclock drivers 337 or later
+    - For use overvolt drivers 346 or later
+
+
+Install 
+
+Debian
+in command line use :
+- wget https://github.com/RunGp/Nvidiux/releases/download/1.00/nvidiux.deb
+- sudo dpkg -i nvidiux.deb
+- sudo apt-get install -f
+
+Ubuntu 
+use this ppa https://launchpad.net/~nvidiux/+archive/ubuntu/nvidiux
+
+Arch
+Nvidiux is available on AUR : https://aur.archlinux.org/packages/nvidiux/
+
+Fedora 
+use rpm paquet here (https://github.com/RunGp/Nvidiux/releases)
+
+Dependancy:python 2.7,python-qt4,gksu,vainfo,python-tk,python-psutil
+
+![alt tag](http://pix.toile-libre.org/upload/original/1448449352.png)
 
 =============================================================
 
 FR Version
+Plus d'information : http://forum.ubuntu-fr.org/viewtopic.php?id=1589261
 
 Nvidiux est un outil graphique pour overclocker/underclocker facilement votre gpu nvidia (generation 4XX ou plus recent)
 Il permet aussi 
@@ -45,32 +59,37 @@ Il permet aussi
 - overvoltage
 
 Pour installer vous devez installer :
-  - Les pilotes nvidia propriétaire version 331 ou plus recent (pour utiliser l'overclock vous devez avoir la version 337 au minimum)
+  - Les pilotes nvidia propriétaire version 331 ou plus recent 
+    - Pour utiliser l'overclock vous devez avoir la version 337 au minimum
+    - Pour utiliser l'overvolt vous devez avoir la version 346 au minimum
+  
+Testé sous:
+- Ubuntu 12.04 + et ses dérivés
+- Debian 7.0 +
+- Arch et Manjaro
+- Fedora 15 +
   
 Installation :
-	Installez le paquet deb se trouvant ici (https://github.com/RunGp/Nvidiux/releases) avec votre instalateur de paquet favoris
-	
-Ou taper les commandes dans votre terminal:
 
-- wget https://github.com/RunGp/Nvidiux/releases/download/0.99/nvidiux.deb
+Debian
+Installez le paquet deb se trouvant ici (https://github.com/RunGp/Nvidiux/releases) avec votre instalateur de paquet favoris
+Ou taper les commandes dans votre terminal:
+- wget https://github.com/RunGp/Nvidiux/releases/download/1.00/nvidiux.deb
 - sudo dpkg -i nvidiux.deb
 - sudo apt-get install -f
 
-testé sous:
-- Ubuntu 12.04 + et ses dérivés
-- Debian 7.0 +
-- Arch
-- Fedora 15
+Ubuntu
+Un ppa est dispo : https://launchpad.net/~nvidiux/+archive/ubuntu/nvidiux
 
-Plus d'information (Francais) : http://forum.ubuntu-fr.org/viewtopic.php?id=1589261
+Arch
+Nvidiux est disponible sur AUR : https://aur.archlinux.org/packages/nvidiux/
 
-=============================================================
-Image version 0.97 avec l'interface en francais
+Fedora
+Installer le paquet rpm se trouvant ici (https://github.com/RunGp/Nvidiux/releases)
 
-![alt tag](http://pix.toile-libre.org/upload/original/1438594970.png)
+Dependance:python 2.7,python-qt4,gksu,vainfo,python-tk,python-psutil
 
-![alt tag](http://pix.toile-libre.org/upload/original/1438596113.png)
+![alt tag](http://pix.toile-libre.org/upload/original/1448449268.png)
 
 =============================================================
-I search linguist for traduce nvidiux on another language
-
+I need help for traduce nvidiux in other language
