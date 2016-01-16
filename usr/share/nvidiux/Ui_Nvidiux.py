@@ -429,7 +429,7 @@ class Ui_MainWindow(object):
         self.checkBoxVSync.setObjectName(_fromUtf8("checkBoxVSync"))
         self.checkBoxMPerf = QtGui.QCheckBox(self.groupBoxInfoGpu)
         self.checkBoxMPerf.setEnabled(True)
-        self.checkBoxMPerf.setGeometry(QtCore.QRect(282, 40, 80, 20))
+        self.checkBoxMPerf.setGeometry(QtCore.QRect(282, 40, 90, 20))
         self.checkBoxMPerf.setCheckable(True)
         self.checkBoxMPerf.setChecked(False)
         self.checkBoxMPerf.setObjectName(_fromUtf8("checkBoxMPerf"))
@@ -476,8 +476,9 @@ class Ui_MainWindow(object):
         self.UPCIE.setObjectName(_fromUtf8("UPCIE"))
       
       
-        self.label_Img = QtGui.QLabel(self.centralwidget)
-        self.label_Img.setGeometry(QtCore.QRect(554, 5, 241, 140))
+        self.label_Img = ClickQLabel(self.centralwidget)
+        #QtGui.QLabel()
+        self.label_Img.setGeometry(QtCore.QRect(554, 5, 240, 140))
         self.label_Img.setObjectName(_fromUtf8("label_Img"))
         self.Message = QtGui.QLabel(self.centralwidget)
         self.Message.setGeometry(QtCore.QRect(250, 470, 300,60))
@@ -576,3 +577,12 @@ class Ui_MainWindow(object):
         self.actionPref.setText(_translate("MainWindow", "Preferences", None))
         self.actionLoadProfile.setText(_translate("MainWindow", "Charger", None))
         self.actionSaveProfile.setText(_translate("MainWindow", "Enregistrer", None))
+
+
+class ClickQLabel(QtGui.QLabel):
+ 
+    def __init(self, parent):
+        QLabel.__init__(self, parent)
+ 
+    def mouseReleaseEvent(self, ev):
+        self.emit(QtCore.SIGNAL('clicked()'))
