@@ -1,11 +1,11 @@
-# Nvidiux V 1.00.0
+# Nvidiux V 1.1
 Licence:gpl-3.0 :https://github.com/RunGp/Nvidiux/blob/master/usr/share/nvidiux/gpl-3.0.txt
-
+Description en Francais en bas de page
 =============================================================
 
 English version
 
-Nvidiux is a graphical python tool to overclock or underclock your nvidia gpu (generation 4XX  5XX  6XX 7XX)
+Nvidiux is a graphical python tool to overclock or underclock your nvidia gpu (generation 4XX 5XX 6XX 7XX 9XX)
 il also provide :
 - Fan control 
 - Auto overclock at startup
@@ -23,12 +23,11 @@ For using this tools you must install
     - For use overclock drivers 337 or later
     - For use overvolt drivers 346 or later
 
-
 Install 
 
 Debian
 in command line use :
-- wget https://github.com/RunGp/Nvidiux/releases/download/1.00/nvidiux.deb
+- wget https://github.com/RunGp/Nvidiux/releases/download/1.1/nvidiux.deb
 - sudo dpkg -i nvidiux.deb
 - sudo apt-get install -f
 
@@ -74,7 +73,7 @@ Installation :
 Debian
 Installez le paquet deb se trouvant ici (https://github.com/RunGp/Nvidiux/releases) avec votre instalateur de paquet favoris
 Ou taper les commandes dans votre terminal:
-- wget https://github.com/RunGp/Nvidiux/releases/download/1.00/nvidiux.deb
+- wget https://github.com/RunGp/Nvidiux/releases/download/1.1/nvidiux.deb
 - sudo dpkg -i nvidiux.deb
 - sudo apt-get install -f
 

@@ -267,12 +267,14 @@ shaderclklabel = StringVar()
 timeLabel = StringVar()
 gpu1 = GpuInfoMonitor()
 gpu1.time = 0
-monitorVersion = 1.00
-monitorVersionStr = "1.00"
+monitorVersion = 1.1
+monitorVersionStr = "1.1"
 listGpu = []
 gpuInfo = [] #idGpu,color, show
 confGpu = []
 error = False
+updateC = True
+versionPiloteMaxTest = 661.16
 print "Monitor " + monitorVersionStr
 
 cmd = "nvidia-settings --query [gpu:0]/NvidiaDriverVersion"
@@ -284,6 +286,9 @@ else:
 if versionPilote > 349.00 and versionPilote < 349.53:
 	tkMessageBox.showwarning("Erreur Version","Le moniteur n'est pas compatible avec cette version:(%s)" % versionPilote)
         sys.exit(1)
+
+if versionPilote > versionPiloteMaxTest:
+	print "Driver non testé"
 
 cmd = "lspci -vnn | egrep 'VGA|3D'"
 ListeGpu, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
@@ -305,7 +310,15 @@ except:
 	ndiFile = None
 
 if ndiFile != None:	
-	versionElement = ndiFile.getElementsByTagName('version')	
+	versionElement = ndiFile.getElementsByTagName('version')
+	updateCo = ndiFile.getElementsByTagName('update')
+	if updateCo != []:
+		if updateCo[0].firstChild.nodeValue == "False":
+			updateC = False
+		else:
+			updateC = True
+	else:
+		updateC = True	
 	itemlist = ndiFile.getElementsByTagName('gpu')
 	errorCode = 0
 	if len(itemlist) > 0:
