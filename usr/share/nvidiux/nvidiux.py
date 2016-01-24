@@ -169,7 +169,7 @@ class NvidiuxApp(QMainWindow):
 	nbGpu = -1
 	nbGpuNvidia = -1
 	optimus = 0
-	nvidiuxVersionStr = "1.1.04"
+	nvidiuxVersionStr = "1.1.05"
 	nvidiuxVersion = 1.1
 	change = 0
 	isFermiArch = []
@@ -444,16 +444,16 @@ class NvidiuxApp(QMainWindow):
 					return self.showError(7,_translate("nvidiux","Erreur Credential",None),_translate("nvidiux","Votre mot de passe est incorrect",None),self.error)
 
 		if int(os.popen("cat /etc/X11/xorg.conf | grep Coolbits | wc -l", "r").read()) == 0:
-			self.showError(-1,_translate("Configuration",None),_translate("La configuration du fichier xorg n'est pas effectue !\nEntrer votre mot de passe administrateur pour effectuer la configuration",None),self.info)
+			self.showError(-1,_translate("nvidiux","Configuration",None),_translate("nvidiux","La configuration du fichier xorg n'est pas effectué!\nEntrer votre mot de passe administrateur pour effectuer la configuration",None),self.info)
 			cmd = "bash /usr/share/nvidiux/toRoot.sh add_coolbits.py >> /dev/null 2>&1"
 			if sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
-				return self.showError(7,_translate("Erreur Credential",None),_translate("Votre mot de passe est incorrect",None),self.error)
+				return self.showError(7,_translate("nvidiux","Erreur Credential",None),_translate("nvidiux","Votre mot de passe est incorrect",None),self.error)
 			else:
 				try:
 					tempFile = open('/tmp/.reboot_nvidiux','a')
 					tempFile.write('Nvidiux temp file')
 					tempFile.close()
-					return self.showError(-1,_translate("nvidiux","Redemarrage Requis",None),_translate("nvidiux","Configuration effectue\nVous devez redemarrer votre machine",None),self.info)
+					return self.showError(-1,_translate("nvidiux","Redemarrage Requis",None),_translate("nvidiux","Configuration effectué\nVous devez redemarrer votre machine",None),self.info)
 				except:
 					return self.showError(5,_translate("nvidiux","Erreur",None),_translate("nvidiux","Erreur configuration nvidiux",None),self.error)
 		else:
