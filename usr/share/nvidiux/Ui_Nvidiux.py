@@ -101,7 +101,7 @@ class Ui_MainWindow(object):
         self.buttonSaveProfile.setFlat(False)
         self.buttonSaveProfile.setObjectName(_fromUtf8("buttonLoadProfile"))
         self.labelProfile = QtGui.QLabel(self.groupBoxProfile)
-        self.labelProfile.setGeometry(QtCore.QRect(75, 2, 50, 20))
+        self.labelProfile.setGeometry(QtCore.QRect(70, 2, 60, 20))
         self.labelProfile.setAlignment(QtCore.Qt.AlignCenter)
         self.labelProfile.setObjectName(_fromUtf8("LabelProfil"))
         font = QtGui.QFont()
@@ -477,7 +477,6 @@ class Ui_MainWindow(object):
       
       
         self.label_Img = ClickQLabel(self.centralwidget)
-        #QtGui.QLabel()
         self.label_Img.setGeometry(QtCore.QRect(554, 5, 240, 140))
         self.label_Img.setObjectName(_fromUtf8("label_Img"))
         self.Message = QtGui.QLabel(self.centralwidget)
@@ -577,7 +576,6 @@ class Ui_MainWindow(object):
         self.actionPref.setText(_translate("MainWindow", "Preferences", None))
         self.actionLoadProfile.setText(_translate("MainWindow", "Charger", None))
         self.actionSaveProfile.setText(_translate("MainWindow", "Enregistrer", None))
-
 
 class ClickQLabel(QtGui.QLabel):
  

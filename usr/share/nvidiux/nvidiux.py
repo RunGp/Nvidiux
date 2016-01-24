@@ -191,10 +191,10 @@ class NvidiuxApp(QMainWindow):
 	overclockEnabled = True
 	overvoltEnabled = False
 	sameParamGpu = True
+	nvidiuxTranslator = None
 	autoStartupSysOverclock = False
 	autoStartupNvidiuxOverclock = False
 	argv = []
-	language = QLocale.system().name()
 	
 	def __init__(self,argv,parent=None):
 		super (NvidiuxApp, self).__init__(parent)
@@ -474,13 +474,10 @@ class NvidiuxApp(QMainWindow):
 		if os.path.isfile(expanduser("~") + "/.nvidiux/conf.xml"):
 			self.loadNvidiuxConf()
 				
-		nvidiuxTranslator = QtCore.QTranslator()
-		if nvidiuxTranslator.load("/usr/share/nvidiux/nvidiux_" + self.language):
-			app.installTranslator(nvidiuxTranslator)
-		else:
-			locale = QtCore.QLocale.system().name()
-			nvidiuxTranslator.load("qt_" + locale,QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.TranslationsPath))
-			app.installTranslator(nvidiuxTranslator)
+		self.nvidiuxTranslator = QtCore.QTranslator()
+		if self.nvidiuxTranslator.load("/usr/share/nvidiux/nvidiux_" + self.language):
+			app.installTranslator(self.nvidiuxTranslator)
+			self.ui.retranslateUi(self)
 		
 		cmd = "nvidia-settings --query [gpu:0]/NvidiaDriverVersion"
 		if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
@@ -1340,11 +1337,8 @@ class NvidiuxApp(QMainWindow):
 if __name__ == "__main__":
 	app = QApplication(sys.argv)
 	nvidiuxApp = NvidiuxApp(sys.argv)
-	nvidiuxTranslator = QtCore.QTranslator()
-	if nvidiuxTranslator.load("/usr/share/nvidiux/nvidiux_" + nvidiuxApp.language):
-		app.installTranslator(nvidiuxTranslator)
-		nvidiuxTranslator.load("qt_" + locale,QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.TranslationsPath))
-	else:
+	if not os.path.isfile("/usr/share/nvidiux/nvidiux_" + nvidiuxApp.language + ".qm"):
+		nvidiuxTranslator = QtCore.QTranslator()
 		locale = QtCore.QLocale.system().name()
 		nvidiuxTranslator.load("qt_" + locale,QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.TranslationsPath))
 		app.installTranslator(nvidiuxTranslator)
