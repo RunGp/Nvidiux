@@ -182,8 +182,8 @@ class Ui_Pref(QWidget):
 				cmd = "\tsudo -u " + getpass.getuser() + " nvidia-settings -a \"[gpu:" + str(i) + "]/GPUGraphicsClockOffset[2]=" + str(offsetGpu) + "\" -a \"[gpu:" + str(i) + "]/GPUMemoryTransferRateOffset[2]=" + str(offsetMem) + "\" -c " + disp + " >> /dev/null 2>&1 \n"
 				script = script + cmd
 			i+=1
-		script += "\tresult=`nvidia-settings --query [gpu:" + str(i) + "]/GPUGraphicsClockOffset[2] | grep \" Attribute 'GPUGraphicsClockOffset'\"| cut -d \")\" -f 2 | tr -cd [0-9]`\n"
-		script += "\tif [ $result -eq " + str(int(tab[-1][1]) - int(self.tabGpu[-1].resetFreqGpu)) + " ]\n\tthen\n\t\tbreak\n\tfi"
+		script += "\tresult=`nvidia-settings --query [gpu:0]/GPUGraphicsClockOffset[2] | grep \" Attribute 'GPUGraphicsClockOffset'\"| cut -d \")\" -f 2 | tr -cd [0-9]`\n"
+		script += "\tif [ $result -eq " + str(int(tab[0][1]) - int(self.tabGpu[0].resetFreqGpu)) + " ]\n\tthen\n\t\tbreak\n\tfi"
 		script += "\n\tboucle=$((boucle+1))\n\tif [ $boucle -eq 100 ]\n\tthen\n\t\techo 0 >> /tmp/nvidiux_startup_overclock_error;break\n\tfi\ndone\n"
 		script += "exit 0\n"
 		fileSh.write(script)
