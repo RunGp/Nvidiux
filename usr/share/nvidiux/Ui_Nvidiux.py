@@ -353,7 +353,7 @@ class Ui_MainWindow(object):
         self.labelFan.setObjectName(_fromUtf8("labelFan"))
         
         self.labelFanVitesse = QtGui.QLabel(self.groupBoxOverclock)
-        self.labelFanVitesse.setGeometry(QtCore.QRect(80, 266, 120, 30))
+        self.labelFanVitesse.setGeometry(QtCore.QRect(90, 266, 120, 30))
         font = QtGui.QFont()
         font.setPointSize(12)
         font.setBold(True)

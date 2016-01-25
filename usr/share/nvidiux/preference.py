@@ -183,7 +183,7 @@ class Ui_Pref(QWidget):
 				script = script + cmd
 			i+=1
 		script += "\tresult=`nvidia-settings --query [gpu:" + str(i) + "]/GPUGraphicsClockOffset[2] | grep \" Attribute 'GPUGraphicsClockOffset'\"| cut -d \")\" -f 2 | tr -cd [0-9]`\n"
-		script += "\tif [ $result -eq " + str(int(tab[-1][1]) - int(self.tabGpu[-1].resetFreqGpu)) + " ]\n\t\tbreak\n\tfi"
+		script += "\tif [ $result -eq " + str(int(tab[-1][1]) - int(self.tabGpu[-1].resetFreqGpu)) + " ]\n\tthen\n\t\tbreak\n\tfi"
 		script += "\n\tboucle=$((boucle+1))\n\tif [ $boucle -eq 100 ]\n\tthen\n\t\techo 0 >> /tmp/nvidiux_startup_overclock_error;break\n\tfi\ndone\n"
 		script += "exit 0\n"
 		fileSh.write(script)
@@ -368,7 +368,7 @@ class Ui_Pref(QWidget):
 			if os.path.isfile(self.home + "/.nvidiux/ntchkdriver"):
 				os.remove(self.home + "/.nvidiux/ntchkdriver")
 	def setLanguage(self,lang):
-		tabLang = ["fr_FR","en_EN"]
+		tabLang = ["fr_FR","en_EN","de_DE"]
 		language = tabLang[lang]
 		self.mainWindows.setLanguage(language)
 		prefTranslator = QtCore.QTranslator()
@@ -490,8 +490,11 @@ class Ui_Pref(QWidget):
 		self.ComboLang.setGeometry(QtCore.QRect(90, 8, 200, 30))
 		self.ComboLang.addItem("Francais")
 		self.ComboLang.addItem("English")
+		self.ComboLang.addItem("Deutsch")
 		if self.language == "fr_FR":
 			self.ComboLang.setCurrentIndex(0)
+		elif self.language == "de_DE":
+			self.ComboLang.setCurrentIndex(2)
 		else:
 			self.ComboLang.setCurrentIndex(1)
 			

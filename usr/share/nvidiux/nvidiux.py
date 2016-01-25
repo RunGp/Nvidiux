@@ -169,7 +169,7 @@ class NvidiuxApp(QMainWindow):
 	nbGpu = -1
 	nbGpuNvidia = -1
 	optimus = 0
-	nvidiuxVersionStr = "1.1.05"
+	nvidiuxVersionStr = "1.1.06"
 	nvidiuxVersion = 1.1
 	change = 0
 	isFermiArch = []
