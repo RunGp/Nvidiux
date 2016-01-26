@@ -99,13 +99,13 @@ class Ui_Pref(QWidget):
 				self.buttonParcSys.setEnabled(False)
 				if self.startWithSystem: #Disable cron
 					if not self.disableCronStartup():
-						self.showError(33,_translate("Form","Echec",_translate("Form","Impossible de continuer",None),self.error))
+						self.showError(33,_translate("Form",_translate("Form","Impossible de continuer",None),self.error))
 						self.buttonParcSys.setEnabled(True)
 						self.checkBoxSys.setChecked(True)
 				else:
 					self.labelGpuSys.setText(_translate("Form","Chargement profil au demarage desactive",None))
 		else:
-			self.showError(32,_translate("Form","Echec",_translate("Form","Impossible de continuer",None),self.error))
+			self.showError(32,_translate("Form",_translate("Form","Impossible de continuer",None),self.error))
 			self.checkBoxSys.setChecked(False)
 	
 	def checkNvi(self,value):
@@ -177,7 +177,7 @@ class Ui_Pref(QWidget):
 				cmd = "\tsudo -u " + getpass.getuser() + " nvidia-settings -a \"[gpu:" + str(i) + "]/GPUOVerVoltageOffset=" + str(self.tabGpu[i].overvolt) + "\" -c " + disp + " >> /dev/null 2>&1 \n"
 				script = script + cmd
 			offsetGpu = int(gpu[1]) - int(self.tabGpu[i].resetFreqGpu)
-			offsetMem = int(gpu[3]) - int(self.tabGpu[i].resetFreqGpu)
+			offsetMem = int(gpu[3]) - int(self.tabGpu[i].resetFreqMem)
 			if offsetGpu != 0 or offsetMem != 0:
 				cmd = "\tsudo -u " + getpass.getuser() + " nvidia-settings -a \"[gpu:" + str(i) + "]/GPUGraphicsClockOffset[2]=" + str(offsetGpu) + "\" -a \"[gpu:" + str(i) + "]/GPUMemoryTransferRateOffset[2]=" + str(offsetMem) + "\" -c " + disp + " >> /dev/null 2>&1 \n"
 				script = script + cmd

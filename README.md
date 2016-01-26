@@ -1,11 +1,11 @@
-# Nvidiux V 1.1
-Licence:gpl-3.0 :https://github.com/RunGp/Nvidiux/blob/master/usr/share/nvidiux/gpl-3.0.txt
-Description en Francais en bas de page
+# Nvidiux V 1.2
+Licence:gpl-3.0 https://github.com/RunGp/Nvidiux/blob/master/usr/share/nvidiux/gpl-3.0.txt
+
 =============================================================
 
-English version
+English version - (Description en Francais en bas de page)
 
-Nvidiux is a graphical python tool to overclock or underclock your nvidia gpu (generation 4XX 5XX 6XX 7XX 9XX)
+Nvidiux is a graphical python tool to overclock or underclock your nvidia gpu (generation 4XX or newer)
 il also provide :
 - Fan control 
 - Auto overclock at startup
@@ -27,14 +27,14 @@ Install
 
 Debian
 in command line use :
-- wget https://github.com/RunGp/Nvidiux/releases/download/1.1/nvidiux.deb
+- wget https://github.com/RunGp/Nvidiux/releases/download/1.2/nvidiux.deb
 - sudo dpkg -i nvidiux.deb
 - sudo apt-get install -f
 
 Ubuntu 
 use this ppa https://launchpad.net/~nvidiux/+archive/ubuntu/nvidiux
 
-Arch
+Arch - Manjaro
 Nvidiux is available on AUR : https://aur.archlinux.org/packages/nvidiux/
 
 Fedora 
@@ -73,14 +73,14 @@ Installation :
 Debian
 Installez le paquet deb se trouvant ici (https://github.com/RunGp/Nvidiux/releases) avec votre instalateur de paquet favoris
 Ou taper les commandes dans votre terminal:
-- wget https://github.com/RunGp/Nvidiux/releases/download/1.1/nvidiux.deb
+- wget https://github.com/RunGp/Nvidiux/releases/download/1.2/nvidiux.deb
 - sudo dpkg -i nvidiux.deb
 - sudo apt-get install -f
 
 Ubuntu
 Un ppa est dispo : https://launchpad.net/~nvidiux/+archive/ubuntu/nvidiux
 
-Arch
+Arch - Manjaro
 Nvidiux est disponible sur AUR : https://aur.archlinux.org/packages/nvidiux/
 
 Fedora

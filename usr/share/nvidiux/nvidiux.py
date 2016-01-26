@@ -30,6 +30,7 @@ import os
 import threading
 import time
 import psutil
+import getopt
 
 muttex = threading.RLock()
 
@@ -169,8 +170,8 @@ class NvidiuxApp(QMainWindow):
 	nbGpu = -1
 	nbGpuNvidia = -1
 	optimus = 0
-	nvidiuxVersionStr = "1.1.06"
-	nvidiuxVersion = 1.1
+	nvidiuxVersionStr = "1.2.06"
+	nvidiuxVersion = 1.2
 	change = 0
 	isFermiArch = []
 	form = ""
@@ -188,17 +189,57 @@ class NvidiuxApp(QMainWindow):
 	valueStart = "0:0"
 	versionPilote = "331.31"
 	versionPiloteMaxTest = 361.18
+	language = "en_EN"
 	overclockEnabled = True
 	overvoltEnabled = False
 	sameParamGpu = True
 	nvidiuxTranslator = None
 	autoStartupSysOverclock = False
 	autoStartupNvidiuxOverclock = False
-	argv = []
+	ndifile = None
+	resetAllGpu = False
+	silent = False
+	#argv = []
 	
 	def __init__(self,argv,parent=None):
 		super (NvidiuxApp, self).__init__(parent)
-		self.argv = argv
+		#self.argv = argv
+		try:                            
+			opts, args = getopt.getopt(argv, "vhs:r", ["version","help", "silent=","reset"])
+		except getopt.GetoptError:
+			print "Unknow option"
+			showHelp()
+			sys.exit(2)
+			
+		for opt, arg in opts:
+			if opt in ("-h", "--help"):
+				showHelp()
+				sys.exit(0)
+			if opt in ("-v", "--version"):
+				print "Nvidiux version:" + self.nvidiuxVersionStr
+				sys.exit(0)
+			elif opt in ("-s", "--silent"):
+				if os.path.isfile(arg):
+					self.ndifile = arg
+					self.silent = True
+				else:
+					print "Unable to find profile file"
+					showHelp()
+					sys.exit(3)
+			elif opt in ("-r", "--reset"):
+				self.resetAllGpu = True	   
+			else:
+				print "Error"
+				showHelp()
+				sys.exit(2)
+		if len(argv) == 1:
+			if argv[0] != "-r" and argv[0] != "--reset":
+				if os.path.isfile(argv[0]):
+					self.ndifile = argv[0]
+				else:
+					print "Unable to find profile file"
+					showHelp()
+					sys.exit(3)
 		self.createWidgets()
 		
 	def about(self):
@@ -318,7 +359,6 @@ class NvidiuxApp(QMainWindow):
 		self.ui.actionAbout.connect(self.ui.actionAbout, SIGNAL("triggered()"),self.about)
 		self.ui.label_Img.connect(self.ui.label_Img, SIGNAL("clicked()"), self.clickImage)
 		self.ui.listWidgetGpu.itemClicked.connect(self.changeGpu)
-		print "nvidiux " + self.nvidiuxVersionStr
 
 		cmd = "vainfo | wc -l"
 		if int(sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()[0].replace('\n','')) > 6:
@@ -327,9 +367,14 @@ class NvidiuxApp(QMainWindow):
 		for gpu in self.tabGpu:
 			self.ui.listWidgetGpu.addItem(str(i + 1) + ":" + gpu.nameGpu)
 			i = i + 1
-		if len(self.argv) == 2:
-			if os.path.exists(self.argv[1]):
-				self.loadProfile(self.argv[1])
+		if self.ndifile != None:
+			if not self.silent:
+				print "Load:" + self.ndifile
+			else:
+				print "Silent load:"  + self.ndifile
+			self.loadProfile(self.ndifile)
+		if self.resetAllGpu:
+			self.reset()
 	
 	def configureMonitor(self):
 		tabGpu = list()
@@ -348,7 +393,6 @@ class NvidiuxApp(QMainWindow):
 		tabLang.append(app)
 		self.form = Ui_Pref(1,self.nvidiuxVersionStr,self.nvidiuxVersion,tabLang,tabGpu,self)
 		self.form.show()
-	
 	
 	def clickImage(self):
 		cmd = "nvidia-settings --query [gpu:" + str(self.numGpu) + "]/GpuUUID"
@@ -397,9 +441,10 @@ class NvidiuxApp(QMainWindow):
 			else:
 				if self.saveProfile(home + "/.nvidiux/" + gpuName + ".ndi") != 0:
 					return self.showError(21,_translate("nvidiux","Droit insuffisant",None),_translate("nvidiux","Impossible d'ecrire le fichier !",None),self.error)
-				self.loadProfile(home + "/.nvidiux/" + gpuName + ".ndi",True)		
-			if os.path.isfile(home + "/.nvidiux/Startup.ndi"):
-				self.loadProfile(home +"/.nvidiux/Startup.ndi",False,"3")	
+				self.loadProfile(home + "/.nvidiux/" + gpuName + ".ndi",True)
+			if self.ndifile != None:		
+				if os.path.isfile(home + "/.nvidiux/Startup.ndi"):
+					self.loadProfile(home +"/.nvidiux/Startup.ndi",False,"3")	
 		except:
 			return self.showError(20,"Erreur","Erreur Chargement configuration",self.error)					
 		
@@ -910,6 +955,8 @@ class NvidiuxApp(QMainWindow):
 				self.tabGpu[i].resetFreqGpu = int(tempgpu[1])
 				self.tabGpu[i].resetFreqShader = int(tempgpu[2])
 				self.tabGpu[i].resetFreqMem = int(tempgpu[3])
+		if self.silent and not defaultOnly:
+			print sys.exit(0)
 		return 0
 	
 	def maxPerf(self,value):
@@ -1333,10 +1380,18 @@ class NvidiuxApp(QMainWindow):
 		if gpuName in notWork:
 			return 1
 		return -1
+def showHelp():
+	print '''Use:nvidiux <option> ndifile
+	-h --help 	print this help
+	-r --reset	reset over/down-clock of all nvidia card
+	-s --silent 	apply profile and not show interface
+	-v --version 	print nvidiux version 
+	ndifile 	apply profile and show nvidiux'''
+
 			
 if __name__ == "__main__":
 	app = QApplication(sys.argv)
-	nvidiuxApp = NvidiuxApp(sys.argv)
+	nvidiuxApp = NvidiuxApp(sys.argv[1:])
 	if not os.path.isfile("/usr/share/nvidiux/nvidiux_" + nvidiuxApp.language + ".qm"):
 		nvidiuxTranslator = QtCore.QTranslator()
 		locale = QtCore.QLocale.system().name()
@@ -1352,3 +1407,6 @@ if __name__ == "__main__":
 	nvidiuxApp.setThread(threadMonitor,threadInfoGpu)	
 	nvidiuxApp.show()
 	sys.exit(app.exec_())
+	
+
+	

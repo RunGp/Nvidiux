@@ -68,7 +68,7 @@ class ConfirmWindow(QWidget):
 		if self.language == "fr_FR":
 			self.texteula.setPlainText(_fromUtf8("Attention cette pratique peut annuler la garantie du produit et reste à l'entière responsabilité de l'utilisateur du logiciel. Ni le concepteur du logiciel ni la communauté gnu ne pourra pas être tenu responsable de toutes mauvaises manipulations ayant entrainé un quelconque dégât direct ou en conséquence de l'utilisation de Nvidiux.\nNvidiux n'est en aucun cas affilié à Nvidia"))
 		elif self.language == "de_DE":
-			self.texteula.setPlainText(_fromUtf8("The author and community are not responsible of bad use and no liability for damages, direct or consequential, which may result from the use of Nvidiux.\nNvidiux is in no way affiliated to Nvidia."))
+			self.texteula.setPlainText(_fromUtf8("Der Autor und die beteiligte Gemeinschaft sind nicht verantwortlich bei unsachgemäßer Verwendung und übernehmen keinerlei Haftung für Schäden, direkt oder indirekt, die sich aus der Verwendung von Nvidiux ergeben könnten. Nvidiux steht in keiner Verbindung mit der NVIDIA GmbH."))
 		else:
 			self.texteula.setPlainText(_fromUtf8("The author and community are not responsible of bad use and no liability for damages, direct or consequential, which may result from the use of Nvidiux.\nNvidiux is in no way affiliated to Nvidia."))
 

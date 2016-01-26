@@ -14,9 +14,9 @@
 # You should have received a copy of the GNU General Public License along
 # with this program. If not, see <http://www.gnu.org/licenses/>.
 
-if [ $# -eq 1 ]
+if [ $# -ge 1 ]
 then
-    python2 /usr/share/nvidiux/nvidiux.py "$1"
+    python2 /usr/share/nvidiux/nvidiux.py "$@"
 else
     python2 /usr/share/nvidiux/nvidiux.py
 
