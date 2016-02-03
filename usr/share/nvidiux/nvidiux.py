@@ -170,7 +170,7 @@ class NvidiuxApp(QMainWindow):
 	nbGpu = -1
 	nbGpuNvidia = -1
 	optimus = 0
-	nvidiuxVersionStr = "1.2.06"
+	nvidiuxVersionStr = "1.2.1.07"
 	nvidiuxVersion = 1.2
 	change = 0
 	isFermiArch = []
@@ -182,6 +182,7 @@ class NvidiuxApp(QMainWindow):
 	isSli= False
 	error = -1
 	warning = -2
+	acceptedEula = True
 	info = 0
 	autoUpdate = True
 	updateTime = 1
@@ -199,11 +200,9 @@ class NvidiuxApp(QMainWindow):
 	ndifile = None
 	resetAllGpu = False
 	silent = False
-	#argv = []
 	
 	def __init__(self,argv,parent=None):
 		super (NvidiuxApp, self).__init__(parent)
-		#self.argv = argv
 		try:                            
 			opts, args = getopt.getopt(argv, "vhs:r", ["version","help", "silent=","reset"])
 		except getopt.GetoptError:
@@ -260,6 +259,10 @@ class NvidiuxApp(QMainWindow):
 		self.form = Ui_Pref(2,self.nvidiuxVersionStr,self.nvidiuxVersion,tabLang,tabGpu,self)
 		self.form.show()
 		
+	def acceptEula(self):
+		print "User accept eula"
+		self.acceptedEula = True
+	
 	def applyNewClock(self):
 		text = "Confirmation("
 		i = 0
@@ -277,6 +280,7 @@ class NvidiuxApp(QMainWindow):
 		tabLang.append(self.language)
 		tabLang.append(app)	
 		self.form = ConfirmWindow(_fromUtf8(text),tabLang,size)
+		self.form.setWindowModality(QtCore.Qt.ApplicationModal)
 		self.connect(self.form, SIGNAL("accept(PyQt_PyObject)"), self.overclock)
 		self.form.show()
 		
@@ -367,7 +371,7 @@ class NvidiuxApp(QMainWindow):
 		for gpu in self.tabGpu:
 			self.ui.listWidgetGpu.addItem(str(i + 1) + ":" + gpu.nameGpu)
 			i = i + 1
-		if self.ndifile != None:
+		if self.ndifile != None and self.acceptedEula:
 			if not self.silent:
 				print "Load:" + self.ndifile
 			else:
@@ -448,6 +452,11 @@ class NvidiuxApp(QMainWindow):
 		except:
 			return self.showError(20,"Erreur","Erreur Chargement configuration",self.error)					
 		
+	
+	def denyEula(self):
+		print "User deny eula"
+		sys.exit(-2)
+	
 	def iscompatible(self):
 		cmd = "ls -l /usr/lib | grep nvidia"
 		if sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
@@ -510,15 +519,19 @@ class NvidiuxApp(QMainWindow):
 		info = ""
 		err = ""
 		out = ""
+		if os.path.isfile(expanduser("~") + "/.nvidiux/conf.xml"):
+			self.loadNvidiuxConf()
+		#~ if not os.path.isfile(expanduser("~") + "/.nvidiux/acceptedeula"):
+			#~ self.showeula()
+		#~ else:
+			#~ self.acceptEula = True
+		
 		compatibility = self.iscompatible()
 		if compatibility >= 1 and  compatibility <= 7:
 			sys.exit(compatibility)
 		if compatibility == -1:
 			sys.exit(0)
 			
-		if os.path.isfile(expanduser("~") + "/.nvidiux/conf.xml"):
-			self.loadNvidiuxConf()
-				
 		self.nvidiuxTranslator = QtCore.QTranslator()
 		if self.nvidiuxTranslator.load("/usr/share/nvidiux/nvidiux_" + self.language):
 			app.installTranslator(self.nvidiuxTranslator)
@@ -713,7 +726,7 @@ class NvidiuxApp(QMainWindow):
 			for gpu in self.tabGpu:
 				returnCode = self.verifyGpu(gpu.nameGpu)
 				if returnCode == -1:
-					info = info + _translate("nvidiux","Ce gpu ",None) + str(gpu.nameGpu) + _translate("nvidiux"," n'est pas dans la liste blanche\nn'hesitez pas à confirmer son fonctionnement",None)
+					info = info + _translate("nvidiux","Ce gpu ",None) + str(gpu.nameGpu) + _translate("nvidiux"," n'est pas dans la liste blanche\nn'hesitez pas a confirmer son fonctionnement",None)
 				if returnCode == 1:
 					info = info + _translate("nvidiux","Ce gpu ",None) + str(gpu.nameGpu) + _translate("nvidiux"," n'est pas supporte \n(Overclock desactive !)",None)
 					self.ui.SliderMem.setEnabled(False)
@@ -785,7 +798,7 @@ class NvidiuxApp(QMainWindow):
 			self.ui.buttonReset.setEnabled(True)
 		else:
 			self.ui.buttonReset.setEnabled(False)
-		self.ui.about.setText(_translate("nvidiux","Version ",None) + str(self.nvidiuxVersion))
+		self.ui.about.setText(_translate("nvidiux","Version ",None) + str(self.nvidiuxVersionStr))
 		
 	def killTMonitor(self):
 		self.threadMonitor.stop()
@@ -991,6 +1004,9 @@ class NvidiuxApp(QMainWindow):
 					self.tabGpu[semf.numGpu].overvoltValue = self.overvoltValue
 			
 	def overclock(self,mode):
+		if not self.acceptedEula:
+			self.showError(-1,_translate("nvidiux","Accepter le contrat de licence",None),_translate("nvidiux","Vous devez accepter le contrat de licence d'abord",None),self.info)
+			return False
 		success = False
 		overclock = False
 		i = 0
@@ -1090,7 +1106,18 @@ class NvidiuxApp(QMainWindow):
 	
 	def resizeEvent(self, event):
 		self.showNormal()
-			
+	
+	def showeula(self):
+		text = "Pour utiliser nvidiux vous devez accepter\nle contrat de licence"
+		tabLang = list()
+		tabLang.append(self.language)
+		tabLang.append(app)	
+		self.eulaForm = ConfirmWindow(_fromUtf8(text),tabLang,16)
+		self.eulaForm.setWindowModality(QtCore.Qt.ApplicationModal)
+		self.connect(self.eulaForm, SIGNAL("accept(PyQt_PyObject)"), self.acceptEula)
+		self.connect(self.eulaForm, SIGNAL("reject(PyQt_PyObject)"), self.denyEula)
+		self.eulaForm.show()
+	
 	def setStartSystem(self,start,value):
 		self.startWithSystem = start
 		self.valueStart = value
@@ -1334,7 +1361,7 @@ class NvidiuxApp(QMainWindow):
 		self.ui.lcdMem.display(value)
 		self.ui.SliderMem.setSliderPosition(value)	
 		self.ui.buttonApply.setEnabled(True)
-		self.ui.buttonReset.setEnabled(True)
+		#self.ui.buttonReset.setEnabled(True)
 		
 
 	def updateGpu(self,value):
@@ -1360,12 +1387,12 @@ class NvidiuxApp(QMainWindow):
 		self.ui.lcdShader.display(self.tabGpu[self.numGpu].freqShader)
 		self.ui.SliderShader.setSliderPosition(self.tabGpu[self.numGpu].freqShader)
 		self.ui.buttonApply.setEnabled(True)
-		self.ui.buttonReset.setEnabled(True)
+		#self.ui.buttonReset.setEnabled(True)
 		self.change = True
 		
-	def verifyGpu(self,gpuName):#-1:unknow 0:ok 1:not ok 
-		verified = ["GeForce GT 420M","GeForce GTX 460M","GeForce GTX 460","GeForce GTX 470","GeForce GTX 560M","GeForce GTX 560 Ti","GeForce GTX 570","GeForce GTX 580","GeForce GT 620","GeForce GT 630","GeForce GTX 650","GeForce GTX 660","GeForce GT 740","GeForce GTX 750","GeForce GTX 750 TI","GeForce GTX 770","GeForce GTX 780 Ti"]
-		notWork = ["GeForce GTX TITAN Z","GeForce GTX TITAN Black","GeForce GTX TITAN","GeForce GTX 690","GeForce GTX 590","GeForce GT 430",
+	def verifyGpu(self,gpuName):#-1:unknown 0:ok 1:not ok 
+		verified = ["GeForce GT 420M","GeForce GTX 460M","GeForce GT 430","GeForce GTX 460","GeForce GTX 470","GeForce GTX 560M","GeForce GTX 560 Ti","GeForce GTX 570","GeForce GTX 580","GeForce GT 620","GeForce GT 630","GeForce GTX 650","GeForce GTX 660","GeForce GT 740","GeForce GTX 750","GeForce GTX 750 TI","GeForce GTX 770","GeForce GTX 780 Ti","GeForce GTX 970","GeForce GTX 980"]
+		notWork = ["GeForce GTX TITAN Z","GeForce GTX TITAN Black","GeForce GTX TITAN","GeForce GTX 690","GeForce GTX 590",
 		"GeForce GT 340", "GeForce GT 330", "GeForce GT 320", "GeForce 315", "GeForce 310","GeForce GTS 360M", "GeForce GTS 350M", "GeForce GT 335M", "GeForce GT 330M","GeForce GT 325M", "GeForce GT 320M", "GeForce 320M", "GeForce 315M", "GeForce 310M", "GeForce 305M",
 		"GeForce GTX 295", "GeForce GTX 285","GeForce GTX 280", "GeForce GTX 275", "GeForce GTX 260", "GeForce GTS 250", "GeForce GTS 240", "GeForce GT 230", "GeForce GT 240", "GeForce GT 220", "GeForce G210", "GeForce 210", "GeForce 205",
 		"GeForce GTX 285M", "GeForce GTX 280M", "GeForce GTX 260M", "GeForce GTS 260M", "GeForce GTS 250M", "GeForce GT 240M", "GeForce GT 230M", "GeForce GT 220M", "GeForce G210M", "GeForce G205M",
@@ -1407,6 +1434,3 @@ if __name__ == "__main__":
 	nvidiuxApp.setThread(threadMonitor,threadInfoGpu)	
 	nvidiuxApp.show()
 	sys.exit(app.exec_())
-	
-
-	

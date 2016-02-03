@@ -51,8 +51,7 @@ class Ui_MainWindow(object):
         self.title.setAlignment(QtCore.Qt.AlignCenter)
         self.title.setObjectName(_fromUtf8("title"))
         self.about = QtGui.QLabel(self.centralwidget)
-        self.about.setGeometry(QtCore.QRect(14, 56, 100, 30))
-        self.about.setAlignment(QtCore.Qt.AlignCenter)
+        self.about.setGeometry(QtCore.QRect(25, 56, 76, 30))
         self.about.setObjectName(_fromUtf8("about"))
         self.buttonAbout = QtGui.QPushButton(self.centralwidget)
         self.buttonAbout.setGeometry(QtCore.QRect(115, 58, 24, 24))
@@ -110,7 +109,7 @@ class Ui_MainWindow(object):
         
         self.listWidgetGpu = QtGui.QListWidget(self.centralwidget)
         self.listWidgetGpu.setGeometry(QtCore.QRect(210, 10, 200, 60))
-        self.listWidgetGpu.setStyleSheet(_fromUtf8("background-color: rgb(207, 255, 233);"))
+        #self.listWidgetGpu.setStyleSheet(_fromUtf8("background-color: rgb(207, 255, 233);"))
         self.listWidgetGpu.setObjectName(_fromUtf8("listWidgetGpu"))
         
         self.groupBoxMonitor = QtGui.QGroupBox(self.centralwidget)

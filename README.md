@@ -1,4 +1,4 @@
-# Nvidiux V 1.2
+# Nvidiux V 1.2.1
 Licence:gpl-3.0 https://github.com/RunGp/Nvidiux/blob/master/usr/share/nvidiux/gpl-3.0.txt
 
 =============================================================
@@ -27,7 +27,7 @@ Install
 
 Debian
 in command line use :
-- wget https://github.com/RunGp/Nvidiux/releases/download/1.2/nvidiux.deb
+- wget https://github.com/RunGp/Nvidiux/releases/download/1.2.1/nvidiux.deb
 - sudo dpkg -i nvidiux.deb
 - sudo apt-get install -f
 
@@ -73,7 +73,7 @@ Installation :
 Debian
 Installez le paquet deb se trouvant ici (https://github.com/RunGp/Nvidiux/releases) avec votre instalateur de paquet favoris
 Ou taper les commandes dans votre terminal:
-- wget https://github.com/RunGp/Nvidiux/releases/download/1.2/nvidiux.deb
+- wget https://github.com/RunGp/Nvidiux/releases/download/1.2.1/nvidiux.deb
 - sudo dpkg -i nvidiux.deb
 - sudo apt-get install -f
 
@@ -92,3 +92,5 @@ Dependance:python 2.7,python-qt4,gksu,vainfo,python-tk,python-psutil
 
 =============================================================
 I need help for traduce nvidiux in other language
+Special thanks to
+@mglinux for german translation

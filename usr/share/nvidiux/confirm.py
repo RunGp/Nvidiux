@@ -34,17 +34,22 @@ except AttributeError:
         return QtGui.QApplication.translate(context, text, disambig)
 
 class ConfirmWindow(QWidget):
+	
+	acceptedEula = False
 	def __init__(self,text,tabLang,size=10,parent=None):
 		super (ConfirmWindow, self).__init__(parent)
 		self.size = size
 		self.language = tabLang[0]
 		self.app = tabLang[1]
 		self.createWidgets(text)
+		
+	def closeEvent(self, event):
+		if not self.acceptedEula:
+			self.emit(SIGNAL("reject(PyQt_PyObject)"), "1")
 	
 	def createWidgets(self,text):
-		
 		self.resize(520, 510)
-		self.setWindowTitle("Confirmation")
+		self.setWindowTitle("Contrat")
 		self.labelInfo = QtGui.QLabel(text,self)
 		self.labelInfo.move(60,15)
 		self.labelInfo.setAlignment(QtCore.Qt.AlignCenter)
@@ -64,7 +69,7 @@ class ConfirmWindow(QWidget):
 		self.texteula = QPlainTextEdit(self)
 		self.texteula.move(0,150)
 		self.texteula.resize(520,270)
-		
+		#self.texteula.setPlainText(_translate("ConfirmWindow", _fromUtf8("Attention cette pratique peut annuler la garantie du produit et reste à l'entière responsabilité de l'utilisateur du logiciel. Ni le concepteur du logiciel ni la communauté gnu ne pourra pas être tenu responsable de toutes mauvaises manipulations ayant entrainé un quelconque dégât direct ou en conséquence de l'utilisation de Nvidiux.\nNvidiux n'est en aucun cas affilié à Nvidia", None))
 		if self.language == "fr_FR":
 			self.texteula.setPlainText(_fromUtf8("Attention cette pratique peut annuler la garantie du produit et reste à l'entière responsabilité de l'utilisateur du logiciel. Ni le concepteur du logiciel ni la communauté gnu ne pourra pas être tenu responsable de toutes mauvaises manipulations ayant entrainé un quelconque dégât direct ou en conséquence de l'utilisation de Nvidiux.\nNvidiux n'est en aucun cas affilié à Nvidia"))
 		elif self.language == "de_DE":
@@ -82,12 +87,14 @@ class ConfirmWindow(QWidget):
 			self.retranslateUi()
 		
 	def quitapp(self):
+		self.emit(SIGNAL("reject(PyQt_PyObject)"), "1")
 		self.close()
 		
 	def acceptEula(self,response):
 		self.buttonConfirm.setEnabled(response)
 		
 	def confirm(self):
+		self.acceptedEula = True
 		self.emit(SIGNAL("accept(PyQt_PyObject)"), "1")
 		self.close()
 		
