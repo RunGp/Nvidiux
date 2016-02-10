@@ -376,7 +376,7 @@ class Ui_Pref(QWidget):
 			self.app.installTranslator(prefTranslator)
 			self.mainWindows.setTimeUpdate(self.updateTime)
 			self.retranslateUi()
-		QMessageBox.information(self,_translate("Form","Information",None),_fromUtf8(_translate("Form","Veuillez redemarer nvidiux",None)))
+		QMessageBox.information(self,_translate("Form","Information",None),_translate("Form","Veuillez redemarer nvidiux",None))
 		
 	def setOvervolt(self,value):
 		if value == True:

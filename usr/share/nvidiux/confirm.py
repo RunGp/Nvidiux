@@ -34,13 +34,13 @@ except AttributeError:
         return QtGui.QApplication.translate(context, text, disambig)
 
 class ConfirmWindow(QWidget):
-	
 	acceptedEula = False
-	def __init__(self,text,tabLang,size=10,parent=None):
+	def __init__(self,text,tabLang,nbGpu=1,showEula=True,parent=None):
 		super (ConfirmWindow, self).__init__(parent)
-		self.size = size
+		self.nbGpu = nbGpu
 		self.language = tabLang[0]
 		self.app = tabLang[1]
+		self.showEula = showEula
 		self.createWidgets(text)
 		
 	def closeEvent(self, event):
@@ -48,39 +48,43 @@ class ConfirmWindow(QWidget):
 			self.emit(SIGNAL("reject(PyQt_PyObject)"), "1")
 	
 	def createWidgets(self,text):
-		self.resize(520, 510)
-		self.setWindowTitle("Contrat")
+		y = 50 + 120 * self.nbGpu
+		self.resize(500, y)
 		self.labelInfo = QtGui.QLabel(text,self)
 		self.labelInfo.move(60,15)
 		self.labelInfo.setAlignment(QtCore.Qt.AlignCenter)
 		font = QtGui.QFont()
-		font.setPointSize(self.size)
+		font.setPointSize(14)
 		font.setBold(True)
 		font.setWeight(75)
 		self.labelInfo.setFont(font)
 		font.setStyleStrategy(QtGui.QFont.PreferAntialias)
-		self.checkBox = QCheckBox("Je comprend les risques et j'accepte les termes du contrat",self)
-		self.checkBox.move(40,435)
 		self.buttonConfirm = QPushButton("Confirmer",self);
-		self.buttonConfirm.move(370,470)
-		self.buttonConfirm.setEnabled(False)
+		self.buttonConfirm.move(370,y -40)
 		self.buttonCancel = QPushButton("Annuler",self);
-		self.buttonCancel.move(50,470)
-		self.texteula = QPlainTextEdit(self)
-		self.texteula.move(0,150)
-		self.texteula.resize(520,270)
-		#self.texteula.setPlainText(_translate("ConfirmWindow", _fromUtf8("Attention cette pratique peut annuler la garantie du produit et reste à l'entière responsabilité de l'utilisateur du logiciel. Ni le concepteur du logiciel ni la communauté gnu ne pourra pas être tenu responsable de toutes mauvaises manipulations ayant entrainé un quelconque dégât direct ou en conséquence de l'utilisation de Nvidiux.\nNvidiux n'est en aucun cas affilié à Nvidia", None))
-		if self.language == "fr_FR":
-			self.texteula.setPlainText(_fromUtf8("Attention cette pratique peut annuler la garantie du produit et reste à l'entière responsabilité de l'utilisateur du logiciel. Ni le concepteur du logiciel ni la communauté gnu ne pourra pas être tenu responsable de toutes mauvaises manipulations ayant entrainé un quelconque dégât direct ou en conséquence de l'utilisation de Nvidiux.\nNvidiux n'est en aucun cas affilié à Nvidia"))
-		elif self.language == "de_DE":
-			self.texteula.setPlainText(_fromUtf8("Der Autor und die beteiligte Gemeinschaft sind nicht verantwortlich bei unsachgemäßer Verwendung und übernehmen keinerlei Haftung für Schäden, direkt oder indirekt, die sich aus der Verwendung von Nvidiux ergeben könnten. Nvidiux steht in keiner Verbindung mit der NVIDIA GmbH."))
+		self.buttonCancel.move(50,y - 40)
+		if self.showEula:
+			self.checkBox = QCheckBox("Je comprend les risques et j'accepte les termes du contrat",self)
+			self.checkBox.move(40,435)
+			self.checkBox.connect(self.checkBox, SIGNAL("clicked(bool)"),self.acceptEula)
+			self.texteula = QPlainTextEdit(self)
+			self.texteula.move(0,150)
+			self.texteula.resize(520,270)
+			self.texteula.setPlainText(_translate("ConfirmWindow","Attention cette pratique peut annuler la garantie du produit et reste à l'entière responsabilité de l'utilisateur du logiciel. Ni le concepteur du logiciel ni la communauté gnu ne pourra pas être tenu responsable de toutes mauvaises manipulations ayant entrainé un quelconque dégât direct ou en conséquence de l'utilisation de Nvidiux.\nNvidiux n'est en aucun cas affilié à Nvidia", None))
+			self.texteula.setReadOnly(True)
+			self.buttonConfirm.setEnabled(False)
+			self.setWindowTitle("Contrat d'utilisation")
+			#~ if self.language == "fr_FR":
+				#~ self.texteula.setPlainText(_fromUtf8("Attention cette pratique peut annuler la garantie du produit et reste à l'entière responsabilité de l'utilisateur du logiciel. Ni le concepteur du logiciel ni la communauté gnu ne pourra pas être tenu responsable de toutes mauvaises manipulations ayant entrainé un quelconque dégât direct ou en conséquence de l'utilisation de Nvidiux.\nNvidiux n'est en aucun cas affilié à Nvidia"))
+			#~ elif self.language == "de_DE":
+				#~ self.texteula.setPlainText(_fromUtf8("Der Autor und die beteiligte Gemeinschaft sind nicht verantwortlich bei unsachgemäßer Verwendung und übernehmen keinerlei Haftung für Schäden, direkt oder indirekt, die sich aus der Verwendung von Nvidiux ergeben könnten. Nvidiux steht in keiner Verbindung mit der NVIDIA GmbH."))
+			#~ else:
+				#~ self.texteula.setPlainText(_fromUtf8("The author and community are not responsible of bad use and no liability for damages, direct or consequential, which may result from the use of Nvidiux.\nNvidiux is in no way affiliated to Nvidia."))
 		else:
-			self.texteula.setPlainText(_fromUtf8("The author and community are not responsible of bad use and no liability for damages, direct or consequential, which may result from the use of Nvidiux.\nNvidiux is in no way affiliated to Nvidia."))
-
-		self.texteula.setReadOnly(True)
-		self.buttonCancel.connect(self.buttonCancel, SIGNAL("released()"),self.quitapp)
+			self.buttonConfirm.setEnabled(True)
+			self.setWindowTitle("Confirmatioon changement")
 		self.buttonConfirm.connect(self.buttonConfirm, SIGNAL("released()"),self.confirm)
-		self.checkBox.connect(self.checkBox, SIGNAL("clicked(bool)"),self.acceptEula)
+		self.buttonCancel.connect(self.buttonCancel, SIGNAL("released()"),self.quitapp)
 		ConfirmTranslator = QtCore.QTranslator()
 		if ConfirmTranslator.load("/usr/share/nvidiux/nvidiux_" + self.language):
 			self.app.installTranslator(ConfirmTranslator)
@@ -99,7 +103,10 @@ class ConfirmWindow(QWidget):
 		self.close()
 		
 	def retranslateUi(self):
-		self.setWindowTitle(_translate("ConfirmWindow", "Confirmation", None))
-		self.checkBox.setText(_translate("ConfirmWindow", "Je comprend les risques et j'accepte les termes du contrat", None))
+		if self.showEula:
+			self.setWindowTitle(_translate("ConfirmWindow", "Contrat d'utilisation", None))
+			self.checkBox.setText(_translate("ConfirmWindow", "Je comprend les risques et j'accepte les termes du contrat", None))
+		else:
+			self.setWindowTitle(_translate("ConfirmWindow", "Confirmation changement", None))
 		self.buttonConfirm.setText(_translate("ConfirmWindow", "Confirmer", None))
 		self.buttonCancel.setText(_translate("ConfirmWindow", "Annuler", None))
