@@ -169,7 +169,7 @@ class NvidiuxApp(QMainWindow):
 	nbGpu = -1
 	nbGpuNvidia = -1
 	optimus = 0
-	nvidiuxVersionStr = "1.2.2.08"
+	nvidiuxVersionStr = "1.2.3.09"
 	nvidiuxVersion = 1.2
 	change = 0
 	isFermiArch = []
@@ -475,17 +475,26 @@ class NvidiuxApp(QMainWindow):
 		ListeGpu, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
 		self.nbGpuNvidia = ListeGpu.count('GeForce')
 		self.nbGpu = len(ListeGpu)
+		
+		if self.nbGpuNvidia == 0:
+			try:
+				cmd = "nvidia-smi -L"
+				ListeGpuSmi, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+				self.nbGpuNvidia = ListeGpu.count('GeForce')
+				if self.nbGpuNvidia == 0:
+					return self.showError(4,"Gpu Nvidia introuvable","Gpu Nvidia introuvable",self.error)
+			except:
+				return self.showError(4,"Gpu Nvidia introuvable","Gpu Nvidia introuvable",self.error)
 
 		if self.nbGpu >= 2: #MultiGpu
 			if ListeGpu.count('Intel') == 1 and self.nbGpuNvidia == 1 : #optimus
 				if os.popen("prime-supported 2>> /dev/null", "r").read().replace('\n','') != "yes":
-					return self.showError(3,_translate("nvidiux","Prime",None),_translate("nvdiux","Seul prime est supporte pour les configurations optimus",None),self.error)	
+					return self.showError(3,_translate("nvidiux","Prime",None),_translate("nvidiux","Seul prime est supporte pour les configurations optimus",None),self.error)	
 				if os.popen("prime-select query", "r").read().replace('\n','') != "nvidia":
-					return self.showError(-1,_translate("nvidiux","Mode intel",None),_translate("nvdiux","Configuration Prime\nVeuillez passer en mode nvidia svp",None),self.info)
+					return self.showError(-1,_translate("nvidiux","Mode intel",None),_translate("nvidiux","Configuration Prime\nVeuillez passer en mode nvidia svp",None),self.info)
 				self.optimus = 1
 				self.ui.checkBoxOptimus.setChecked(1)
-		if self.nbGpuNvidia == 0:
-			return self.showError(4,"Gpu Nvidia introuvable","Gpu Nvidia introuvable",self.error)
+		
 		
 		if not os.path.isfile("/etc/X11/xorg.conf"):
 			reply = QtGui.QMessageBox.question(self,_translate("nvidiux","Xorg.conf",None),_translate("nvidiux","Pas de fichier xorg.conf en generer un ?",None), QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
@@ -528,11 +537,13 @@ class NvidiuxApp(QMainWindow):
 		out = ""
 		if os.path.isfile(self.home + "/.nvidiux/conf.xml"):
 			self.loadNvidiuxConf()
+		
+		compatibility = self.iscompatible()
 		if not os.path.isfile(self.home + "/.nvidiux/acceptedeula"):
 			self.showeula()
 		else:
 			self.acceptEula = True
-		compatibility = self.iscompatible()
+					
 		if compatibility >= 1 and  compatibility <= 7:
 			sys.exit(compatibility)
 		if compatibility == -1:
@@ -1112,7 +1123,7 @@ class NvidiuxApp(QMainWindow):
 		self.showNormal()
 	
 	def showeula(self):
-		text = _translate("nvidiux","Pour utiliser nvidiux vous devez accepter\nle contrat de licence",None)
+		text = ""
 		tabLang = list()
 		tabLang.append(self.language)
 		tabLang.append(app)	
@@ -1409,7 +1420,7 @@ class NvidiuxApp(QMainWindow):
 			self.change = False
 		
 	def verifyGpu(self,gpuName):#-1:unknown 0:ok 1:not ok 
-		verified = ["GeForce GT 420M","GeForce GTX 460M","GeForce GT 430","GeForce GTX 460","GeForce GTX 470","GeForce GTX 560M","GeForce GTX 560 Ti","GeForce GTX 570","GeForce GTX 580","GeForce GT 620","GeForce GT 630","GeForce GTX 650","GeForce GTX 660","GeForce GT 740","GeForce GTX 750","GeForce GTX 750 TI","GeForce GTX 770","GeForce GTX 780 Ti","GeForce GTX 970","GeForce GTX 980"]
+		verified = ["GeForce GT 420M","GeForce GTX 460M","GeForce GT 430","GeForce GTX 460","GeForce GTX 470","GeForce GTX 480","GeForce GTX 560M","GeForce GTX 560 Ti","GeForce GTX 570","GeForce GTX 580","GeForce GT 620","GeForce GT 630","GeForce GTX 650","GeForce GTX 660","GeForce GT 740","GeForce GTX 750","GeForce GTX 750 TI","GeForce GTX 770","GeForce GTX 780 Ti","GeForce Gtx 960","GeForce GTX 970","GeForce GTX 980"]
 		notWork = ["GeForce GTX TITAN Z","GeForce GTX TITAN Black","GeForce GTX TITAN","GeForce GTX 690","GeForce GTX 590",
 		"GeForce GT 340", "GeForce GT 330", "GeForce GT 320", "GeForce 315", "GeForce 310","GeForce GTS 360M", "GeForce GTS 350M", "GeForce GT 335M", "GeForce GT 330M","GeForce GT 325M", "GeForce GT 320M", "GeForce 320M", "GeForce 315M", "GeForce 310M", "GeForce 305M",
 		"GeForce GTX 295", "GeForce GTX 285","GeForce GTX 280", "GeForce GTX 275", "GeForce GTX 260", "GeForce GTS 250", "GeForce GTS 240", "GeForce GT 230", "GeForce GT 240", "GeForce GT 220", "GeForce G210", "GeForce 210", "GeForce 205",
@@ -1428,6 +1439,12 @@ class NvidiuxApp(QMainWindow):
 		
 if __name__ == "__main__":
 	app = QApplication(sys.argv)
+	if len(sys.argv) == 1:
+		pixmap = QtGui.QPixmap("/usr/share/nvidiux/img/splash.png")
+		splash = QtGui.QSplashScreen(pixmap)
+		splash.setMask(pixmap.mask())
+		splash.show()
+
 	nvidiuxApp = NvidiuxApp(sys.argv[1:])
 	if not os.path.isfile("/usr/share/nvidiux/nvidiux_" + nvidiuxApp.language + ".qm"):
 		nvidiuxTranslator = QtCore.QTranslator()
@@ -1441,6 +1458,8 @@ if __name__ == "__main__":
 		threadInfoGpu = Mythread(nvidiuxApp.updateTime, majGpu, [0], {"fen":nvidiuxApp})
 		threadInfoGpu.setDaemon(True)
 		threadInfoGpu.start()
-	nvidiuxApp.setThread(threadMonitor,threadInfoGpu)	
+	nvidiuxApp.setThread(threadMonitor,threadInfoGpu)
 	nvidiuxApp.show()
+	if len(sys.argv) == 1:
+		splash.finish(nvidiuxApp)
 	sys.exit(app.exec_())

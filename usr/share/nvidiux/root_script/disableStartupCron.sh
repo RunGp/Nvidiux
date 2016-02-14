@@ -18,5 +18,5 @@ then
 	exit 254
 fi
 
-crontab -l | grep -v "@reboot $1/.nvidiux/startup.sh" | crontab -
+crontab -l | grep -v "@reboot sleep 60 && nvidiux" | crontab -
 exit $?

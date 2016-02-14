@@ -51,6 +51,8 @@ class ConfirmWindow(QWidget):
 		y = 50 + 120 * self.nbGpu
 		self.resize(500, y)
 		self.labelInfo = QtGui.QLabel(text,self)
+		if text == "":
+			self.labelInfo.setText(_translate("nvidiux","Pour utiliser nvidiux vous devez accepter\nle contrat de licence",None))	
 		self.labelInfo.move(60,15)
 		self.labelInfo.setAlignment(QtCore.Qt.AlignCenter)
 		font = QtGui.QFont()
@@ -74,12 +76,6 @@ class ConfirmWindow(QWidget):
 			self.texteula.setReadOnly(True)
 			self.buttonConfirm.setEnabled(False)
 			self.setWindowTitle("Contrat d'utilisation")
-			#~ if self.language == "fr_FR":
-				#~ self.texteula.setPlainText(_fromUtf8("Attention cette pratique peut annuler la garantie du produit et reste à l'entière responsabilité de l'utilisateur du logiciel. Ni le concepteur du logiciel ni la communauté gnu ne pourra pas être tenu responsable de toutes mauvaises manipulations ayant entrainé un quelconque dégât direct ou en conséquence de l'utilisation de Nvidiux.\nNvidiux n'est en aucun cas affilié à Nvidia"))
-			#~ elif self.language == "de_DE":
-				#~ self.texteula.setPlainText(_fromUtf8("Der Autor und die beteiligte Gemeinschaft sind nicht verantwortlich bei unsachgemäßer Verwendung und übernehmen keinerlei Haftung für Schäden, direkt oder indirekt, die sich aus der Verwendung von Nvidiux ergeben könnten. Nvidiux steht in keiner Verbindung mit der NVIDIA GmbH."))
-			#~ else:
-				#~ self.texteula.setPlainText(_fromUtf8("The author and community are not responsible of bad use and no liability for damages, direct or consequential, which may result from the use of Nvidiux.\nNvidiux is in no way affiliated to Nvidia."))
 		else:
 			self.buttonConfirm.setEnabled(True)
 			self.setWindowTitle("Confirmatioon changement")
@@ -106,7 +102,10 @@ class ConfirmWindow(QWidget):
 		if self.showEula:
 			self.setWindowTitle(_translate("ConfirmWindow", "Contrat d'utilisation", None))
 			self.checkBox.setText(_translate("ConfirmWindow", "Je comprend les risques et j'accepte les termes du contrat", None))
+			self.texteula.setPlainText(_translate("ConfirmWindow","Attention cette pratique peut annuler la garantie du produit et reste à l'entière responsabilité de l'utilisateur du logiciel. Ni le concepteur du logiciel ni la communauté gnu ne pourra pas être tenu responsable de toutes mauvaises manipulations ayant entrainé un quelconque dégât direct ou en conséquence de l'utilisation de Nvidiux.\nNvidiux n'est en aucun cas affilié à Nvidia", None))
+			self.labelInfo.setText(_translate("nvidiux","Pour utiliser nvidiux vous devez accepter\nle contrat de licence",None))
 		else:
 			self.setWindowTitle(_translate("ConfirmWindow", "Confirmation changement", None))
+			
 		self.buttonConfirm.setText(_translate("ConfirmWindow", "Confirmer", None))
 		self.buttonCancel.setText(_translate("ConfirmWindow", "Annuler", None))

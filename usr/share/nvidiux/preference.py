@@ -159,40 +159,12 @@ class Ui_Pref(QWidget):
 		tab,fileToLoad = self.loadProfile()
 		if tab == None:
 			return None
-		startUpFilePath = expanduser("~") + "/.nvidiux/startup.sh"
-		if os.path.isfile(startUpFilePath):
-			os.remove(startUpFilePath)
-		fileSh = open(startUpFilePath, "w")
-		disp = ":0"
-		if os.environ['DISPLAY'] != None:
-			disp = os.environ['DISPLAY']
-		script = "#!/bin/bash\nboucle=0\nwhile [ 1 ]\ndo\n\tsleep 2\n"
-		i = 0
-		if self.tabGpu[i].overvolt > self.tabGpu[i].maxOvervolt:
-			self.showError(41,_translate("Form","Erreur non geree",None),_translate("Form","Erreur non geree",None),self.error)
-			return 1
-		self.tabGpu[i].overvolt = 10
-		for gpu in tab:
-			if self.tabGpu[i].overvolt > 0 and self.versionPilote >= 346.16 :
-				cmd = "\tsudo -u " + getpass.getuser() + " nvidia-settings -a \"[gpu:" + str(i) + "]/GPUOVerVoltageOffset=" + str(self.tabGpu[i].overvolt) + "\" -c " + disp + " >> /dev/null 2>&1 \n"
-				script = script + cmd
-			offsetGpu = int(gpu[1]) - int(self.tabGpu[i].resetFreqGpu)
-			offsetMem = int(gpu[3]) - int(self.tabGpu[i].resetFreqMem)
-			if offsetGpu != 0 or offsetMem != 0:
-				cmd = "\tsudo -u " + getpass.getuser() + " nvidia-settings -a \"[gpu:" + str(i) + "]/GPUGraphicsClockOffset[2]=" + str(offsetGpu) + "\" -a \"[gpu:" + str(i) + "]/GPUMemoryTransferRateOffset[2]=" + str(offsetMem) + "\" -c " + disp + " >> /dev/null 2>&1 \n"
-				script = script + cmd
-			i+=1
-		script += "\tresult=`nvidia-settings --query [gpu:0]/GPUGraphicsClockOffset[2] | grep \" Attribute 'GPUGraphicsClockOffset'\"| cut -d \")\" -f 2 | tr -cd [0-9]`\n"
-		script += "\tif [ $result -eq " + str(int(tab[0][1]) - int(self.tabGpu[0].resetFreqGpu)) + " ]\n\tthen\n\t\tbreak\n\tfi"
-		script += "\n\tboucle=$((boucle+1))\n\tif [ $boucle -eq 100 ]\n\tthen\n\t\techo 0 >> /tmp/nvidiux_startup_overclock_error;break\n\tfi\ndone\n"
-		script += "exit 0\n"
-		fileSh.write(script)
-		fileSh.close()
-		os.chmod(startUpFilePath,0775)
-		cmd = "bash /usr/share/nvidiux/toRoot.sh enableStartupCron.sh " + expanduser("~") + " >> /dev/null 2>&1"
+		shutil.copy(fileToLoad,self.home + "/.nvidiux/StartupSys.ndi")
+		os.chmod(self.home + "/.nvidiux/StartupSys.ndi",0775)
+		cmd = "bash /usr/share/nvidiux/toRoot.sh enableStartupCron.sh " + self.home + " >> /dev/null 2>&1"
 		result = sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True)
 		if int(result) == 0:
-			self.labelGpuSys.setText(_fromUtf8(_translate("Form","Le profil:",None)) + fileToLoad + _translate("Form","\nsera charge à chaque demarrage du systeme",None))
+			self.labelGpuSys.setText(_fromUtf8(_translate("Form","Le profil:",None)) + fileToLoad + _translate("Form","\nsera chargé à chaque demarrage du systeme",None))
 			self.startWithSystem = True
 			self.valueStart = str(offsetGpu) + ":" + str(offsetMem)
 			self.mainWindows.setStartSystem(self.startWithSystem,self.valueStart)
@@ -288,7 +260,7 @@ class Ui_Pref(QWidget):
 	
 	def retranslateUi(self):
 		self.labelUpdateMon.setText(_translate("Form", "rafraichissement continu", None))
-		self.labelInfo.setText(_translate("Form", "Permet d'underclocker ou d'overclocker votre gpu nvidia\n(C) 2014 Payet Guillaume\nNvidiux n'est en aucun cas affilie à Nvidia", None))
+		self.labelInfo.setText(_translate("Form", "Permet d'underclocker ou d'overclocker votre gpu nvidia\n(C) 2014-2016 Payet Guillaume\nNvidiux n'est en aucun cas affilie à Nvidia", None))
 		self.setWindowTitle(_translate("Form", "Preferences", None))
 		self.buttonParcNvi.setText(_translate("Form", "Parcourir", None))
 		self.checkBoxNvi.setText(_translate("Form", "Appliquer ce profil au demarrage de nvidiux", None))
@@ -658,7 +630,7 @@ class Ui_Pref(QWidget):
 		font.setWeight(75)
 		font.setStyleStrategy(QtGui.QFont.PreferAntialias)
 		self.labelInfo.setFont(font)
-		self.labelInfo.setText(_translate("Form", "Permet d'underclocker ou d'overclocker votre gpu nvidia\n(C) 2014 Payet Guillaume\nNvidiux n'est en aucun cas affilie à Nvidia",None) + "\nVersion : " + self.versionStr)
+		self.labelInfo.setText(_translate("Form", "Permet d'underclocker ou d'overclocker votre gpu nvidia\n(C) 2014-2016 Payet Guillaume\nNvidiux n'est en aucun cas affilie à Nvidia",None) + "\nVersion : " + self.versionStr)
 		self.textBrowser = QtGui.QTextBrowser(self.paramWindow)
 		self.textBrowser.setGeometry(QtCore.QRect(10, 280, 560, 240))
 		self.textBrowser.setAlignment(QtCore.Qt.AlignCenter)

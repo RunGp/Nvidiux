@@ -1,4 +1,4 @@
-# Nvidiux V 1.2.1
+# Nvidiux V 1.2.3
 Licence:gpl-3.0 https://github.com/RunGp/Nvidiux/blob/master/usr/share/nvidiux/gpl-3.0.txt
 
 =============================================================
@@ -93,4 +93,5 @@ Dependance:python 2.7,python-qt4,gksu,vainfo,python-tk,python-psutil
 =============================================================
 I need help for traduce nvidiux in other language
 Special thanks to
-@mglinux for german translation
+- @mglinux for german translation
+- @gaara @bishop @gfx @jul974 for testing and help for debug
