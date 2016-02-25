@@ -2,6 +2,7 @@
 Type=Application
 Name=Nvidiux
 Exec=nvidiux
+StartupWMClass=nvidiux.py
 Terminal=false
 Comment=Overclock your nvidia card !
 Icon=/usr/share/nvidiux/img/Nvidiux.png
