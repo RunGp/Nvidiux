@@ -24,6 +24,8 @@ import getpass
 import subprocess as sub
 import shutil
 import os
+import platform
+import re
 
 try:
 	_fromUtf8 = QtCore.QString.fromUtf8
@@ -273,9 +275,11 @@ class Ui_Pref(QWidget):
 		self.tabWidget.setTabText(self.tabWidget.indexOf(self.paramWindow), _translate("Form", "A Propos", None))
 		self.labelInfo.setText(self.labelInfo.text() + "\nVersion:" + self.versionStr)
 		self.labelLang.setText(_translate("Form","Langue",None))
+		self.checkBoxExpert.setText(_translate("Form", "Option avancé", None))
 		self.labelUpdateMon.setText(_translate("Form", "Rafraichissement continu",None))
 		self.checkBoxSameGpu.setText(_translate("Form", "Appliquer les memes parametres a des gpus identiques",None))
 		self.checkBoxVerifDriver.setText(_translate("Form", "Activer overclock meme si la version\n du driver n'est pas reconnue",None))
+		self.checkBoxTurboBoost.setText(_translate("Form","Forcer l'application des parametres pour gpuboost v1 (Gt(x)6XX)", None))
 	
 	def saveMonitorConf(self):
 
@@ -340,7 +344,7 @@ class Ui_Pref(QWidget):
 			if os.path.isfile(self.home + "/.nvidiux/ntchkdriver"):
 				os.remove(self.home + "/.nvidiux/ntchkdriver")
 	def setLanguage(self,lang):
-		tabLang = ["fr_FR","en_EN","de_DE"]
+		tabLang = ["fr_FR","en_EN","de_DE","es_ES"]
 		language = tabLang[lang]
 		self.mainWindows.setLanguage(language)
 		prefTranslator = QtCore.QTranslator()
@@ -349,6 +353,16 @@ class Ui_Pref(QWidget):
 			self.mainWindows.setTimeUpdate(self.updateTime)
 			self.retranslateUi()
 		QMessageBox.information(self,_translate("Form","Information",None),_translate("Form","Veuillez redemarer nvidiux",None))
+	
+	def setVerifTurboBoost(self,value):
+		if value:
+			reply = QtGui.QMessageBox.question(self, _fromUtf8(_translate("Form","Attention",None)),_fromUtf8(_translate("Form","N'utilisez cette option que si votre carte ne respecte pas les frequences defini par nvidiux (utile que sur certaines Gtx6XX)\nContinuer?",None)), QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
+			if reply == QtGui.QMessageBox.Yes:
+				print "accept"
+		else:
+			print "cancel"
+			
+			
 		
 	def setOvervolt(self,value):
 		if value == True:
@@ -463,15 +477,47 @@ class Ui_Pref(QWidget):
 		self.ComboLang.addItem("Francais")
 		self.ComboLang.addItem("English")
 		self.ComboLang.addItem("Deutsch")
+		self.ComboLang.addItem("Español")
 		if self.language == "fr_FR":
 			self.ComboLang.setCurrentIndex(0)
 		elif self.language == "de_DE":
 			self.ComboLang.setCurrentIndex(2)
+		elif self.language == "es_Es":
+			self.ComboLang.setCurrentIndex(3)
 		else:
 			self.ComboLang.setCurrentIndex(1)
-			
-		self.checkBoxOverVolt = QtGui.QCheckBox(self.groupBoxPrefGen)
-		self.checkBoxOverVolt.setGeometry(QtCore.QRect(10, 75, 320, 20))
+		
+		self.checkBoxSameGpu = QtGui.QCheckBox(self.groupBoxPrefGen)
+		self.checkBoxSameGpu.setGeometry(QtCore.QRect(10, 75, 450, 20))
+		self.checkBoxSameGpu.setObjectName(_fromUtf8("checkBoxSameGpu"))
+		self.checkBoxSameGpu.setChecked(self.sameParamGpu)
+		self.checkBoxSameGpu.setText(_translate("Form", "Appliquer les mêmes paramètres à des gpus identiques",None))
+		
+		self.checkBoxVerifDriver = QtGui.QCheckBox(self.groupBoxPrefGen)
+		self.checkBoxVerifDriver.setGeometry(QtCore.QRect(10, 95, 450, 35))
+		self.checkBoxVerifDriver.setObjectName(_fromUtf8("checkBoxVerifDriver"))
+		self.checkBoxVerifDriver.setChecked(os.path.isfile(self.home + "/.nvidiux/ntchkdriver"))
+		self.checkBoxVerifDriver.setText(_translate("Form", "Activer overclock meme si la version\ndu driver n'est pas reconnue",None))
+		
+		self.checkBoxExpert = QtGui.QCheckBox(self.groupBoxPrefGen)
+		self.checkBoxExpert.setGeometry(QtCore.QRect(10, 130, 320, 20))
+		self.checkBoxExpert.setObjectName(_fromUtf8("checkBoxExpert"))
+		self.checkBoxExpert.setText(_translate("Form", "Option avancé", None))
+		self.checkBoxExpert.setChecked(False)	
+		
+		self.groupBoxPrefAdvance= QtGui.QGroupBox(self.tabConf)
+		self.groupBoxPrefAdvance.setGeometry(QtCore.QRect(10, 310, 535,100 ))
+		self.groupBoxPrefAdvance.setStyleSheet(_fromUtf8("QGroupBox \n"
+			"{ \n"
+			"border: 1px solid SlateGrey;\n"
+			"border-radius: 10px;\n"
+			"}"))
+		self.groupBoxPrefAdvance.setTitle(_fromUtf8(""))
+		self.groupBoxPrefAdvance.setVisible(False)
+		self.groupBoxPrefAdvance.setObjectName(_fromUtf8("groupBoxPrefAdvance"))
+		
+		self.checkBoxOverVolt = QtGui.QCheckBox(self.groupBoxPrefAdvance)
+		self.checkBoxOverVolt.setGeometry(QtCore.QRect(10, 5, 600, 20))
 		self.checkBoxOverVolt.setObjectName(_fromUtf8("checkBoxOverVolt"))
 		self.checkBoxOverVolt.setChecked(False)
 		if self.versionPilote >= 346.16 and self.overclockEnabled:
@@ -491,22 +537,29 @@ class Ui_Pref(QWidget):
 		else:
 			self.checkBoxOverVolt.setEnabled(False)
 		
-		self.checkBoxSameGpu = QtGui.QCheckBox(self.groupBoxPrefGen)
-		self.checkBoxSameGpu.setGeometry(QtCore.QRect(10, 100, 450, 20))
-		self.checkBoxSameGpu.setObjectName(_fromUtf8("checkBoxSameGpu"))
-		self.checkBoxSameGpu.setChecked(self.sameParamGpu)
-		self.checkBoxSameGpu.setText(_translate("Form", "Appliquer les mêmes paramètres à des gpus identiques",None))
+		self.checkBoxTurboBoost= QtGui.QCheckBox(self.groupBoxPrefAdvance)
+		self.checkBoxTurboBoost.setGeometry(QtCore.QRect(10, 25, 600, 20))
+		self.checkBoxTurboBoost.setObjectName(_fromUtf8("checkBoxTurboBoost"))
+		self.checkBoxTurboBoost.setText(_translate("Form","Forcer l'application des parametres pour gpuboost v1 (Gt(x)6XX)", None))
+		self.checkBoxTurboBoost.setChecked(False)
+		self.checkBoxTurboBoost.setEnabled(False)
 		
-		self.checkBoxVerifDriver = QtGui.QCheckBox(self.groupBoxPrefGen)
-		self.checkBoxVerifDriver.setGeometry(QtCore.QRect(10, 120, 450, 35))
-		self.checkBoxVerifDriver.setObjectName(_fromUtf8("checkBoxVerifDriver"))
-		self.checkBoxVerifDriver.setChecked(os.path.isfile(self.home + "/.nvidiux/ntchkdriver"))
-		self.checkBoxVerifDriver.setText(_translate("Form", "Activer overclock meme si la version\ndu driver n'est pas reconnue",None))
+		for i in range(0, self.nbGpuNvidia):
+			var_nb = int(re.findall('\d+', self.tabGpu[i].nameGpu)[0])
+			if var_nb >= 600 and var_nb <= 699:
+				self.checkBoxTurboBoost.setEnabled(True)
+		
+		search = "Option     \"RegistryDwords\" \"PowerMizerEnable=0x1; PerfLevelSrc=0x2222; PowerMizerDefaultAC=0x1\""
+		openFile = open("/etc/X11/xorg.conf","r")
+		for line in openFile:
+		    if search in line:
+			print line
+			self.checkBoxTurboBoost.setChecked(True)
+		openFile.close()
 		
 		self.tabMoniteur = QtGui.QWidget()
 		self.tabMoniteur.setObjectName(_fromUtf8("tabMoniteur"))
 		self.tabWidget.addTab(self.tabMoniteur, _fromUtf8(""))
-		
 		gpuInfo = []
 		ndiFile = None
 		try:
@@ -630,7 +683,22 @@ class Ui_Pref(QWidget):
 		font.setWeight(75)
 		font.setStyleStrategy(QtGui.QFont.PreferAntialias)
 		self.labelInfo.setFont(font)
-		self.labelInfo.setText(_translate("Form", "Permet d'underclocker ou d'overclocker votre gpu nvidia\n(C) 2014-2016 Payet Guillaume\nNvidiux n'est en aucun cas affilie à Nvidia",None) + "\nVersion : " + self.versionStr)
+		labelOs = None
+		distrib = None
+		try:
+			linuxDistrib = platform.linux_distribution()
+			if linuxDistrib == ('', '', ''):
+				if os.path.isfile("/etc/issue"):
+					with open("/etc/issue") as f:
+						labelOs = f.read().lower().split()[0] + " " + platform.architecture()[0]
+				else:
+					labelOs = "Unknow distrib " + platform.architecture()[0]
+			else:
+				labelOs =  linuxDistrib[0] + linuxDistrib[1]
+		except:
+			labelOs = ""
+		info = _translate("Form", "Permet d'underclocker ou d'overclocker votre gpu nvidia\n(C) 2014-2016 Payet Guillaume\nNvidiux n'est en aucun cas affilie à Nvidia",None) + "\nVersion : " + self.versionStr + "( " + labelOs + " )"
+		self.labelInfo.setText(info )
 		self.textBrowser = QtGui.QTextBrowser(self.paramWindow)
 		self.textBrowser.setGeometry(QtCore.QRect(10, 280, 560, 240))
 		self.textBrowser.setAlignment(QtCore.Qt.AlignCenter)
@@ -651,8 +719,10 @@ class Ui_Pref(QWidget):
 		self.checkBoxSys.connect(self.checkBoxSys,QtCore.SIGNAL("clicked(bool)"),self.checkSys)
 		self.ComboLang.connect(self.ComboLang,QtCore.SIGNAL("currentIndexChanged(int)"),self.setLanguage)
 		self.checkBoxOverVolt.connect(self.checkBoxOverVolt,QtCore.SIGNAL("clicked(bool)"),self.setOvervolt)
+		self.checkBoxExpert.connect(self.checkBoxExpert,QtCore.SIGNAL("clicked(bool)"),self.showExpertSettings)
 		self.checkBoxSameGpu.connect(self.checkBoxSameGpu,QtCore.SIGNAL("clicked(bool)"),self.setSameParamGpu)
 		self.checkBoxVerifDriver.connect(self.checkBoxVerifDriver,QtCore.SIGNAL("clicked(bool)"),self.setVerifDriver)
+		self.checkBoxTurboBoost.connect(self.checkBoxTurboBoost,QtCore.SIGNAL("clicked(bool)"),self.setVerifTurboBoost)
 		self.checkBoxUpdateMon.connect(self.checkBoxUpdateMon,QtCore.SIGNAL("clicked(bool)"),self.setUpdateContin)
 		
 		self.setWindowTitle(_translate("Form", "Preferences", None))
@@ -662,6 +732,7 @@ class Ui_Pref(QWidget):
 		self.checkBoxSys.setText(_translate("Form", "Appliquer ce profil au demarrage du systeme", None))
 		
 		self.checkBoxOverVolt.setText(_translate("Form", "Activer overvoltage", None))
+		self.checkBoxExpert.setText(_translate("Form", "Option avancé", None))
 		self.checkBoxTime.setText(_translate("Form", "Actualiser les données toutes les", None))
 		if self.updateTime <= 1:
 			self.spinBox.setSuffix(_translate("Form", " seconde", None))
@@ -702,6 +773,8 @@ class Ui_Pref(QWidget):
 		else:
 			QMessageBox.information(self, _fromUtf8(title),_fromUtf8(errorMsg))
 		return errorCode
-		
+	
+	def showExpertSettings(self,value):
+		self.groupBoxPrefAdvance.setVisible(value)
 	
 

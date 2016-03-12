@@ -59,6 +59,8 @@ class Ui_MainWindow(object):
         self.buttonAbout.setDefault(False)
         self.buttonAbout.setFlat(False)
         self.buttonAbout.setObjectName(_fromUtf8("buttonAbout"))
+        self.buttonAbout.setIcon(QtGui.QIcon("/usr/share/nvidiux/img/i.png"))
+        
         self.buttonConfigure = QtGui.QPushButton(self.centralwidget)
         self.buttonConfigure.setGeometry(QtCore.QRect(150, 57, 26, 26))
         self.buttonConfigure.setAutoDefault(False)
@@ -109,7 +111,6 @@ class Ui_MainWindow(object):
         
         self.listWidgetGpu = QtGui.QListWidget(self.centralwidget)
         self.listWidgetGpu.setGeometry(QtCore.QRect(210, 10, 200, 60))
-        #self.listWidgetGpu.setStyleSheet(_fromUtf8("background-color: rgb(207, 255, 233);"))
         self.listWidgetGpu.setObjectName(_fromUtf8("listWidgetGpu"))
         
         self.groupBoxMonitor = QtGui.QGroupBox(self.centralwidget)
@@ -376,8 +377,6 @@ class Ui_MainWindow(object):
         self.checkBoxFan.setCheckable(True)
         self.checkBoxFan.setChecked(False)
         self.checkBoxFan.setObjectName(_fromUtf8("checkBoxFan"))
-        
-        
         self.groupBoxInfoGpu = QtGui.QGroupBox(self.centralwidget)
         self.groupBoxInfoGpu.setGeometry(QtCore.QRect(15, 156, 382,316))
         self.groupBoxInfoGpu.setStyleSheet(_fromUtf8("QGroupBox \n"
@@ -405,7 +404,6 @@ class Ui_MainWindow(object):
         self.nomGpu.setFont(font)
         self.nomGpu.setObjectName(_fromUtf8("nomGpu"))
         self.checkBoxVaapi = QtGui.QCheckBox(self.groupBoxInfoGpu)
-        self.checkBoxVaapi.setEnabled(False)
         self.checkBoxVaapi.setGeometry(QtCore.QRect(5, 40, 65, 20))
         self.checkBoxVaapi.setCheckable(True)
         self.checkBoxVaapi.setObjectName(_fromUtf8("checkBoxVaapi"))
@@ -432,6 +430,13 @@ class Ui_MainWindow(object):
         self.checkBoxMPerf.setCheckable(True)
         self.checkBoxMPerf.setChecked(False)
         self.checkBoxMPerf.setObjectName(_fromUtf8("checkBoxMPerf"))
+        self.buttonSwitchApi = QtGui.QPushButton(self.groupBoxInfoGpu)
+        self.buttonSwitchApi.setGeometry(QtCore.QRect(350, 86, 25, 25))
+        self.buttonSwitchApi.setAutoDefault(False)
+        self.buttonSwitchApi.setDefault(False)
+        self.buttonSwitchApi.setFlat(False)
+        self.buttonSwitchApi.setObjectName(_fromUtf8("buttonSwitchApi"))
+        self.buttonSwitchApi.setIcon(QtGui.QIcon("/usr/share/nvidiux/img/switch25.png"))
         self.PiloteVersion = QtGui.QLabel(self.groupBoxInfoGpu)
         self.PiloteVersion.setGeometry(QtCore.QRect(30, 75, 150, 45))
         self.PiloteVersion.setStyleSheet(_fromUtf8("border-color: rgb(0, 0, 0);"))
@@ -464,16 +469,22 @@ class Ui_MainWindow(object):
         self.UMem.setMargin(2)
         self.UMem.setObjectName(_fromUtf8("UMem"))
         self.UGPU = QtGui.QLabel(self.groupBoxInfoGpu)
-        self.UGPU.setGeometry(QtCore.QRect(30, 255, 150, 45))
+        self.UGPU.setGeometry(QtCore.QRect(205, 255, 150, 45))
         self.UGPU.setAlignment(QtCore.Qt.AlignCenter)
         self.UGPU.setMargin(2)
         self.UGPU.setObjectName(_fromUtf8("UGPU"))
+        self.buttonSwitchUseGpu = QtGui.QPushButton(self.groupBoxInfoGpu)
+        self.buttonSwitchUseGpu.setGeometry(QtCore.QRect(350, 266, 25, 25))
+        self.buttonSwitchUseGpu.setAutoDefault(False)
+        self.buttonSwitchUseGpu.setDefault(False)
+        self.buttonSwitchUseGpu.setFlat(False)
+        self.buttonSwitchUseGpu.setObjectName(_fromUtf8("buttonSwitchUseGpu"))
+        self.buttonSwitchUseGpu.setIcon(QtGui.QIcon("/usr/share/nvidiux/img/switch25.png"))
         self.UPCIE = QtGui.QLabel(self.groupBoxInfoGpu)
-        self.UPCIE.setGeometry(QtCore.QRect(205, 255, 150, 45))
+        self.UPCIE.setGeometry(QtCore.QRect(30, 255, 150, 45))
         self.UPCIE.setAlignment(QtCore.Qt.AlignCenter)
         self.UPCIE.setMargin(2)
         self.UPCIE.setObjectName(_fromUtf8("UPCIE"))
-      
       
         self.label_Img = ClickQLabel(self.centralwidget)
         self.label_Img.setGeometry(QtCore.QRect(554, 5, 240, 140))
@@ -489,7 +500,6 @@ class Ui_MainWindow(object):
         self.Message.setAlignment(QtCore.Qt.AlignCenter)
         self.Message.setObjectName(_fromUtf8("Message"))
         
-
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 25))
@@ -537,7 +547,6 @@ class Ui_MainWindow(object):
         self.title.setText(_translate("MainWindow", "Nvidiux", None))
         self.buttonReset.setText(_translate("MainWindow", "Reset", None))
         self.buttonApply.setText(_translate("MainWindow", "Appliquer", None))
-        self.buttonAbout.setIcon(QtGui.QIcon("/usr/share/nvidiux/img/i.png"))
         self.labelFanVitesse.setText(_translate("MainWindow", "Auto",None))
         self.labelFan.setText(_translate("MainWindow", "Fan", None))
         self.buttonStartMonitor.setText(_translate("MainWindow", "Lancer", None))

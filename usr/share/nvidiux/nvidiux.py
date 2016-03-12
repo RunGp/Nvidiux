@@ -31,6 +31,7 @@ import threading
 import time
 import psutil
 import getopt
+import platform
 
 muttex = threading.RLock()
 
@@ -113,50 +114,41 @@ class Mythread(threading.Thread):
 def majGpu(numGpu,fen):
 	with muttex:
 		cmd = "nvidia-settings --query [gpu:" + str(numGpu) + "]/GPUCoreTemp"
-		if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
-			try:
-				out, err = sub.Popen(cmd + " | grep GPUCore | head -1",stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-				fen.ui.Temp.setText(_translate("nvidiux","Temperature",None) + "\n" + str(out.split(':')[-1].split('.')[0]) + _fromUtf8("°C"))
-			except:
-				fen.ui.Temp.setText(_fromUtf8("N/A"))
-		else:
+		try:
+			out, err = sub.Popen(cmd + " | grep GPUCore | head -1",stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+			fen.ui.Temp.setText(_translate("nvidiux","Temperature",None) + "\n" + str(out.split(':')[-1].split('.')[0]) + _fromUtf8("°C"))
+		except:
 			fen.ui.Temp.setText(_fromUtf8("N/A"))
-
+	
 		cmd = "nvidia-settings --query [gpu:" + str(numGpu) + "]/GPUUtilization"
-		if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
-			try:
-				out, err = sub.Popen(cmd + "| grep GPUUtilization | head -1",stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-				fen.ui.UPCIE.setText(_translate("nvidiux","Utilisation Bus PCIE",None) + "\n" + str(out.split('=')[-1].replace('\n','').replace(',','')) + " %")
-				fen.ui.UGPU.setText(_translate("nvidiux","Utilisation Gpu",None) + "\n" + str(out.split('=')[1].split(',')[0]) + "%")
-			except:
-				fen.ui.UPCIE.setText(_fromUtf8("N/A"))
-				fen.ui.UGPU.setText(_fromUtf8("N/A"))
-		else:
+		try:
+			out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+			if fen.showUseGpu:
+				fen.ui.UGPU.setText(_translate("nvidiux","Utilisation Gpu",None) + "\n" + str(out.split('graphics=')[1].split(',')[0]) + "%")
+			else:
+				fen.ui.UGPU.setText(_translate("nvidiux","Util décodage video",None)+ "\n" + str(out.split('video=')[1].split(',')[0]) + "%")
+			fen.ui.UPCIE.setText(_translate("nvidiux","Utilisation Bus PCIE",None) + "\n" + str(out.split('PCIe=')[-1].replace('\n','').replace(',','')) + " %")
+		except:
 			fen.ui.UPCIE.setText(_fromUtf8("N/A"))
 			fen.ui.UGPU.setText(_fromUtf8("N/A"))
-
+		
 		cmd = "nvidia-settings --query [gpu:" + str(numGpu) + "]/UsedDedicatedGPUMemory"
-		if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
-			try:
-				out, err = sub.Popen(cmd + " | grep UsedDedicatedGPUMemory | head -1",stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-				fen.ui.UMem.setText(_translate("nvidiux","Utilisation Memoire",None) + "\n" + str(out.split(':')[-1].split('.')[0]) + " Mo")
-			except:
-				fen.ui.UMem.setText(_fromUtf8("N/A"))
-		else:
+		try:
+			out, err = sub.Popen(cmd + " | grep UsedDedicatedGPUMemory | head -1",stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+			fen.ui.UMem.setText(_translate("nvidiux","Utilisation Memoire",None) + "\n" + str(out.split(':')[-1].split('.')[0]) + " Mo")
+		except:
 			fen.ui.UMem.setText(_fromUtf8("N/A"))
 		
 		if fen.ui.labelFanVitesse.text()[0:4] == "Auto":
 			cmd = "nvidia-settings --query [fan:" + str(numGpu) + "]/GPUCurrentFanSpeed"
-			if not sub.call(cmd ,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
-				out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-				try:
-					value = int(out.split('.')[0].split(':')[-1])
-					fen.ui.labelFanVitesse.setText(_translate("nvidiux","Auto(",None) + str(value) + "%)")
-					fen.ui.SliderFan.setSliderPosition(value)
-				except:
-					fen.ui.labelFanVitesse.setText(_fromUtf8("???%"))
-			else:
+			out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+			try:
+				value = int(out.split('.')[0].split(':')[-1])
+				fen.ui.labelFanVitesse.setText(_translate("nvidiux","Auto(",None) + str(value) + "%)")
+				fen.ui.SliderFan.setSliderPosition(value)
+			except:
 				fen.ui.labelFanVitesse.setText(_fromUtf8("???%"))
+			
 def checkMonitor(pid,fen):
 	if not psutil.pid_exists(pid):
 		fen.ui.buttonStartMonitor.setText(_translate("nvidiux","Lancer",None))
@@ -169,8 +161,8 @@ class NvidiuxApp(QMainWindow):
 	nbGpu = -1
 	nbGpuNvidia = -1
 	optimus = 0
-	nvidiuxVersionStr = "1.2.3.09"
-	nvidiuxVersion = 1.2
+	nvidiuxVersionStr = "1.3.0.10"
+	nvidiuxVersion = 1.3
 	change = 0
 	isFermiArch = []
 	form = ""
@@ -193,10 +185,13 @@ class NvidiuxApp(QMainWindow):
 	overclockEnabled = True
 	overvoltEnabled = False
 	sameParamGpu = True
+	showUseGpu = True
+	showGraphicApi = False
 	nvidiuxTranslator = None
 	autoStartupSysOverclock = False
 	autoStartupNvidiuxOverclock = False
 	ndifile = None
+	vaapi= False
 	home = expanduser("~")
 	resetAllGpu = False
 	silent = False
@@ -290,11 +285,6 @@ class NvidiuxApp(QMainWindow):
 		
 	def changeGpu(self,item):
 		self.numGpu = int(item.text().split(':')[0]) - 1
-		if self.autoUpdate:
-			self.threadInfoGpu.stop()
-			self.threadInfoGpu = Mythread(1, majGpu, [self.numGpu], {"fen":nvidiuxApp})
-			self.threadInfoGpu.setDaemon(True)
-			self.threadInfoGpu.start()
 		self.ui.lcdShader.display(self.tabGpu[self.numGpu].freqShader)
 		self.ui.SliderShader.setSliderPosition(int(self.tabGpu[self.numGpu].freqShader))
 		self.ui.SliderMem.setSliderPosition(int(self.tabGpu[self.numGpu].freqMem))
@@ -309,12 +299,20 @@ class NvidiuxApp(QMainWindow):
 		self.ui.label_Dfreq_Gpu.setText(str(self.tabGpu[self.numGpu].defaultFreqGpu) + _fromUtf8(" Mhz →"))
 		self.ui.label_Dfreq_Shader.setText(str(self.tabGpu[self.numGpu].defaultFreqShader) + _fromUtf8(" Mhz →"))
 		self.ui.label_Dfreq_Mem.setText(str(self.tabGpu[self.numGpu].defaultFreqMem) + _fromUtf8(" Mhz →"))
-		
+		if self.isFermiArch[self.numGpu]:
+			self.ui.SliderFan.setMinimum(30)
+		else:
+			self.ui.SliderFan.setMinimum(10)
 		if self.overvoltEnabled and self.versionPilote >= 346.16:
 			self.ui.spinBoxOvervolt.setMaximum(self.tabGpu[self.numGpu].maxOvervolt)
 			self.ui.labelValueOvervolt.setText(str(self.tabGpu[self.numGpu].overvolt) + _translate("nvidiux","μv",None))
 			if self.tabGpu[self.numGpu].maxOvervolt == 0:
 				self.ui.groupBoxOvervolt.setEnabled(False)
+		if self.autoUpdate:
+			self.threadInfoGpu.stop()
+			self.threadInfoGpu = Mythread(1, majGpu, [self.numGpu], {"fen":nvidiuxApp})
+			self.threadInfoGpu.setDaemon(True)
+			self.threadInfoGpu.start()
 		
 	def closeEvent(self, event):
 		if self.change:
@@ -364,31 +362,44 @@ class NvidiuxApp(QMainWindow):
 		self.ui.buttonOvervolt.connect(self.ui.buttonOvervolt,SIGNAL("released()"),self.overvolt)
 		self.ui.buttonConfigure.connect(self.ui.buttonConfigure,SIGNAL("released()"),self.loadPrefWindow)
 		self.ui.buttonApply.connect(self.ui.buttonApply,SIGNAL("released()"),self.applyNewClock)
+		self.ui.buttonSwitchApi.connect(self.ui.buttonSwitchApi,SIGNAL("released()"),self.switchApi)
+		self.ui.buttonSwitchUseGpu.connect(self.ui.buttonSwitchUseGpu,SIGNAL("released()"),self.switchUseGpu)
+		
 		self.ui.SliderMem.connect(self.ui.SliderMem, SIGNAL("sliderMoved(int)"),self.updateMem)
 		self.ui.SliderGpu.connect(self.ui.SliderGpu, SIGNAL("sliderMoved(int)"),self.updateGpu)
 		self.ui.SliderFan.connect(self.ui.SliderFan, SIGNAL("sliderMoved(int)"),self.changeFanSpeed)
+		
 		self.ui.actionQuitter.connect(self.ui.actionQuitter, SIGNAL("triggered()"),self.quitapp)
 		self.ui.actionLoadProfile.connect(self.ui.actionLoadProfile, SIGNAL("triggered()"),self.loadProfile)
 		self.ui.actionSaveProfile.connect(self.ui.actionSaveProfile, SIGNAL("triggered()"),self.saveProfile)
-		self.ui.actionPref.connect(self.ui.actionPref, SIGNAL("triggered()"),self.loadPrefWindow)
-		self.ui.checkBoxFan.connect(self.ui.checkBoxFan,QtCore.SIGNAL("clicked(bool)"),self.stateFan)
-		self.ui.checkBoxVSync.connect(self.ui.checkBoxVSync,QtCore.SIGNAL("clicked(bool)"),self.stateVSync)
-		self.ui.checkBoxMPerf.connect(self.ui.checkBoxMPerf,QtCore.SIGNAL("clicked(bool)"),self.maxPerf)
 		self.ui.actionStartMonitor.connect(self.ui.actionStartMonitor, SIGNAL("triggered()"),self.startMonitor)
 		self.ui.actionConfigureMonitor.connect(self.ui.actionConfigureMonitor, SIGNAL("triggered()"),self.configureMonitor)
 		self.ui.actionAbout.connect(self.ui.actionAbout, SIGNAL("triggered()"),self.about)
+		
+		self.ui.actionPref.connect(self.ui.actionPref, SIGNAL("triggered()"),self.loadPrefWindow)
+		self.ui.checkBoxVaapi.connect(self.ui.checkBoxVaapi, SIGNAL("clicked(bool)"),self.setVaapi)
+		self.ui.checkBoxFan.connect(self.ui.checkBoxFan,QtCore.SIGNAL("clicked(bool)"),self.stateFan)
+		self.ui.checkBoxVSync.connect(self.ui.checkBoxVSync,QtCore.SIGNAL("clicked(bool)"),self.stateVSync)
+		self.ui.checkBoxMPerf.connect(self.ui.checkBoxMPerf,QtCore.SIGNAL("clicked(bool)"),self.maxPerf)
+		
 		self.ui.label_Img.connect(self.ui.label_Img, SIGNAL("clicked()"), self.clickImage)
 		self.ui.listWidgetGpu.itemClicked.connect(self.changeGpu)
 
 		cmd = "vainfo | wc -l"
 		if int(sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()[0].replace('\n','')) > 6:
-			self.ui.checkBoxVaapi.setChecked(1)
+			self.ui.checkBoxVaapi.setChecked(True)
+			self.ui.checkBoxVaapi.setEnabled(False)
+			self.vaapi = True
+		
+		if self.vaapi:
+			self.ui.buttonSwitchUseGpu.setVisible(True)
+		else:
+			self.ui.buttonSwitchUseGpu.setVisible(False)
 		i = 0
 		for gpu in self.tabGpu:
 			self.ui.listWidgetGpu.addItem(str(i + 1) + ":" + gpu.nameGpu)
 			i = i + 1
 		
-	
 	def configureMonitor(self):
 		tabGpu = list()
 		tabLang = list()
@@ -412,11 +423,11 @@ class NvidiuxApp(QMainWindow):
 		out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
 		try:
 			QMessageBox.information(self,_translate("nvidiux","UUID",None),_translate("nvidiux",out.split("):")[-1],None))
+			#Memory interface
 		except:
 			self.showError(35.1,_translate("nvidiux","Echec",None),_translate("nvidiux","Echec obtention UUID",None),self.error)
 		
 	def changeFanSpeed(self,value):
-
 		if self.sameParamGpu and self.nbGpuNvidia > 1:
 			nomGpu = self.tabGpu[self.numGpu].gpuName
 			i = 0
@@ -627,30 +638,7 @@ class NvidiuxApp(QMainWindow):
 					sys.exit(1)
 			else:
 				self.tabGpu[i].cudaCores = "N/A"
-	
-			cmd = "nvidia-settings --query [gpu:" + str(i) + "]/NvidiaDriverVersion"
-			if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
-				out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-				try:
-					self.tabGpu[i].version = float(out.split(':')[-1][1:])
-				except:
-					print "Text to send:" + str(out)
-					self.showError(37,_translate("nvidiux","Echec",None),_translate("nvidiux","Echec chargement des parametres Gpu",None),self.error)
-					sys.exit(1)
-			else:
-				self.showError(32,"Echec","Echec chargement des parametres Gpu",self.error)
-			cmd = "nvidia-settings --query all | grep OpenGLVersion"
-			if not sub.call(cmd + "| head -1",stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
-				out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-				try:
-					self.tabGpu[i].openGlVersion = out.split('NVIDIA')[0].split(':')[-1]
-				except:
-					print "Text to send:" + str(out)
-					self.showError(38,_translate("nvidiux","Echec",None),_translate("nvidiux","Echec chargement des parametres Gpu",None),self.error)
-					sys.exit(1)
-			else:
-				self.tabGpu[i].openGlVersion = "N/A"
-			
+
 			cmd = "nvidia-settings --query [gpu:" + str(i) + "]/GPUCurrentClockFreqsString"
 			if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 				out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
@@ -739,6 +727,16 @@ class NvidiuxApp(QMainWindow):
 					self.tabGpu[i].maxOvervolt = 0
 					self.tabGpu[i].overvolt = 0
 			
+		cmd = "nvidia-settings --query all | grep OpenGLVersion"
+		out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+		try:
+			for i in range(0, self.nbGpuNvidia):
+				self.tabGpu[i].openGlVersion = out.split('NVIDIA')[0].split(':')[-1]
+		except:
+			print "Text to send:" + str(out)
+			self.showError(38,_translate("nvidiux","Echec",None),_translate("nvidiux","Echec chargement des parametres Gpu",None),self.error)
+			sys.exit(1)
+		
 		try:
 			for gpu in self.tabGpu:
 				returnCode = self.verifyGpu(gpu.nameGpu)
@@ -773,7 +771,10 @@ class NvidiuxApp(QMainWindow):
 		self.ui.SliderShader.setMaximum(int(self.tabGpu[self.numGpu].resetFreqShader) * 1.3)
 		self.ui.SliderShader.setSliderPosition(int(self.tabGpu[self.numGpu].freqShader))
 		self.ui.lcdShader.display(int(self.tabGpu[self.numGpu].freqShader))
-		self.ui.SliderFan.setMinimum(30)
+		if self.isFermiArch[0]:
+			self.ui.SliderFan.setMinimum(30)
+		else:
+			self.ui.SliderFan.setMinimum(10)
 		self.ui.SliderFan.setMaximum(100)
 		self.ui.SliderMem.setMinimum(int(self.tabGpu[self.numGpu].resetFreqMem) * 0.80)
 		self.ui.SliderMem.setMaximum(int(self.tabGpu[self.numGpu].resetFreqMem) * 1.3)
@@ -787,15 +788,16 @@ class NvidiuxApp(QMainWindow):
 			self.ui.label_Dfreq_Gpu.setText(str(self.tabGpu[self.numGpu].defaultFreqGpu) + _fromUtf8(" Mhz →"))
 			self.ui.label_Dfreq_Shader.setText(str(self.tabGpu[self.numGpu].defaultFreqShader) + _fromUtf8(" Mhz →"))
 			self.ui.label_Dfreq_Mem.setText(str(self.tabGpu[self.numGpu].defaultFreqMem) + _fromUtf8(" Mhz →"))
+			
 		self.ui.nomGpu.setText(self.tabGpu[self.numGpu].nameGpu)
 		self.ui.MemGpu.setText(_translate("nvidiux","Memoire video",None) + "\n" + str(self.tabGpu[self.numGpu].videoRam) + " Go")
 		self.ui.CudaCore.setText(_translate("nvidiux","NB coeur cuda",None) + "\n" + str(self.tabGpu[self.numGpu].cudaCores))
 		self.ui.PiloteVersion.setText(_translate("nvidiux","Version du Pilote",None) + "\n" + str(self.versionPilote))
 		self.ui.OpenGlSupport.setText(_translate("nvidiux","OpenGl Support",None) + "\n" + str(self.tabGpu[self.numGpu].openGlVersion))
-		self.ui.checkBoxSli.setChecked(0)
+		self.ui.checkBoxSli.setChecked(False)
 		if self.nbGpuNvidia >= 2: #detect sli 2 card with same name #find a better way
 			if len(list(set(self.tabGpu[i].nameGpu))) == 1:
-				self.ui.checkBoxSli.setChecked(1)
+				self.ui.checkBoxSli.setChecked(True)
 				self.isSli = True
 		majGpu(0,self)
 		self.ui.SliderShader.setEnabled(False)
@@ -815,6 +817,7 @@ class NvidiuxApp(QMainWindow):
 			self.ui.buttonReset.setEnabled(True)
 		else:
 			self.ui.buttonReset.setEnabled(False)
+		
 		self.ui.about.setText(_translate("nvidiux","Version ",None) + str(".".join(self.nvidiuxVersionStr.split(".")[:-1])))
 		
 	def killTMonitor(self):
@@ -1196,7 +1199,17 @@ class NvidiuxApp(QMainWindow):
 		self.threadInfoGpu = Mythread(self.updateTime, majGpu, [0], {"fen":nvidiuxApp})
 		self.threadInfoGpu.setDaemon(True)
 		self.threadInfoGpu.start()
-	
+		
+	def setVaapi(self,value):
+		if not vaapi:
+			msg = "Pour activer la vaapi (Vidéo Accélération api) vous devez installer les paquets neccesaire à la vaapi\n"
+			if platform.linux_distribution()[0] == "Ubuntu" or platform.linux_distribution()[0] == "Debian":
+				msg = msg + "Utiliser la commande suivante:apt install libvdpau1 vdpau-va-driver"
+			QMessageBox.information(self,_translate("nvidiux","vaapi",None),_translate("nvidiux",msg,None))
+			self.ui.checkBoxVaapi.setChecked(False)
+		else:
+			self.ui.checkBoxVaapi.setChecked(True)
+		
 	def stateFan(self,value):
 		if value:
 			cmd = "nvidia-settings -a [gpu:" + str(self.numGpu) + "]/GPUFanControlState=1"
@@ -1372,6 +1385,27 @@ class NvidiuxApp(QMainWindow):
 	def setThread(self,threadMonitor,threadInfoGpu):
 		self.threadMonitor = threadMonitor
 		self.threadInfoGpu = threadInfoGpu
+		
+	def switchApi(self):
+		if not self.showGraphicApi:
+			self.showGraphicApi = True
+			if not self.isFermiArch[self.numGpu]:#detect vulkan version
+				self.ui.OpenGlSupport.setText(_translate("nvidiux","Vulkan Support",None) + "\n" + "1.0")
+			else:
+				self.ui.OpenGlSupport.setText(_translate("nvidiux","Vulkan Support",None) + "\n" + "Non")	
+		else:	
+			self.ui.OpenGlSupport.setText(_translate("nvidiux","OpenGl Support",None) + "\n" + str(self.tabGpu[self.numGpu].openGlVersion))
+			self.showGraphicApi = False
+			
+	def switchUseGpu(self):
+		cmd = "nvidia-settings --query [gpu:" + str(self.numGpu) + "]/GPUUtilization"
+		out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+		if not self.showUseGpu:
+			self.showUseGpu = True
+			self.ui.UGPU.setText(_translate("nvidiux","Utilisation Gpu",None) + "\n" + str(out.split('graphics=')[1].split(',')[0]) + "%")
+		else:
+			self.showUseGpu = False
+			self.ui.UGPU.setText(_translate("nvidiux","Util décodage video",None)+ "\n" + str(out.split('video=')[1].split(',')[0]) + "%")
 					
 	def updateMem(self,value):
 		if self.sameParamGpu and self.nbGpuNvidia > 1:
@@ -1420,7 +1454,7 @@ class NvidiuxApp(QMainWindow):
 			self.change = False
 		
 	def verifyGpu(self,gpuName):#-1:unknown 0:ok 1:not ok 
-		verified = ["GeForce GT 420M","GeForce GTX 460M","GeForce GT 430","GeForce GTX 460","GeForce GTX 470","GeForce GTX 480","GeForce GTX 560M","GeForce GTX 560 Ti","GeForce GTX 570","GeForce GTX 580","GeForce GT 620","GeForce GT 630","GeForce GTX 650","GeForce GTX 660","GeForce GT 740","GeForce GTX 750","GeForce GTX 750 TI","GeForce GTX 770","GeForce GTX 780 Ti","GeForce Gtx 960","GeForce GTX 970","GeForce GTX 980"]
+		verified = ["GeForce GT 420M","GeForce GTX 460M","GeForce GT 430","GeForce GTX 460","GeForce GTX 470","GeForce GTX 480","GeForce GTX 560M","GeForce GTX 560 Ti","GeForce GTX 570","GeForce GTX 580","GeForce GT 620","GeForce GT 630","GeForce GTX 650","GeForce GTX 660","GeForce GTX 670","GeForce GT 740","GeForce GTX 750","GeForce GTX 750 TI","GeForce GTX 760","GeForce GTX 770","GeForce GTX 780 Ti","GeForce Gtx 960","GeForce GTX 970","GeForce GTX 980","GeForce GTX 880m"]
 		notWork = ["GeForce GTX TITAN Z","GeForce GTX TITAN Black","GeForce GTX TITAN","GeForce GTX 690","GeForce GTX 590",
 		"GeForce GT 340", "GeForce GT 330", "GeForce GT 320", "GeForce 315", "GeForce 310","GeForce GTS 360M", "GeForce GTS 350M", "GeForce GT 335M", "GeForce GT 330M","GeForce GT 325M", "GeForce GT 320M", "GeForce 320M", "GeForce 315M", "GeForce 310M", "GeForce 305M",
 		"GeForce GTX 295", "GeForce GTX 285","GeForce GTX 280", "GeForce GTX 275", "GeForce GTX 260", "GeForce GTS 250", "GeForce GTS 240", "GeForce GT 230", "GeForce GT 240", "GeForce GT 220", "GeForce G210", "GeForce 210", "GeForce 205",
@@ -1439,19 +1473,19 @@ class NvidiuxApp(QMainWindow):
 		
 if __name__ == "__main__":
 	app = QApplication(sys.argv)
-	if len(sys.argv) == 1:
-		pixmap = QtGui.QPixmap("/usr/share/nvidiux/img/splash.png")
-		splash = QtGui.QSplashScreen(pixmap)
-		splash.setMask(pixmap.mask())
-		splash.show()
+	#~ if len(sys.argv) == 1:
+		#~ pixmap = QtGui.QPixmap("/usr/share/nvidiux/img/splash.png")
+		#~ splash = QtGui.QSplashScreen(pixmap)
+		#~ splash.setMask(pixmap.mask())
+		#~ splash.show()
 
-	nvidiuxApp = NvidiuxApp(sys.argv[1:])
-	if not os.path.isfile("/usr/share/nvidiux/nvidiux_" + nvidiuxApp.language + ".qm"):
+	if not os.path.isfile("/usr/share/nvidiux/nvidiux_" + QtCore.QLocale.system().name() + ".qm"):
 		nvidiuxTranslator = QtCore.QTranslator()
 		locale = QtCore.QLocale.system().name()
 		nvidiuxTranslator.load("qt_" + locale,QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.TranslationsPath))
 		app.installTranslator(nvidiuxTranslator)
-		
+	
+	nvidiuxApp = NvidiuxApp(sys.argv[1:])
 	threadMonitor = ThreadCheckMonitor([0], {"fen":nvidiuxApp})
 	threadInfoGpu = None
 	if nvidiuxApp.autoUpdate:
@@ -1460,6 +1494,6 @@ if __name__ == "__main__":
 		threadInfoGpu.start()
 	nvidiuxApp.setThread(threadMonitor,threadInfoGpu)
 	nvidiuxApp.show()
-	if len(sys.argv) == 1:
-		splash.finish(nvidiuxApp)
+	#~ if len(sys.argv) == 1:
+		#~ splash.finish(nvidiuxApp)
 	sys.exit(app.exec_())
