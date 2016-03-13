@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/python2
 
-# Copyright 2014 Payet Guillaume
+# Copyright 2014-2016 Payet Guillaume
 #
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License version 3, as published
@@ -343,6 +343,7 @@ class Ui_Pref(QWidget):
 		else:
 			if os.path.isfile(self.home + "/.nvidiux/ntchkdriver"):
 				os.remove(self.home + "/.nvidiux/ntchkdriver")
+				
 	def setLanguage(self,lang):
 		tabLang = ["fr_FR","en_EN","de_DE","es_ES"]
 		language = tabLang[lang]
@@ -358,12 +359,20 @@ class Ui_Pref(QWidget):
 		if value:
 			reply = QtGui.QMessageBox.question(self, _fromUtf8(_translate("Form","Attention",None)),_fromUtf8(_translate("Form","N'utilisez cette option que si votre carte ne respecte pas les frequences defini par nvidiux (utile que sur certaines Gtx6XX)\nContinuer?",None)), QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
 			if reply == QtGui.QMessageBox.Yes:
-				print "accept"
+				cmd = "bash /usr/share/nvidiux/toRoot.sh add_xtra1.py >> /dev/null 2>&1"
+				if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
+					QMessageBox.information(self,_translate("Form","Information",None),_translate("Form","Veuillez redemarer nvidiux",None))
+				else:
+					self.checkBoxTurboBoost.setChecked(False)
+					self.showError(7,_translate("nvidiux","Erreur Credential",None),_translate("nvidiux","Votre mot de passe est incorrect",None),self.error)	
 		else:
-			print "cancel"
+			cmd = "bash /usr/share/nvidiux/toRoot.sh del_xtra1.py >> /dev/null 2>&1"
+			if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
+				QMessageBox.information(self,_translate("Form","Information",None),_translate("Form","Veuillez redemarer nvidiux",None))
+			else:
+				self.checkBoxTurboBoost.setChecked(True)
+				self.showError(7,_translate("nvidiux","Erreur Credential",None),_translate("nvidiux","Votre mot de passe est incorrect",None),self.error)
 			
-			
-		
 	def setOvervolt(self,value):
 		if value == True:
 			reply = QtGui.QMessageBox.question(self, _translate("Form","Attention",None),_translate("Form","Fonction reserve aux experts.\nModifier le voltage du gpu peut causer des dommages irreversibles et annule la garantie.\nNvidiux n'est pas responsable des eventuels dommages due a une utilisation de cette fonction\nActiver tous de même cette fonctionnalite ?",None), QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
@@ -544,16 +553,14 @@ class Ui_Pref(QWidget):
 		self.checkBoxTurboBoost.setChecked(False)
 		self.checkBoxTurboBoost.setEnabled(False)
 		
-		for i in range(0, self.nbGpuNvidia):
+		for i in range(0, self.nbGpuNvidia):#only for gt(x) 6XX card
 			var_nb = int(re.findall('\d+', self.tabGpu[i].nameGpu)[0])
 			if var_nb >= 600 and var_nb <= 699:
 				self.checkBoxTurboBoost.setEnabled(True)
-		
-		search = "Option     \"RegistryDwords\" \"PowerMizerEnable=0x1; PerfLevelSrc=0x2222; PowerMizerDefaultAC=0x1\""
+		search = "PerfLevelSrc=0x2222"
 		openFile = open("/etc/X11/xorg.conf","r")
 		for line in openFile:
 		    if search in line:
-			print line
 			self.checkBoxTurboBoost.setChecked(True)
 		openFile.close()
 		
@@ -697,7 +704,7 @@ class Ui_Pref(QWidget):
 				labelOs =  linuxDistrib[0] + linuxDistrib[1]
 		except:
 			labelOs = ""
-		info = _translate("Form", "Permet d'underclocker ou d'overclocker votre gpu nvidia\n(C) 2014-2016 Payet Guillaume\nNvidiux n'est en aucun cas affilie à Nvidia",None) + "\nVersion : " + self.versionStr + "( " + labelOs + " )"
+		info = _translate("Form", "Permet d'underclocker ou d'overclocker votre gpu nvidia\n(C) 2014-2016 Payet Guillaume\nNvidiux n'est en aucun cas affilie à Nvidia",None) + "\nVersion : " + self.versionStr + " | " + labelOs 
 		self.labelInfo.setText(info )
 		self.textBrowser = QtGui.QTextBrowser(self.paramWindow)
 		self.textBrowser.setGeometry(QtCore.QRect(10, 280, 560, 240))
@@ -776,5 +783,3 @@ class Ui_Pref(QWidget):
 	
 	def showExpertSettings(self,value):
 		self.groupBoxPrefAdvance.setVisible(value)
-	
-

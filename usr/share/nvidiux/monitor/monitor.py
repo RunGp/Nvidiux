@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/python2
 
-# Copyright 2014 Payet Guillaume
+# Copyright 2014-2016 Payet Guillaume
 #
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License version 3, as published
@@ -262,14 +262,13 @@ timeLabel = StringVar()
 gpu1 = GpuInfoMonitor()
 gpu1.time = 0
 monitorVersion = 1.1
-monitorVersionStr = "1.1"
+monitorVersionStr = "1.1.1"
 listGpu = []
 gpuInfo = [] #idGpu,color, show
 confGpu = []
 error = False
 updateC = True
-versionPiloteMaxTest = 661.16
-print "Monitor " + monitorVersionStr
+versionPiloteMaxTest = 361.28
 
 cmd = "nvidia-settings --query [gpu:0]/NvidiaDriverVersion"
 if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):

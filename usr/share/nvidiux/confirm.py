@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/python2
 
-# Copyright 2014 Payet Guillaume
+# Copyright 2014-2016 Payet Guillaume
 #
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License version 3, as published
@@ -75,10 +75,10 @@ class ConfirmWindow(QWidget):
 			self.texteula.setPlainText(_translate("ConfirmWindow","Attention cette pratique peut annuler la garantie du produit et reste à l'entière responsabilité de l'utilisateur du logiciel. Ni le concepteur du logiciel ni la communauté gnu ne pourra pas être tenu responsable de toutes mauvaises manipulations ayant entrainé un quelconque dégât direct ou en conséquence de l'utilisation de Nvidiux.\nNvidiux n'est en aucun cas affilié à Nvidia", None))
 			self.texteula.setReadOnly(True)
 			self.buttonConfirm.setEnabled(False)
-			self.setWindowTitle("Contrat d'utilisation")
+			self.setWindowTitle(_translate("ConfirmWindow","Contrat d'utilisation",None))
 		else:
 			self.buttonConfirm.setEnabled(True)
-			self.setWindowTitle("Confirmatioon changement")
+			self.setWindowTitle(_translate("ConfirmWindow","Confirmation changement",None))
 		self.buttonConfirm.connect(self.buttonConfirm, SIGNAL("released()"),self.confirm)
 		self.buttonCancel.connect(self.buttonCancel, SIGNAL("released()"),self.quitapp)
 		ConfirmTranslator = QtCore.QTranslator()

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/python2
 
-# Copyright 2014 Payet Guillaume
+# Copyright 2014-2016 Payet Guillaume
 #
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License version 3, as published
@@ -421,11 +421,11 @@ class NvidiuxApp(QMainWindow):
 	def clickImage(self):
 		cmd = "nvidia-settings --query [gpu:" + str(self.numGpu) + "]/GpuUUID"
 		out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-		try:
-			QMessageBox.information(self,_translate("nvidiux","UUID",None),_translate("nvidiux",out.split("):")[-1],None))
-			#Memory interface
-		except:
-			self.showError(35.1,_translate("nvidiux","Echec",None),_translate("nvidiux","Echec obtention UUID",None),self.error)
+		
+		cmd = "nvidia-settings --query [gpu:" + str(self.numGpu) + "]/GPUMemoryInterface"
+		out2, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+		msg = "Gpu UUid:" + out.split("):")[-1] + "Gpu Memory Interface:" + out2.split("):")[1].split(".")[0] + "bits"
+		QMessageBox.information(self,_translate("nvidiux","Extra",None),msg)
 		
 	def changeFanSpeed(self,value):
 		if self.sameParamGpu and self.nbGpuNvidia > 1:
@@ -614,7 +614,9 @@ class NvidiuxApp(QMainWindow):
 				print "Text to send:" + str(out)
 				self.showError(34,_translate("nvidiux","Echec",None),_translate("nvidiux","Echec chargement des parametres Gpu",None),self.error)
 				sys.exit(1)
-
+			cmd = "nvidia-settings -a [gpu:" + str(i) + "]/GPUPowerMizerMode=1"
+			sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True)
+				
 			cmd = "nvidia-settings --query [gpu:" + str(i) + "]/videoRam"
 			if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 				out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
@@ -688,12 +690,12 @@ class NvidiuxApp(QMainWindow):
 						out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
 						self.tabGpu[i].fanSpeed = out.split(': ')[1].split('.')[0]
 					except:
-						self.tabGpu[i].fanSpeed = 30
+						self.tabGpu[i].fanSpeed = 0
 						self.ui.SliderFan.setEnabled(False)
 						self.ui.checkBoxFan.setChecked(False)
 						self.ui.labelFanVitesse.setText(_translate("nvidiux","incompatible(impossible de detecter la vitesse)",None))
 				else:
-					self.tabGpu[i].fanSpeed = 30
+					self.tabGpu[i].fanSpeed = 0
 					
 				try:
 					cmd = "nvidia-settings --query [gpu:" + str(i) + "]/GPUFanControlState"
@@ -726,16 +728,23 @@ class NvidiuxApp(QMainWindow):
 				except:
 					self.tabGpu[i].maxOvervolt = 0
 					self.tabGpu[i].overvolt = 0
+					
+			cmd = "nvidia-settings -a [gpu:" + str(i) + "]/GPUPowerMizerMode=0"
+			sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True)
 			
-		cmd = "nvidia-settings --query all | grep OpenGLVersion"
-		out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-		try:
-			for i in range(0, self.nbGpuNvidia):
-				self.tabGpu[i].openGlVersion = out.split('NVIDIA')[0].split(':')[-1]
-		except:
-			print "Text to send:" + str(out)
-			self.showError(38,_translate("nvidiux","Echec",None),_translate("nvidiux","Echec chargement des parametres Gpu",None),self.error)
-			sys.exit(1)
+			
+			self.tabGpu[i].openGlVersion = "4.5.0" #Assuming  all card is in 4.5.0 found better way detect openGL 
+			
+		#~ cmd = "nvidia-settings --query all | grep OpenGLVersion"
+		#~ out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+		#~ try:
+			#~ for i in range(0, self.nbGpuNvidia):
+				#~ self.tabGpu[i].openGlVersion = out.split('NVIDIA')[0].split(':')[-1]
+			#~ print out.split('NVIDIA')[0].split(':')[-1]
+		#~ except:
+			#~ print "Text to send:" + str(out)
+			#~ self.showError(38,_translate("nvidiux","Echec",None),_translate("nvidiux","Echec chargement des parametres Gpu",None),self.error)
+			#~ sys.exit(1)
 		
 		try:
 			for gpu in self.tabGpu:
@@ -1473,12 +1482,6 @@ class NvidiuxApp(QMainWindow):
 		
 if __name__ == "__main__":
 	app = QApplication(sys.argv)
-	#~ if len(sys.argv) == 1:
-		#~ pixmap = QtGui.QPixmap("/usr/share/nvidiux/img/splash.png")
-		#~ splash = QtGui.QSplashScreen(pixmap)
-		#~ splash.setMask(pixmap.mask())
-		#~ splash.show()
-
 	if not os.path.isfile("/usr/share/nvidiux/nvidiux_" + QtCore.QLocale.system().name() + ".qm"):
 		nvidiuxTranslator = QtCore.QTranslator()
 		locale = QtCore.QLocale.system().name()
@@ -1494,6 +1497,4 @@ if __name__ == "__main__":
 		threadInfoGpu.start()
 	nvidiuxApp.setThread(threadMonitor,threadInfoGpu)
 	nvidiuxApp.show()
-	#~ if len(sys.argv) == 1:
-		#~ splash.finish(nvidiuxApp)
 	sys.exit(app.exec_())
