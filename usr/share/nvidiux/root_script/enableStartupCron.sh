@@ -17,5 +17,5 @@ if [ $# -lt 1 ]
 then
 	exit 254
 fi
-(crontab -l;echo "@reboot sleep 60 && nvidiux -s $1/.nvidiux/StartupSys.ndi") | crontab -
+(crontab -l;echo "@reboot sudo -u $1 nvidiux -s /home/$1/.nvidiux/StartupSys.ndi") | crontab -
 exit $?

@@ -161,7 +161,7 @@ class NvidiuxApp(QMainWindow):
 	nbGpu = -1
 	nbGpuNvidia = -1
 	optimus = 0
-	nvidiuxVersionStr = "1.3.0.10"
+	nvidiuxVersionStr = "1.3.0.11"
 	nvidiuxVersion = 1.3
 	change = 0
 	isFermiArch = []
@@ -201,8 +201,15 @@ class NvidiuxApp(QMainWindow):
 		try:                            
 			opts, args = getopt.getopt(argv, "vhs:r", ["version","help", "silent=","reset","accept-eula"])
 		except getopt.GetoptError:
-			print "Unknow option"
-			self.showHelp()
+			if "-s" in argv:
+				print "Missing ndiFile"
+				print "Use nvidiux -s <ndiFile>"
+			elif "--silent" in argv:
+				print "Missing ndiFile"
+				print "Use nvidiux --silent <ndiFile>" 
+			else:
+				print "Unknown option"
+				self.showHelp()
 			sys.exit(2)
 			
 		for opt, arg in opts:
@@ -1147,12 +1154,12 @@ class NvidiuxApp(QMainWindow):
 	
 	def showHelp(self):
 		print '''Use:nvidiux <option> ndifile
-		-h --help 	print this help
-		-r --reset	reset over/down-clock of all nvidia card
-		-s --silent 	apply profile and not show interface
-		-v --version 	print nvidiux version
-		--accept-eula	Read and accept eula
-		ndifile 	apply profile and show nvidiux'''
+		-h --help 		print this help
+		-r --reset		reset over/down-clock of all nvidia card
+		-s --silent <ndiFile>	apply profile and not show interface
+		-v --version 		print nvidiux version
+		--accept-eula		Read and accept eula
+		<ndiFile> 		apply profile and show nvidiux'''
 	
 	def setStartSystem(self,start,value):
 		self.startWithSystem = start

@@ -163,7 +163,7 @@ class Ui_Pref(QWidget):
 			return None
 		shutil.copy(fileToLoad,self.home + "/.nvidiux/StartupSys.ndi")
 		os.chmod(self.home + "/.nvidiux/StartupSys.ndi",0775)
-		cmd = "bash /usr/share/nvidiux/toRoot.sh enableStartupCron.sh " + self.home + " >> /dev/null 2>&1"
+		cmd = "bash /usr/share/nvidiux/toRoot.sh enableStartupCron.sh " + self.home.split("/")[-1] + " >> /dev/null 2>&1"
 		result = sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True)
 		if int(result) == 0:
 			self.labelGpuSys.setText(_fromUtf8(_translate("Form","Le profil:",None)) + fileToLoad + _translate("Form","\nsera chargé à chaque demarrage du systeme",None))
