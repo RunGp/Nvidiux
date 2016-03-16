@@ -161,7 +161,7 @@ class NvidiuxApp(QMainWindow):
 	nbGpu = -1
 	nbGpuNvidia = -1
 	optimus = 0
-	nvidiuxVersionStr = "1.3.0.11"
+	nvidiuxVersionStr = "1.3.0.12"
 	nvidiuxVersion = 1.3
 	change = 0
 	isFermiArch = []
@@ -571,6 +571,10 @@ class NvidiuxApp(QMainWindow):
 		if self.nvidiuxTranslator.load("/usr/share/nvidiux/nvidiux_" + self.language):
 			app.installTranslator(self.nvidiuxTranslator)
 			self.ui.retranslateUi(self)
+		#~ else:
+			#~ self.nvidiuxTranslator.load("/usr/share/nvidiux/nvidiux_en_EN")
+			#~ app.installTranslator(self.nvidiuxTranslator)
+			#~ self.ui.retranslateUi(self)
 		
 		cmd = "nvidia-settings --query [gpu:0]/NvidiaDriverVersion"
 		if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
@@ -1408,7 +1412,7 @@ class NvidiuxApp(QMainWindow):
 			if not self.isFermiArch[self.numGpu]:#detect vulkan version
 				self.ui.OpenGlSupport.setText(_translate("nvidiux","Vulkan Support",None) + "\n" + "1.0")
 			else:
-				self.ui.OpenGlSupport.setText(_translate("nvidiux","Vulkan Support",None) + "\n" + "Non")	
+				self.ui.OpenGlSupport.setText(_translate("nvidiux","Vulkan Support",None) + "\n" + "N/A")	
 		else:	
 			self.ui.OpenGlSupport.setText(_translate("nvidiux","OpenGl Support",None) + "\n" + str(self.tabGpu[self.numGpu].openGlVersion))
 			self.showGraphicApi = False
@@ -1489,10 +1493,17 @@ class NvidiuxApp(QMainWindow):
 		
 if __name__ == "__main__":
 	app = QApplication(sys.argv)
-	if not os.path.isfile("/usr/share/nvidiux/nvidiux_" + QtCore.QLocale.system().name() + ".qm"):
-		nvidiuxTranslator = QtCore.QTranslator()
-		locale = QtCore.QLocale.system().name()
-		nvidiuxTranslator.load("qt_" + locale,QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.TranslationsPath))
+	localeSystem = QtCore.QLocale.system().name()
+	nvidiuxTranslator = QtCore.QTranslator()
+	if not os.path.isfile("/usr/share/nvidiux/nvidiux_" + localeSystem + ".qm"):
+		if localeSystem != "fr_FR":
+			nvidiuxTranslator.load("/usr/share/nvidiux/nvidiux_" + localeSystem)
+			app.installTranslator(nvidiuxTranslator)
+		else:
+			nvidiuxTranslator.load("qt_" + localeSystem,QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.TranslationsPath))
+			app.installTranslator(nvidiuxTranslator)
+	else:
+		nvidiuxTranslator.load("/usr/share/nvidiux/nvidiux_" + localeSystem)
 		app.installTranslator(nvidiuxTranslator)
 	
 	nvidiuxApp = NvidiuxApp(sys.argv[1:])

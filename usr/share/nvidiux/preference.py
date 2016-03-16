@@ -66,6 +66,8 @@ class Ui_Pref(QWidget):
 	mainWindows = None
 	language = None
 	app = None
+	labelOs = None
+	distrib = None
 	
 	def __init__(self,loadTab,versionStr,version,TabLang,tabParam,mainW,parent=None):
 		super (Ui_Pref, self).__init__(parent)
@@ -262,7 +264,6 @@ class Ui_Pref(QWidget):
 	
 	def retranslateUi(self):
 		self.labelUpdateMon.setText(_translate("Form", "rafraichissement continu", None))
-		self.labelInfo.setText(_translate("Form", "Permet d'underclocker ou d'overclocker votre gpu nvidia\n(C) 2014-2016 Payet Guillaume\nNvidiux n'est en aucun cas affilie à Nvidia", None))
 		self.setWindowTitle(_translate("Form", "Preferences", None))
 		self.buttonParcNvi.setText(_translate("Form", "Parcourir", None))
 		self.checkBoxNvi.setText(_translate("Form", "Appliquer ce profil au demarrage de nvidiux", None))
@@ -273,7 +274,7 @@ class Ui_Pref(QWidget):
 		self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabConf), _translate("Form", "Nvidiux", None))
 		self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabMoniteur), _translate("Form", "Moniteur", None))
 		self.tabWidget.setTabText(self.tabWidget.indexOf(self.paramWindow), _translate("Form", "A Propos", None))
-		self.labelInfo.setText(self.labelInfo.text() + "\nVersion:" + self.versionStr)
+		self.labelInfo.setText(_translate("Form", "Permet d'underclocker ou d'overclocker votre gpu nvidia\n(C) 2014-2016 Payet Guillaume\nNvidiux n'est en aucun cas affilie à Nvidia",None) + _translate("Form","\nVersion : ",None) + self.versionStr + " | " + self.labelOs)
 		self.labelLang.setText(_translate("Form","Langue",None))
 		self.checkBoxExpert.setText(_translate("Form", "Option avancé", None))
 		self.labelUpdateMon.setText(_translate("Form", "Rafraichissement continu",None))
@@ -480,21 +481,21 @@ class Ui_Pref(QWidget):
 		self.labelLang.setObjectName(_fromUtf8("labelLang"))
 		self.labelLang.setText(_translate("Form","Langue",None))
 
-		self.ComboLang=QComboBox(self.groupBoxPrefGen)
-		self.ComboLang.setObjectName("List language")
-		self.ComboLang.setGeometry(QtCore.QRect(90, 8, 200, 30))
-		self.ComboLang.addItem("Francais")
-		self.ComboLang.addItem("English")
-		self.ComboLang.addItem("Deutsch")
-		self.ComboLang.addItem("Español")
+		self.combolang=QComboBox(self.groupBoxPrefGen)
+		self.combolang.setObjectName("List language")
+		self.combolang.setGeometry(QtCore.QRect(90, 8, 200, 30))
+		self.combolang.addItem("Francais")
+		self.combolang.addItem("English")
+		self.combolang.addItem("Deutsch")
+		self.combolang.addItem("Espanol")
 		if self.language == "fr_FR":
-			self.ComboLang.setCurrentIndex(0)
+			self.combolang.setCurrentIndex(0)
 		elif self.language == "de_DE":
-			self.ComboLang.setCurrentIndex(2)
-		elif self.language == "es_Es":
-			self.ComboLang.setCurrentIndex(3)
+			self.combolang.setCurrentIndex(2)
+		elif self.language == "es_ES":
+			self.combolang.setCurrentIndex(3)
 		else:
-			self.ComboLang.setCurrentIndex(1)
+			self.combolang.setCurrentIndex(1)
 		
 		self.checkBoxSameGpu = QtGui.QCheckBox(self.groupBoxPrefGen)
 		self.checkBoxSameGpu.setGeometry(QtCore.QRect(10, 75, 450, 20))
@@ -690,22 +691,21 @@ class Ui_Pref(QWidget):
 		font.setWeight(75)
 		font.setStyleStrategy(QtGui.QFont.PreferAntialias)
 		self.labelInfo.setFont(font)
-		labelOs = None
-		distrib = None
+		
 		try:
-			linuxDistrib = platform.linux_distribution()
-			if linuxDistrib == ('', '', ''):
+			self.linuxDistrib = platform.linux_distribution()
+			if self.linuxDistrib == ('', '', ''):
 				if os.path.isfile("/etc/issue"):
 					with open("/etc/issue") as f:
-						labelOs = f.read().lower().split()[0] + " " + platform.architecture()[0]
+						self.labelOs = f.read().lower().split()[0] + " " + platform.architecture()[0]
 				else:
-					labelOs = "Unknow distrib " + platform.architecture()[0]
+					self.labelOs = "Unknow distrib " + platform.architecture()[0]
 			else:
-				labelOs =  linuxDistrib[0] + linuxDistrib[1]
+				self.labelOs =  self.linuxDistrib[0] + " " + self.linuxDistrib[1]
 		except:
-			labelOs = ""
-		info = _translate("Form", "Permet d'underclocker ou d'overclocker votre gpu nvidia\n(C) 2014-2016 Payet Guillaume\nNvidiux n'est en aucun cas affilie à Nvidia",None) + "\nVersion : " + self.versionStr + " | " + labelOs 
-		self.labelInfo.setText(info )
+			self.labelOs = ""
+		info = _translate("Form", "Permet d'underclocker ou d'overclocker votre gpu nvidia\n(C) 2014-2016 Payet Guillaume\nNvidiux n'est en aucun cas affilie à Nvidia",None) + _translate("Form","\nVersion : ",None) + self.versionStr + " | " + self.labelOs 
+		self.labelInfo.setText(info)
 		self.textBrowser = QtGui.QTextBrowser(self.paramWindow)
 		self.textBrowser.setGeometry(QtCore.QRect(10, 280, 560, 240))
 		self.textBrowser.setAlignment(QtCore.Qt.AlignCenter)
@@ -724,7 +724,7 @@ class Ui_Pref(QWidget):
 		self.spinBox.connect(self.spinBox,QtCore.SIGNAL("valueChanged(int)"),self.setTime)
 		self.buttonParcSys.connect(self.buttonParcSys,SIGNAL("released()"),self.enableCronStartup)
 		self.checkBoxSys.connect(self.checkBoxSys,QtCore.SIGNAL("clicked(bool)"),self.checkSys)
-		self.ComboLang.connect(self.ComboLang,QtCore.SIGNAL("currentIndexChanged(int)"),self.setLanguage)
+		self.combolang.connect(self.combolang,QtCore.SIGNAL("currentIndexChanged(int)"),self.setLanguage)
 		self.checkBoxOverVolt.connect(self.checkBoxOverVolt,QtCore.SIGNAL("clicked(bool)"),self.setOvervolt)
 		self.checkBoxExpert.connect(self.checkBoxExpert,QtCore.SIGNAL("clicked(bool)"),self.showExpertSettings)
 		self.checkBoxSameGpu.connect(self.checkBoxSameGpu,QtCore.SIGNAL("clicked(bool)"),self.setSameParamGpu)

@@ -344,7 +344,7 @@ class Ui_MainWindow(object):
         self.buttonApply.setObjectName(_fromUtf8("buttonApply"))
         
         self.labelFan = QtGui.QLabel(self.groupBoxOverclock)
-        self.labelFan.setGeometry(QtCore.QRect(28, 265, 60, 30))
+        self.labelFan.setGeometry(QtCore.QRect(28, 265, 100, 30))
         font = QtGui.QFont()
         font.setPointSize(15)
         font.setBold(True)
@@ -353,7 +353,7 @@ class Ui_MainWindow(object):
         self.labelFan.setObjectName(_fromUtf8("labelFan"))
         
         self.labelFanVitesse = QtGui.QLabel(self.groupBoxOverclock)
-        self.labelFanVitesse.setGeometry(QtCore.QRect(90, 266, 120, 30))
+        self.labelFanVitesse.setGeometry(QtCore.QRect(150, 266, 120, 30))
         font = QtGui.QFont()
         font.setPointSize(12)
         font.setBold(True)
