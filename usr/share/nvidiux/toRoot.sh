@@ -51,7 +51,7 @@ else
 		type gksu-polkit >> /dev/null 2>&1
 		if [ $? -eq 0 ]
 		then 
-			gksu-polkit python2 /usr/share/nvidiux/root_script/$1 $2
+			gksu-polkit bash /usr/share/nvidiux/root_script/$1 $2
 		else
 			gksudo bash /usr/share/nvidiux/root_script/$1 $2
 		fi
