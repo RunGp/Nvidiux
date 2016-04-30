@@ -51,7 +51,7 @@ class Ui_MainWindow(object):
         self.title.setAlignment(QtCore.Qt.AlignCenter)
         self.title.setObjectName(_fromUtf8("title"))
         self.about = QtGui.QLabel(self.centralwidget)
-        self.about.setGeometry(QtCore.QRect(25, 56, 76, 30))
+        self.about.setGeometry(QtCore.QRect(15, 56, 85, 30))
         self.about.setObjectName(_fromUtf8("about"))
         self.buttonAbout = QtGui.QPushButton(self.centralwidget)
         self.buttonAbout.setGeometry(QtCore.QRect(115, 58, 24, 24))

@@ -38,11 +38,23 @@ then
 	exit $?
 else
 	if [ ${1#*.} = "py" ]
-	then 
-		gksudo python2 /usr/share/nvidiux/root_script/$1 $2
+	then
+		type gksu-polkit >> /dev/null 2>&1
+		if [ $? -eq 0 ]
+		then 
+			gksu-polkit python2 /usr/share/nvidiux/root_script/$1 $2
+		else
+			gksudo python2 /usr/share/nvidiux/root_script/$1 $2
+		fi
 	elif [ ${1#*.} = "sh" ]
 	then
-		gksudo bash /usr/share/nvidiux/root_script/$1 $2
+		type gksu-polkit >> /dev/null 2>&1
+		if [ $? -eq 0 ]
+		then 
+			gksu-polkit python2 /usr/share/nvidiux/root_script/$1 $2
+		else
+			gksudo bash /usr/share/nvidiux/root_script/$1 $2
+		fi
 	else
 		exit 252
 	fi
