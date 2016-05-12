@@ -68,7 +68,7 @@ class Gpuinfo():
 	openGlVersion = ""
 	vulkanVersion = ""
 	arch = ""
-	#version = ""
+	isCompatible = False
 	
 class ThreadCheckMonitor(threading.Thread):
  
@@ -164,8 +164,8 @@ class NvidiuxApp(QMainWindow):
 	nbGpu = -1
 	nbGpuNvidia = -1
 	optimus = 0
-	nvidiuxVersionStr = "1.3.1.15"
-	nvidiuxVersion = 1.3
+	nvidiuxVersionStr = "1.4.0.19"
+	nvidiuxVersion = 1.4
 	change = 0
 	form = ""
 	monitor = False
@@ -197,6 +197,7 @@ class NvidiuxApp(QMainWindow):
 	home = expanduser("~")
 	resetAllGpu = False
 	silent = False
+	monitorGen = 1
 	
 	def __init__(self,argv,parent=None):
 		super (NvidiuxApp, self).__init__(parent)
@@ -315,11 +316,32 @@ class NvidiuxApp(QMainWindow):
 			self.ui.SliderFan.setMinimum(30)
 		else:
 			self.ui.SliderFan.setMinimum(10)
-		if self.overvoltEnabled and self.piloteVersion >= 346.16:
-			self.ui.spinBoxOvervolt.setMaximum(self.tabGpu[self.numGpu].maxOvervolt)
-			self.ui.labelValueOvervolt.setText(str(self.tabGpu[self.numGpu].overvolt) + _translate("nvidiux","μv",None))
-			if self.tabGpu[self.numGpu].maxOvervolt == 0:
-				self.ui.groupBoxOvervolt.setEnabled(False)
+		if not self.tabGpu[self.numGpu].isCompatible:
+			self.ui.SliderMem.setEnabled(False)
+			self.ui.SliderGpu.setEnabled(False)
+			self.ui.SliderShader.setEnabled(False)
+			self.ui.buttonReset.setEnabled(False)
+			self.ui.buttonApply.setEnabled(False)
+			self.ui.buttonLoadProfile.setEnabled(False)
+			self.ui.buttonSaveProfile.setEnabled(False)
+			self.ui.actionLoadProfile.setEnabled(False)
+			self.ui.actionSaveProfile.setEnabled(False)
+			self.ui.Message.setText(_translate("nvidiux","Gpu(" ,None) + str(gpu.nameGpu) + _translate("nvidiux",")non supporte",None))
+			self.overclockEnabled = False
+		else:
+			self.ui.SliderMem.setEnabled(True)
+			self.ui.SliderGpu.setEnabled(True)
+			self.ui.buttonLoadProfile.setEnabled(True)
+			self.ui.buttonSaveProfile.setEnabled(True)
+			self.ui.actionLoadProfile.setEnabled(True)
+			self.ui.actionSaveProfile.setEnabled(True)
+			self.ui.Message.setText(_translate("nvidiux","",None))
+			self.overclockEnabled = True
+			if self.overvoltEnabled and self.piloteVersion >= 346.16:
+				self.ui.spinBoxOvervolt.setMaximum(self.tabGpu[self.numGpu].maxOvervolt)
+				self.ui.labelValueOvervolt.setText(str(self.tabGpu[self.numGpu].overvolt) + _translate("nvidiux","μv",None))
+				if self.tabGpu[self.numGpu].maxOvervolt == 0:
+					self.ui.groupBoxOvervolt.setEnabled(False)
 		if self.autoUpdate:
 			self.threadInfoGpu.stop()
 			self.threadInfoGpu = Mythread(1, majGpu, [self.numGpu], {"fen":nvidiuxApp})
@@ -431,13 +453,25 @@ class NvidiuxApp(QMainWindow):
 		self.form.show()
 	
 	def clickImage(self):
-		cmd = "nvidia-settings --query [gpu:" + str(self.numGpu) + "]/GpuUUID"
-		out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-		
-		cmd = "nvidia-settings --query [gpu:" + str(self.numGpu) + "]/GPUMemoryInterface"
-		out2, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-		msg = "Gpu UUid:" + out.split("):")[-1] + "Gpu Memory Interface:" + out2.split("):")[1].split(".")[0] + "bits"
-		QMessageBox.information(self,_translate("nvidiux","Extra",None),msg)
+		try:
+			cmd = "nvidia-settings --query [gpu:" + str(self.numGpu) + "]/GpuUUID"
+			out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+			
+			cmd = "nvidia-settings --query [gpu:" + str(self.numGpu) + "]/GPUMemoryInterface"
+			out2, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+			
+			cmd = "nvidia-settings --query [gpu:" + str(self.numGpu) + "]/PCIEGen"
+			out3, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+			
+			msg = ""
+			msg += _translate("nvidiux","Nom gpu:",None) + self.tabGpu[self.numGpu].nameGpu + "\n"
+			msg += _translate("nvidiux","Gpu UUid:",None) + out.split("):")[-1] + "\n"
+			msg += _translate("nvidiux","Interface memoire gpu:",None) + out2.split("):")[1].split(".")[0] + _translate("nvidiux","bits",None) + "\n"
+			msg += _translate("nvidiux","PCIE Gen:",None) + out3.split("):")[1].split(".")[0]
+			
+			QMessageBox.information(self,_translate("nvidiux","Extra informations",None),msg)
+		except:
+			QMessageBox.information(self,_translate("nvidiux","Extra informations",None),_translate("nvidiux","Erreur lors d'obtention des données",None))
 		
 	def changeFanSpeed(self,value):
 		if self.sameParamGpu and self.nbGpuNvidia > 1:
@@ -557,6 +591,7 @@ class NvidiuxApp(QMainWindow):
 		info = ""
 		err = ""
 		out = ""
+		openGlV = ""
 		if os.path.isfile(self.home + "/.nvidiux/conf.xml"):
 			self.loadNvidiuxConf()
 		
@@ -575,10 +610,6 @@ class NvidiuxApp(QMainWindow):
 		if self.nvidiuxTranslator.load("/usr/share/nvidiux/nvidiux_" + self.language):
 			app.installTranslator(self.nvidiuxTranslator)
 			self.ui.retranslateUi(self)
-		#~ else:
-			#~ self.nvidiuxTranslator.load("/usr/share/nvidiux/nvidiux_en_EN")
-			#~ app.installTranslator(self.nvidiuxTranslator)
-			#~ self.ui.retranslateUi(self)
 		
 		cmd = "nvidia-settings --query [gpu:0]/NvidiaDriverVersion"
 		if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
@@ -618,6 +649,13 @@ class NvidiuxApp(QMainWindow):
 			self.overclockEnabled = False
 			self.ui.Message.setText(_translate("nvidiux","Driver non supporté (trop ancien)!\nOverclock desactivé"),None)
 			QMessageBox.information(self,_translate("nvidiux","Driver",None),_translate("nvidiux","Driver non supporte:trop ancien\nOverclock desactive\nIl vous faut la version 337.19 ou plus recent pour overclocker"),None)
+		
+		cmd = "glxinfo | grep \"OpenGL version string\""
+		out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+		try:
+			openGlV = out.split('NVIDIA')[0].split('string:')[-1]
+		except: #Assuming  all card is in 4.5.0 found other method detect openGL version
+			openGlV = "4.5.0"
 
 		cmd = "lspci -vnn | grep NVIDIA | grep -v Audio | grep GeForce"
 		out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()			
@@ -690,7 +728,9 @@ class NvidiuxApp(QMainWindow):
 					self.tabGpu[i].arch = "kepler"	
 			elif nb_nvi >= 900 and nb_nvi <= 999:
 				self.tabGpu[i].arch = "maxwell"
-			else: # soon pascal gpu ?
+			elif nb_nvi >= 1000 and nb_nvi <= 1099:
+				self.tabGpu[i].arch = "pascal"
+			else:
 				self.tabGpu[i].arch = "Unknow"
 				
 			cmd = "nvidia-settings --query all | grep SyncToVBlank"
@@ -738,7 +778,7 @@ class NvidiuxApp(QMainWindow):
 				self.ui.checkBoxFan.setChecked(False)
 				self.ui.checkBoxFan.setEnabled(False)
 				self.ui.labelFanVitesse.setText(_translate("nvidiux","incompatible",None))
-			
+
 			if self.piloteVersion >= 346.16:
 				cmd = "nvidia-settings --query [gpu:" + str(i) + "]/GPUOverVoltageOffset"
 				out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
@@ -753,43 +793,25 @@ class NvidiuxApp(QMainWindow):
 			sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True)
 			
 			if self.tabGpu[i].arch == "kepler" or self.tabGpu[i].arch == "pascal" or self.tabGpu[i].arch == "maxwell":
-				if self.piloteVersion >> 355:
+				if self.piloteVersion >= 355.0:
 					self.tabGpu[i].vulkanVersion = "Yes"
 				else:
 					self.tabGpu[i].vulkanVersion = "No"
 			else:	
 				self.tabGpu[i].vulkanVersion = "No"
-			self.tabGpu[i].openGlVersion = "4.5.0" #Assuming  all card is in 4.5.0 found better way detect openGL version
+			self.tabGpu[i].openGlVersion = openGlV
 			
-		#~ cmd = "nvidia-settings --query all | grep OpenGLVersion"
-		#~ out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-		#~ try:
-			#~ for i in range(0, self.nbGpuNvidia):
-				#~ self.tabGpu[i].openGlVersion = out.split('NVIDIA')[0].split(':')[-1]
-			#~ print out.split('NVIDIA')[0].split(':')[-1]
-		#~ except:
-			#~ print "Text to send:" + str(out)
-			#~ self.showError(38,_translate("nvidiux","Echec",None),_translate("nvidiux","Echec chargement des parametres Gpu",None),self.error)
-			#~ sys.exit(1)
-		
 		try:
 			for gpu in self.tabGpu:
 				returnCode = self.verifyGpu(gpu.nameGpu)
 				if returnCode == -1:
 					info = info + _translate("nvidiux","Ce gpu ",None) + str(gpu.nameGpu) + _translate("nvidiux"," n'est pas dans la liste blanche\nn'hesitez pas a confirmer son fonctionnement",None)
-				if returnCode == 1:
+					self.tabGpu[i].isCompatible = True
+				elif returnCode == 1:
 					info = info + _translate("nvidiux","Ce gpu ",None) + str(gpu.nameGpu) + _translate("nvidiux"," n'est pas supporte \n(Overclock desactive !)",None)
-					self.ui.SliderMem.setEnabled(False)
-					self.ui.SliderGpu.setEnabled(False)
-					self.ui.SliderShader.setEnabled(False)
-					self.ui.buttonReset.setEnabled(False)
-					self.ui.buttonApply.setEnabled(False)
-					self.ui.buttonLoadProfile.setEnabled(False)
-					self.ui.buttonSaveProfile.setEnabled(False)
-					self.ui.actionLoadProfile.setEnabled(False)
-					self.ui.actionSaveProfile.setEnabled(False)
-					self.ui.Message.setText(_translate("nvidiux","Gpu(" ,None) + str(gpu.nameGpu) + _translate("nvidiux",")non supporte",None))
-					self.overclockEnabled = False
+					self.tabGpu[i].isCompatible = False
+				else: #0 = white list
+					self.tabGpu[i].isCompatible = True
 				self.defineDefaultFreqGpu(gpu.nameGpu)
 			if info != "":
 					QMessageBox.information(self,_translate("nvidiux","Information",None),_fromUtf8(info))	
@@ -809,7 +831,21 @@ class NvidiuxApp(QMainWindow):
 		if self.tabGpu[self.numGpu].arch == "fermi":
 			self.ui.SliderFan.setMinimum(30)
 		else:
-			self.ui.SliderFan.setMinimum(10)
+			self.ui.SliderFan.setMinimum(15)
+			
+		if not self.tabGpu[0].isCompatible:
+			self.ui.SliderMem.setEnabled(False)
+			self.ui.SliderGpu.setEnabled(False)
+			self.ui.SliderShader.setEnabled(False)
+			self.ui.buttonReset.setEnabled(False)
+			self.ui.buttonApply.setEnabled(False)
+			self.ui.buttonLoadProfile.setEnabled(False)
+			self.ui.buttonSaveProfile.setEnabled(False)
+			self.ui.actionLoadProfile.setEnabled(False)
+			self.ui.actionSaveProfile.setEnabled(False)
+			self.ui.Message.setText(_translate("nvidiux","Gpu(" ,None) + str(self.tabGpu[0].nameGpu) + _translate("nvidiux",")non supporte",None))
+			self.overclockEnabled = False	
+			
 		self.ui.SliderFan.setMaximum(100)
 		self.ui.SliderMem.setMinimum(int(self.tabGpu[self.numGpu].resetFreqMem) * 0.80)
 		self.ui.SliderMem.setMaximum(int(self.tabGpu[self.numGpu].resetFreqMem) * 1.3)
@@ -856,8 +892,9 @@ class NvidiuxApp(QMainWindow):
 		self.ui.about.setText(_translate("nvidiux","Version ",None) + str(".".join(self.nvidiuxVersionStr.split(".")[:-1])))
 		
 	def killTMonitor(self):
-		self.threadMonitor.stop()
-		self.pidMonitor = 0
+		if self.pidMonitor != 0:
+			self.threadMonitor.stop()
+			self.pidMonitor = 0
 		
 	def loadNvidiuxConf(self):
 		try:
@@ -1282,8 +1319,10 @@ class NvidiuxApp(QMainWindow):
 			self.threadMonitor.stop()
 			self.pidMonitor = 0
 		else:
-			proc = sub.Popen(['python2', '/usr/share/nvidiux/monitor/monitor.py', "&"])
-			#proc = sub.Popen(['python2', '/usr/share/nvidiux/monitor/monitor2.py', "&"])
+			if self.monitorGen == 1:
+				proc = sub.Popen(['python2', '/usr/share/nvidiux/monitor/monitor.py', "&"])
+			else:
+				proc = sub.Popen(['python2', '/usr/share/nvidiux/monitor/monitor2.py', "&"])
 			self.pidMonitor = proc.pid
 			
 			self.threadMonitor = ThreadCheckMonitor([proc.pid], {"fen":nvidiuxApp})
@@ -1418,6 +1457,9 @@ class NvidiuxApp(QMainWindow):
 			QMessageBox.information(self, _fromUtf8(title),_fromUtf8(errorMsg))
 		return errorCode
 		
+	def setMonitorGen(self,gen):
+		self.monitorGen = gen
+	
 	def setThread(self,threadMonitor,threadInfoGpu):
 		self.threadMonitor = threadMonitor
 		self.threadInfoGpu = threadInfoGpu
@@ -1487,9 +1529,12 @@ class NvidiuxApp(QMainWindow):
 			self.change = False
 		
 	def verifyGpu(self,gpuName):#-1:unknown 0:ok 1:not ok 
-		verified = ["GeForce GT 420M","GeForce GTX 460M","GeForce GT 430","GeForce GT 440","GeForce GTX 460","GeForce GTX 460 SE v2","GeForce GTX 470","GeForce GTX 480","GeForce GTX 550 Ti","GeForce GTX 560M","GeForce GTX 560 Ti","GeForce GTX 570","GeForce GTX 580","GeForce GT 620","GeForce GT 630","GeForce GTX 650","GeForce GTX 660","GeForce GTX 670","GeForce GT 740","GeForce GTX 750","GeForce GTX 750 TI","GeForce GTX 760","GeForce GTX 770","GeForce GTX 780 Ti","GeForce Gtx 960","GeForce GTX 970","GeForce GTX 980","GeForce GTX 880m"]
-		notWork = ["GeForce GTX TITAN Z","GeForce GTX TITAN Black","GeForce GTX TITAN","GeForce GTX 690","GeForce GTX 590",
-		"GeForce GT 340", "GeForce GT 330", "GeForce GT 320", "GeForce 315", "GeForce 310","GeForce GTS 360M", "GeForce GTS 350M", "GeForce GT 335M", "GeForce GT 330M","GeForce GT 325M", "GeForce GT 320M", "GeForce 320M", "GeForce 315M", "GeForce 310M", "GeForce 305M",
+		verified = ["GeForce GT 420M","GeForce GTX 460M","GeForce GT 430","GeForce GT 440","GeForce GTX 460","GeForce GTX 460 SE v2","GeForce GTX 470","GeForce GTX 480",
+		"GeForce GTX 550 Ti","GeForce GTX 560M","GeForce GTX 560 Ti","GeForce GTX 570","GeForce GTX 580",
+		"GeForce GT 620","GeForce GT 630","GeForce GTX 650","GeForce GTX 660","GeForce GTX 670","GeForce GTX 680","GeForce GTX 690",
+		"GeForce GT 730","GeForce GT 740","GeForce GTX 750","GeForce GTX 750 TI","GeForce GTX 760","GeForce GTX 770","GeForce GTX 780","GeForce GTX 780 Ti",
+		"GeForce Gtx 960","GeForce GTX 970","GeForce GTX 980","GeForce GTX 880m"]
+		notWork = ["GeForce GT 340", "GeForce GT 330", "GeForce GT 320", "GeForce 315", "GeForce 310","GeForce GTS 360M", "GeForce GTS 350M", "GeForce GT 335M", "GeForce GT 330M","GeForce GT 325M", "GeForce GT 320M", "GeForce 320M", "GeForce 315M", "GeForce 310M", "GeForce 305M",
 		"GeForce GTX 295", "GeForce GTX 285","GeForce GTX 280", "GeForce GTX 275", "GeForce GTX 260", "GeForce GTS 250", "GeForce GTS 240", "GeForce GT 230", "GeForce GT 240", "GeForce GT 220", "GeForce G210", "GeForce 210", "GeForce 205",
 		"GeForce GTX 285M", "GeForce GTX 280M", "GeForce GTX 260M", "GeForce GTS 260M", "GeForce GTS 250M", "GeForce GT 240M", "GeForce GT 230M", "GeForce GT 220M", "GeForce G210M", "GeForce G205M",
 		"GeForce GT 140", "GeForce GT 130", "GeForce GT 120", "GeForce G100","GeForce GTS 160M", "GeForce GTS 150M", "GeForce GT 130M", "GeForce GT 120M", "GeForce G 110M", "GeForce G 105M", "GeForce G 103M"

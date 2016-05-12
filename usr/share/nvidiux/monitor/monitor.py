@@ -268,7 +268,7 @@ gpuInfo = [] #idGpu,color, show
 confGpu = []
 error = False
 updateC = True
-versionPiloteMaxTest = 361.28
+versionPiloteMaxTest = 364.19
 
 cmd = "nvidia-settings --query [gpu:0]/NvidiaDriverVersion"
 if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):

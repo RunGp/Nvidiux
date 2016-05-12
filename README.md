@@ -6,7 +6,7 @@ Licence:gpl-3.0 https://github.com/RunGp/Nvidiux/blob/master/usr/share/nvidiux/g
 English version - (Description en Francais en bas de page)
 
 Nvidiux is a graphical python tool to overclock or underclock your nvidia gpu (generation 4XX or newer)
-il also provide :
+also provide :
 - Fan control 
 - Auto overclock at startup
 - Graphical monitoring for 4 params (temp,gpu load,speed fan (%) and graphic memory use (%))

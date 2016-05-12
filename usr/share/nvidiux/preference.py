@@ -56,6 +56,7 @@ class Ui_Pref(QWidget):
 	startWithSystem = False
 	valueStart = "0:0"
 	autoUpdateValue = False
+	monitorGen = 1
 	updateC = False
 	updateTime = 1
 	home = ""
@@ -273,11 +274,14 @@ class Ui_Pref(QWidget):
 		self.spinBox.setSuffix(_translate("Form", " secondes", None))
 		self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabConf), _translate("Form", "Nvidiux", None))
 		self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabMoniteur), _translate("Form", "Moniteur", None))
-		self.tabWidget.setTabText(self.tabWidget.indexOf(self.paramWindow), _translate("Form", "A Propos", None))
+		self.tabWidget.setTabText(self.tabWidget.indexOf(self.about), _translate("Form", "A Propos", None))
 		self.labelInfo.setText(_translate("Form", "Permet d'underclocker ou d'overclocker votre gpu nvidia\n(C) 2014-2016 Payet Guillaume\nNvidiux n'est en aucun cas affilie à Nvidia",None) + _translate("Form","\nVersion : ",None) + self.versionStr + " | " + self.labelOs)
 		self.labelLang.setText(_translate("Form","Langue",None))
 		self.checkBoxExpert.setText(_translate("Form", "Option avancé", None))
 		self.labelUpdateMon.setText(_translate("Form", "Rafraichissement continu",None))
+		self.buttonLicence.setText(_translate("Form", "Licence",None))
+		self.buttonDonate.setText(_translate("Form", "Faire un don",None))
+		self.buttonThanks.setText(_translate("Form", "Remerciement",None)) 
 		self.checkBoxSameGpu.setText(_translate("Form", "Appliquer les memes parametres a des gpus identiques",None))
 		self.checkBoxVerifDriver.setText(_translate("Form", "Activer overclock meme si la version\n du driver n'est pas reconnue",None))
 		self.checkBoxTurboBoost.setText(_translate("Form","Forcer l'application des parametres pour gpuboost v1 (Gt(x)6XX)", None))
@@ -335,6 +339,13 @@ class Ui_Pref(QWidget):
 		
 	def setUpdateContin(self,value):
 		self.updateC = value
+		
+	def setChangeMonitor(self,value):
+		if value:
+			self.monitorGen = 2
+		else:
+			self.monitorGen = 1
+		self.mainWindows.setMonitorGen(self.monitorGen)
 	
 	def setVerifDriver(self,value):
 		if value:
@@ -608,17 +619,11 @@ class Ui_Pref(QWidget):
 				gpuInfo = []
 				i = i + 1
 			
-		self.checkBoxUpdateMon = QtGui.QCheckBox(self.tabMoniteur)
-		self.checkBoxUpdateMon.setGeometry(QtCore.QRect(10, 20, 20, 20))
+		self.checkBoxUpdateMon = QtGui.QCheckBox(_translate("Form", "Rafraichissement continu",None),self.tabMoniteur)
+		self.checkBoxUpdateMon.setGeometry(QtCore.QRect(10, 20, 340, 20))
 		self.checkBoxUpdateMon.setObjectName(_fromUtf8("checkBoxUpdateMon"))
 		self.checkBoxUpdateMon.setEnabled(False)
 		self.checkBoxUpdateMon.setChecked(self.updateC)
-		
-		self.labelUpdateMon = QtGui.QLabel(self.tabMoniteur)
-		self.labelUpdateMon.setGeometry(QtCore.QRect(30, 20, 340, 20))
-		self.labelUpdateMon.setObjectName(_fromUtf8("UpdateMon"))
-		self.labelUpdateMon.setText(_translate("Form", "Rafraichissement continu",None))
-
 		self.groupBoxPrefGpu = QtGui.QGroupBox(self.tabMoniteur)
 		self.groupBoxPrefGpu.setGeometry(QtCore.QRect(10, 50, 220, 50 * self.nbGpuNvidia + 5 ))
 		self.groupBoxPrefGpu.setStyleSheet(_fromUtf8("QGroupBox \n"
@@ -661,19 +666,26 @@ class Ui_Pref(QWidget):
 					self.listCheckBoxGpu[i].setEnabled(True)
 		self.connect(mapperPref, SIGNAL("mapped(int)"),self.showColor)	
 		self.colorBox = QtGui.QColorDialog(self.groupBoxPrefGpu)
+		self.checkBoxChangeGenMon = QtGui.QCheckBox(_translate("Form", "Activer Moniteur Experimental",None),self.tabMoniteur)
+		self.checkBoxChangeGenMon.setGeometry(QtCore.QRect(10, 70 + self.nbGpuNvidia * 50, 340, 20))
+		self.checkBoxChangeGenMon.setObjectName(_fromUtf8("checkBoxChangeGenMon"))
+		self.checkBoxChangeGenMon.setChecked(False)
+		
 		if ndiFile == None:
 			self.saveMonitorConf()
-		self.paramWindow = QtGui.QWidget()
-		self.paramWindow.setObjectName(_fromUtf8("paramWindow"))
-		self.tabWidget.addTab(self.paramWindow, _fromUtf8(""))
+			
+		self.about = QtGui.QWidget()
+		self.about.setObjectName(_fromUtf8("about"))
+		self.tabWidget.addTab(self.about, _fromUtf8(""))
 		
-		self.Img = QtGui.QLabel(self.paramWindow)
-		self.Img.move(190,5)
-		self.Img.setPixmap(QtGui.QPixmap("/usr/share/nvidiux/img/drivers_nvidia_linux.png"))	
-		self.title = QtGui.QLabel(self.paramWindow)
-		self.title.move(210,142)
+		self.Img = QtGui.QLabel(self.about)
+		self.Img.move(0,120)
+		self.Img.setPixmap(QtGui.QPixmap("/usr/share/nvidiux/img/drivers_nvidia_linux.png"))
+			
+		self.title = QtGui.QLabel(self.about)
+		self.title.move(180,10)
 		font = QtGui.QFont()
-		font.setPointSize(40)
+		font.setPointSize(45)
 		font.setBold(True)
 		font.setUnderline(False)
 		font.setWeight(75)
@@ -682,8 +694,8 @@ class Ui_Pref(QWidget):
 		self.title.setFont(font)
 		self.title.setAlignment(QtCore.Qt.AlignCenter)
 		self.title.setText("Nvidiux")
-		self.labelInfo = QtGui.QLabel(self.paramWindow)
-		self.labelInfo.move(90,200)
+		self.labelInfo = QtGui.QLabel(self.about)
+		self.labelInfo.move(100,80)
 		self.labelInfo.setAlignment(QtCore.Qt.AlignCenter)
 		font = QtGui.QFont()
 		font.setPointSize(11)
@@ -692,12 +704,42 @@ class Ui_Pref(QWidget):
 		font.setStyleStrategy(QtGui.QFont.PreferAntialias)
 		self.labelInfo.setFont(font)
 		
+		self.groupBoxAbout = QtGui.QGroupBox(self.about)
+		self.groupBoxAbout.setGeometry(QtCore.QRect(225, 160, 220, 95))
+		self.groupBoxAbout.setStyleSheet(_fromUtf8("QGroupBox \n"
+			"{ \n"
+			"border: 2px solid SlateGrey;\n"
+			"border-radius: 10px;\n"
+			"}"))
+		self.groupBoxAbout.setTitle(_fromUtf8(""))
+		self.groupBoxAbout.setObjectName(_fromUtf8("groupBoxAbout"))
+		
+		self.buttonLicence = QtGui.QPushButton(self.groupBoxAbout)
+		self.buttonLicence.setGeometry(QtCore.QRect(5, 5, 105, 40))
+		self.buttonLicence.setObjectName(_fromUtf8("buttonLicence"))
+		self.buttonLicence.setEnabled(False)
+		
+		self.buttonDonate = QtGui.QPushButton(self.groupBoxAbout)
+		self.buttonDonate.setGeometry(QtCore.QRect(110, 5, 105, 40))
+		self.buttonDonate.setObjectName(_fromUtf8("buttonDonate"))
+		self.buttonDonate.setEnabled(False)
+		self.buttonDonate.setVisible(False)
+		
+		self.buttonThanks = QtGui.QPushButton(self.groupBoxAbout)
+		self.buttonThanks.setGeometry(QtCore.QRect(5, 50, 210, 40))
+		self.buttonThanks.setObjectName(_fromUtf8("buttonThanks"))
+		self.buttonThanks.setEnabled(True)
+		
+		self.buttonLicence.setText(_translate("Form", "Licence",None))
+		self.buttonDonate.setText(_translate("Form", "Faire un don",None))
+		self.buttonThanks.setText(_translate("Form", "Remerciement",None)) 
+		
 		try:
 			self.linuxDistrib = platform.linux_distribution()
 			if self.linuxDistrib == ('', '', ''):
 				if os.path.isfile("/etc/issue"):
 					with open("/etc/issue") as f:
-						self.labelOs = f.read().lower().split()[0] + " " + platform.architecture()[0]
+						self.labelOs = f.read().split()[0] + " " + platform.architecture()[0]
 				else:
 					self.labelOs = "Unknow distrib " + platform.architecture()[0]
 			else:
@@ -706,7 +748,7 @@ class Ui_Pref(QWidget):
 			self.labelOs = ""
 		info = _translate("Form", "Permet d'underclocker ou d'overclocker votre gpu nvidia\n(C) 2014-2016 Payet Guillaume\nNvidiux n'est en aucun cas affilie à Nvidia",None) + _translate("Form","\nVersion : ",None) + self.versionStr + " | " + self.labelOs 
 		self.labelInfo.setText(info)
-		self.textBrowser = QtGui.QTextBrowser(self.paramWindow)
+		self.textBrowser = QtGui.QTextBrowser(self.about)
 		self.textBrowser.setGeometry(QtCore.QRect(10, 280, 560, 240))
 		self.textBrowser.setAlignment(QtCore.Qt.AlignCenter)
 		if os.path.isfile("/usr/share/nvidiux/licences/gpl-3.0_" + self.language + ".txt"):
@@ -731,6 +773,10 @@ class Ui_Pref(QWidget):
 		self.checkBoxVerifDriver.connect(self.checkBoxVerifDriver,QtCore.SIGNAL("clicked(bool)"),self.setVerifDriver)
 		self.checkBoxTurboBoost.connect(self.checkBoxTurboBoost,QtCore.SIGNAL("clicked(bool)"),self.setVerifTurboBoost)
 		self.checkBoxUpdateMon.connect(self.checkBoxUpdateMon,QtCore.SIGNAL("clicked(bool)"),self.setUpdateContin)
+		self.checkBoxChangeGenMon.connect(self.checkBoxChangeGenMon,QtCore.SIGNAL("clicked(bool)"),self.setChangeMonitor)
+		self.buttonLicence.connect(self.buttonLicence,SIGNAL("released()"),self.showLicence)
+		self.buttonDonate.connect(self.buttonDonate,SIGNAL("released()"),self.showDonate)
+		self.buttonThanks.connect(self.buttonThanks,SIGNAL("released()"),self.showT)
 		
 		self.setWindowTitle(_translate("Form", "Preferences", None))
 		self.buttonParcNvi.setText(_translate("Form", "Parcourir", None))
@@ -747,7 +793,7 @@ class Ui_Pref(QWidget):
 			self.spinBox.setSuffix(_translate("Form", " secondes", None))
 		self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabConf), _translate("Form", "Nvidiux", None))
 		self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabMoniteur), _translate("Form", "Moniteur", None))
-		self.tabWidget.setTabText(self.tabWidget.indexOf(self.paramWindow), _translate("Form", "A Propos", None))
+		self.tabWidget.setTabText(self.tabWidget.indexOf(self.about), _translate("Form", "A Propos", None))
 		
 		prefTranslator = QtCore.QTranslator()
 		if prefTranslator.load("/usr/share/nvidiux/nvidiux_" + self.language):
@@ -766,6 +812,28 @@ class Ui_Pref(QWidget):
 					self.listCheckBoxGpu[i].setEnabled(False)
 				else:
 					self.listCheckBoxGpu[i].setEnabled(True)
+	
+	def showLicence(self):
+		self.buttonThanks.setEnabled(True)
+		self.buttonLicence.setEnabled(False)
+		if os.path.isfile("/usr/share/nvidiux/licences/gpl-3.0_" + self.language + ".txt"):
+			txtFile = open("/usr/share/nvidiux/licences/gpl-3.0_" + self.language + ".txt", "r")
+			self.textBrowser.setText(_fromUtf8(txtFile.read()))
+		elif os.path.isfile("/usr/share/nvidiux/licences/gpl-3.0.txt"):
+			txtFile = open('/usr/share/nvidiux/licences/gpl-3.0.txt', 'r')
+			self.textBrowser.setText(_fromUtf8(txtFile.read()))
+		else:
+			self.textBrowser.setText(_fromUtf8(_translate("Form", "Programme distribué sous license GPL V3\nVoir http://www.gnu.org/licenses/gpl-3.0.txt"),None))	
+		
+	def showT(self):
+		self.buttonLicence.setEnabled(True)
+		self.buttonThanks.setEnabled(False)
+		self.textBrowser.setText(_fromUtf8(_translate("Form","Special thanks to\n -@mglinux for german translation\n - @profesorfalken for spanish translation\n - @gaara @bishop @gfx @jul974 for testing and help for debug",None)))
+		
+	def showDonate(self):
+		import webbrowser
+		url = "http://docs.python.org/library/webbrowser.html"
+		webbrowser.open(url,new=2)
 	
 	def showColor(self,idButton):
 		pColor = self.colorBox.getColor()
