@@ -62,8 +62,9 @@ class GpuInfoMonitor():
 class MonitorApp(QMainWindow):
 	
 	
-	sampleInterval=1.0 #second
-	timeWindow=240 #second
+	sampleInterval = 1 #second
+	timeWindow = 240 #second
+	totalTime = 0
 	error = -1
 	warning = -2
 	plotGpuCurve = None
@@ -84,25 +85,13 @@ class MonitorApp(QMainWindow):
 		if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 			out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
 			self.versionPilote = float(out.split(':')[-1][1:])
+			self.ui.labelInfo.setText("Nvidia driver version: " + str(self.versionPilote))
 		else:
 			sys.exit(1)
 		
 		if self.versionPilote > self.versionPiloteMaxTest:
 			print "Driver non testé"
 			
-		cmd = "lspci -vnn | grep -E 'VGA|3D'"
-		ListeGpu, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-		self.nbGpuNvidia = ListeGpu.count('GeForce')
-		self.nbGpu = len(ListeGpu)
-		if self.nbGpuNvidia == 0:
-			try:
-				cmd = "nvidia-smi -L"
-				ListeGpuSmi, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-				self.nbGpuNvidia = ListeGpu.count('GeForce')
-				if self.nbGpuNvidia == 0:
-					return self.showError(4,"Gpu Nvidia introuvable","Gpu Nvidia introuvable",self.error)
-			except:
-				return self.showError(4,"Gpu Nvidia introuvable","Gpu Nvidia introuvable",self.error)
 		
 		self.iscompatible()
 		self.interval = int(self.sampleInterval*1000)
@@ -128,20 +117,31 @@ class MonitorApp(QMainWindow):
 		self.ui.plotGpu.showGrid(x=True, y=True)
 		self.ui.plotGpu.setLabel('left', '%')
 		self.ui.plotGpu.setLabel('bottom', 'Time', 'sec')
-		self.ui.plotGpu.setRange(yRange=[0,100])
+		self.ui.plotGpu.setRange(yRange=[8,91],xRange=[20,220])
+		self.ui.plotGpu.setMenuEnabled(enableMenu=False)
+		
+		self.ui.plotGpu.autoRange(padding=0)
 		self.plotGpuCurve = self.ui.plotGpu.plot(self.tabGpu[0].xGpu, self.tabGpu[0].yGpu, pen=(255,0,0))
 		self.ui.plotFan.setTitle("Use Fan")
 		self.ui.plotFan.showGrid(x=True, y=True)
 		self.ui.plotFan.setLabel('left', '%')
 		self.ui.plotFan.setLabel('bottom', 'Time', 'sec')
-		self.ui.plotFan.setRange(yRange=[0,100])
+		self.ui.plotFan.setRange(yRange=[9,91],xRange=[20,220])
+		self.ui.plotFan.autoRange(padding=0)
 		self.plotFanCurve = self.ui.plotFan.plot(self.tabGpu[0].xFan, self.tabGpu[0].yFan, pen=(255,0,0))
 		self.ui.plotTemp.setTitle("Temperature")
 		self.ui.plotTemp.showGrid(x=True, y=True)
 		self.ui.plotTemp.setLabel('left', '°C')
 		self.ui.plotTemp.setLabel('bottom', 'Time', 'sec')
-		self.ui.plotTemp.setRange(yRange=[0,120])
+		self.ui.plotTemp.setRange(yRange=[9,91],xRange=[20,220])
+		self.ui.plotTemp.autoRange(padding=0)
 		self.plotTempCurve = self.ui.plotTemp.plot(self.tabGpu[0].xTemp, self.tabGpu[0].yTemp, pen=(255,0,0))
+		
+		self.ui.labelGpu.setAlignment(QtCore.Qt.AlignCenter)
+		self.ui.labelMemory.setAlignment(QtCore.Qt.AlignCenter)
+		self.ui.labelTemp.setAlignment(QtCore.Qt.AlignCenter)
+		self.ui.labelFan.setAlignment(QtCore.Qt.AlignCenter)
+		self.ui.labelTime.setAlignment(QtCore.Qt.AlignCenter)
 		
 		
 		cmd = "nvidia-settings --query [gpu:0]/videoRam"
@@ -153,12 +153,21 @@ class MonitorApp(QMainWindow):
 		
 		self.ui.plotMem.setTitle("Use Memory")
 		self.ui.plotMem.showGrid(x=True, y=True)
-		self.ui.plotMem.setLabel('left', 'Mo')
+		self.ui.plotMem.setLabel('left', 'go')
 		self.ui.plotMem.setLabel('bottom', 'Time', 'sec')
-		self.ui.plotMem.setRange(yRange=[0,self.tabGpu[0].totalMem])
+		self.ui.plotMem.setRange(yRange=[100,self.tabGpu[0].totalMem - 80],xRange=[20,220])
+		self.ui.plotMem.autoRange(padding=0)
 		self.plotMemCurve = self.ui.plotMem.plot(self.tabGpu[0].xMem, self.tabGpu[0].yMem, pen=(255,0,0))
 		
+		cmd = "lspci -vnn | grep NVIDIA | grep -v Audio | grep GeForce"
+		out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()			
+		try:
+			self.tabGpu[0].nameGpu =  str("GeForce" + out.split('\n')[i].split("GeForce")[-1].split("]")[0])
+			self.ui.labelGpuName.setText(self.tabGpu[0].nameGpu)
+		except:
+			sys.exit(1)
 		
+		self.ui.labelTime.setText(str(self.totalTime + self.sampleInterval) + " second")
 		self.timer = QtCore.QTimer()
 		self.timer.timeout.connect(self.updatePlot)
 		self.timer.start(self.interval)
@@ -168,9 +177,9 @@ class MonitorApp(QMainWindow):
 		
 		cmd = "ls -l /usr/lib | grep nvidia"
 		if sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
-			return self.showError(1,_translate("nvidiux","Non supporte",None),_translate("nvidiux","Driver introuvable \nVeuillez installer les pilotes proprietaires",None),self.error)
+			return self.showError(1,_translate("monitor","Unsupported",None),_translate("monitor","Driver not found \nPlease install nvidia proprietary drivers",None),self.error)
 		if not os.path.isfile("/usr/bin/nvidia-settings"):
-			return self.showError(2,_translate("nvidiux","Non supporte",None),_translate("nvidiux","Nvidia settings introuvable \nveuillez installer les pilotes proprietaires et nvidia settings",None),self.error)
+			return self.showError(2,_translate("monitor","Unsupported",None),_translate("monitor","Nvidia settings not found \nPlease install nvidia proprietary drivers",None),self.error)
 		
 		cmd = "lspci -vnn | grep -E 'VGA|3D'"
 		ListeGpu, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
@@ -182,16 +191,16 @@ class MonitorApp(QMainWindow):
 				ListeGpuSmi, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
 				self.nbGpuNvidia = ListeGpu.count('GeForce')
 				if self.nbGpuNvidia == 0:
-					return self.showError(4,"Gpu Nvidia introuvable","Gpu Nvidia introuvable",self.error)
+					return self.showError(4,_translate("monitor","Nvidia gpu not found",None),_translate("monitor","Nvidia gpu not found",None),self.error)
 			except:
-				return self.showError(4,"Gpu Nvidia introuvable","Gpu Nvidia introuvable",self.error)
-
+				return self.showError(4,_translate("monitor","Nvidia gpu not found",None),_translate("monitor","Nvidia gpu not found",None),self.error)
+		
 		if self.nbGpu >= 2: #MultiGpu
 			if ListeGpu.count('Intel') == 1 and self.nbGpuNvidia == 1 : #optimus
 				if os.popen("prime-supported 2>> /dev/null", "r").read().replace('\n','') != "yes":
-					return self.showError(3,_translate("nvidiux","Prime",None),_translate("nvidiux","Seul prime est supporte pour les configurations optimus",None),self.error)	
+					return self.showError(3,_translate("monitor","Prime",None),_translate("monitor","Only prime is supported for optimus configuration",None),self.error)	
 				if os.popen("prime-select query", "r").read().replace('\n','') != "nvidia":
-					return self.showError(-1,_translate("nvidiux","Mode intel",None),_translate("nvidiux","Configuration Prime\nVeuillez passer en mode nvidia svp",None),self.info)
+					return self.showError(-1,_translate("monitor","Mode intel",None),_translate("monitor","Prime\nPlease switch to nvidia mode",None),self.info)
 				self.optimus = 1
 				self.ui.checkBoxOptimus.setChecked(1)
 		
@@ -201,6 +210,7 @@ class MonitorApp(QMainWindow):
 		if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 			out, err = sub.Popen(cmd + "| grep GPUUtilization | head -1",stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
 			self.tabGpu[0].percentGpu = int(out.split('=')[1].split(',')[0])
+			self.ui.labelGpu.setText(str(self.tabGpu[0].percentGpu) + " %")
 			return self.tabGpu[0].percentGpu 
 		else:
 			sys.exit(1)
@@ -211,6 +221,7 @@ class MonitorApp(QMainWindow):
 		if not sub.call(cmd ,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 			out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
 			self.tabGpu[0].percentFan = int(out.split(': ')[1].split('.')[0])
+			self.ui.labelFan.setText(str(self.tabGpu[0].percentFan) + " %")
 			return self.tabGpu[0].percentFan
 		else:
 			sys.exit(1)
@@ -221,6 +232,7 @@ class MonitorApp(QMainWindow):
 		if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 			out, err = sub.Popen(cmd + " | grep GPUCore | head -1",stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
 			self.tabGpu[0].temperature = int(out.split(':')[-1].split('.')[0])
+			self.ui.labelTemp.setText(str(self.tabGpu[0].temperature) + " C")
 			return self.tabGpu[0].temperature
 		else:
 			sys.exit(1)
@@ -231,6 +243,7 @@ class MonitorApp(QMainWindow):
 		if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 			out, err = sub.Popen(cmd + " | grep UsedDedicatedGPUMemory | head -1",stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
 			self.tabGpu[0].memoryUse = int(out.split(':')[-1].split('.')[0])
+			self.ui.labelMemory.setText(str(self.tabGpu[0].memoryUse) + " Mo")
 			return self.tabGpu[0].memoryUse
 		else:
 			sys.exit(1)
@@ -259,11 +272,32 @@ class MonitorApp(QMainWindow):
 		self.tabGpu[0].dataBufferMem.append(self.getDataMem())
 		self.tabGpu[0].yMem[:] = self.tabGpu[0].dataBufferMem
 		self.plotMemCurve.setData(self.tabGpu[0].xMem, self.tabGpu[0].yMem)
+		self.totalTime += self.sampleInterval
+		self.ui.labelTime.setText(str(self.totalTime) + " seconds")
 		
 
 if __name__ == '__main__':
 
 	app = QApplication(sys.argv)
+	localeSystem = QtCore.QLocale.system().name()
+	if "en" in localeSystem:
+		localeSystem  = "en_EN"
+	elif "es" in localeSystem:
+		localeSystem = "es_ES"
+	elif "de" in localeSystem:
+		localeSystem = "de_DE"
+	elif "fr" in localeSystem:
+		localeSystem = "fr_FR"
+	else:
+		localeSystem = "en_EN"
+	monitorTranslator = QtCore.QTranslator()
+	if localeSystem != "en_EN":
+		if not os.path.isfile("/usr/share/nvidiux/nvidiux_" + localeSystem + ".qm"):
+			monitorTranslator.load("qt_" + localeSystem,QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.TranslationsPath))
+		else:
+			monitorTranslator.load("/usr/share/nvidiux/nvidiux_" + localeSystem)
+		app.installTranslator(monitorTranslator)
+
 	monitorApp = MonitorApp(sys.argv[1:])
 	monitorApp.show()
 	sys.exit(app.exec_())
