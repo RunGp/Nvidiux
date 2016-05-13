@@ -52,7 +52,7 @@ class Ui_Pref(QWidget):
 	nbGpuNvidia = 0
 	listGpuMonitor = []
 	tabGpu = []
-	info = 0
+	info = ""
 	startWithSystem = False
 	valueStart = "0:0"
 	autoUpdateValue = False
@@ -264,7 +264,6 @@ class Ui_Pref(QWidget):
 		return listgpu,profileFileName
 	
 	def retranslateUi(self):
-		self.labelUpdateMon.setText(_translate("Form", "rafraichissement continu", None))
 		self.setWindowTitle(_translate("Form", "Preferences", None))
 		self.buttonParcNvi.setText(_translate("Form", "Parcourir", None))
 		self.checkBoxNvi.setText(_translate("Form", "Appliquer ce profil au demarrage de nvidiux", None))
@@ -275,10 +274,9 @@ class Ui_Pref(QWidget):
 		self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabConf), _translate("Form", "Nvidiux", None))
 		self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabMoniteur), _translate("Form", "Moniteur", None))
 		self.tabWidget.setTabText(self.tabWidget.indexOf(self.about), _translate("Form", "A Propos", None))
-		self.labelInfo.setText(_translate("Form", "Permet d'underclocker ou d'overclocker votre gpu nvidia\n(C) 2014-2016 Payet Guillaume\nNvidiux n'est en aucun cas affilie à Nvidia",None) + _translate("Form","\nVersion : ",None) + self.versionStr + " | " + self.labelOs)
+		self.labelInfo.setText(_translate("Form", "Permet d'underclocker ou d'overclocker votre gpu nvidia\n(C) 2014-2016 Payet Guillaume\nNvidiux n'est en aucun cas affilie à Nvidia\n",None) + _translate("Form","Version : ",None) + self.versionStr + " | " + self.labelOs)
 		self.labelLang.setText(_translate("Form","Langue",None))
 		self.checkBoxExpert.setText(_translate("Form", "Option avancé", None))
-		self.labelUpdateMon.setText(_translate("Form", "Rafraichissement continu",None))
 		self.buttonLicence.setText(_translate("Form", "Licence",None))
 		self.buttonDonate.setText(_translate("Form", "Faire un don",None))
 		self.buttonThanks.setText(_translate("Form", "Remerciement",None)) 
@@ -343,9 +341,13 @@ class Ui_Pref(QWidget):
 	def setChangeMonitor(self,value):
 		if value:
 			self.monitorGen = 2
+			self.groupBoxPrefGpu.setVisible(False)
+			self.checkBoxUpdateMon.setVisible(False)
 		else:
 			self.monitorGen = 1
+			self.groupBoxPrefGpu.setVisible(True)
 		self.mainWindows.setMonitorGen(self.monitorGen)
+		
 	
 	def setVerifDriver(self,value):
 		if value:
@@ -746,7 +748,7 @@ class Ui_Pref(QWidget):
 				self.labelOs =  self.linuxDistrib[0] + " " + self.linuxDistrib[1]
 		except:
 			self.labelOs = ""
-		info = _translate("Form", "Permet d'underclocker ou d'overclocker votre gpu nvidia\n(C) 2014-2016 Payet Guillaume\nNvidiux n'est en aucun cas affilie à Nvidia",None) + _translate("Form","\nVersion : ",None) + self.versionStr + " | " + self.labelOs 
+		info = _translate("Form", "Permet d'underclocker ou d'overclocker votre gpu nvidia\n(C) 2014-2016 Payet Guillaume\nNvidiux n'est en aucun cas affilie à Nvidia",None) + _translate("Form","Version:",None) + self.versionStr + " | " + self.labelOs 
 		self.labelInfo.setText(info)
 		self.textBrowser = QtGui.QTextBrowser(self.about)
 		self.textBrowser.setGeometry(QtCore.QRect(10, 280, 560, 240))
@@ -828,7 +830,7 @@ class Ui_Pref(QWidget):
 	def showT(self):
 		self.buttonLicence.setEnabled(True)
 		self.buttonThanks.setEnabled(False)
-		self.textBrowser.setText(_fromUtf8(_translate("Form","Special thanks to\n -@mglinux for german translation\n - @profesorfalken for spanish translation\n - @gaara @bishop @gfx @jul974 for testing and help for debug",None)))
+		self.textBrowser.setText(_fromUtf8(_translate("Form","Special thanks to\n - @mglinux for german translation\n - @profesorfalken for spanish translation\n - @gaara @bishop @gfx @jul974 for testing and help for debug",None)))
 		
 	def showDonate(self):
 		import webbrowser

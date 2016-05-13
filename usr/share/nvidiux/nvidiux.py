@@ -197,7 +197,7 @@ class NvidiuxApp(QMainWindow):
 	home = expanduser("~")
 	resetAllGpu = False
 	silent = False
-	monitorGen = 1
+	monitorGen = 2
 	
 	def __init__(self,argv,parent=None):
 		super (NvidiuxApp, self).__init__(parent)
@@ -605,11 +605,13 @@ class NvidiuxApp(QMainWindow):
 			sys.exit(compatibility)
 		if compatibility == -1:
 			sys.exit(0)
-			
+		
 		self.nvidiuxTranslator = QtCore.QTranslator()
-		if self.nvidiuxTranslator.load("/usr/share/nvidiux/nvidiux_" + self.language):
-			app.installTranslator(self.nvidiuxTranslator)
-			self.ui.retranslateUi(self)
+		if self.language != "fr_FR":
+			print "erf"
+			if self.nvidiuxTranslator.load("/usr/share/nvidiux/nvidiux_" + self.language):
+				app.installTranslator(self.nvidiuxTranslator)
+				self.ui.retranslateUi(self)
 		
 		cmd = "nvidia-settings --query [gpu:0]/NvidiaDriverVersion"
 		if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
@@ -1563,13 +1565,9 @@ if __name__ == "__main__":
 	else:
 		localeSystem = "en_EN"
 	nvidiuxTranslator = QtCore.QTranslator()
-	if not os.path.isfile("/usr/share/nvidiux/nvidiux_" + localeSystem + ".qm"):
-		if localeSystem != "fr_FR":
-			nvidiuxTranslator.load("/usr/share/nvidiux/nvidiux_" + localeSystem)
-			app.installTranslator(nvidiuxTranslator)
-		else:
-			nvidiuxTranslator.load("qt_" + localeSystem,QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.TranslationsPath))
-			app.installTranslator(nvidiuxTranslator)
+	if not os.path.isfile("/usr/share/nvidiux/nvidiux_" + localeSystem + ".qm") or localeSystem == "fr_FR":
+		nvidiuxTranslator.load("qt_" + localeSystem,QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.TranslationsPath))
+		app.installTranslator(nvidiuxTranslator)
 	else:
 		nvidiuxTranslator.load("/usr/share/nvidiux/nvidiux_" + localeSystem)
 		app.installTranslator(nvidiuxTranslator)

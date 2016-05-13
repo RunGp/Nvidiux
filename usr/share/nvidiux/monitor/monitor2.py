@@ -26,13 +26,26 @@ from PyQt4.QtGui import *
 import os
 import collections
 import sys
-import random
 import time
-import math
 import numpy as np
 import subprocess as sub
 import pyqtgraph as pg
+import pyqtgraph.exporters
+import platform
 from Monitor2ui import Ui_MainWindow
+
+try:
+    _fromUtf8 = QtCore.QString.fromUtf8
+except AttributeError:
+    def _fromUtf8(s):
+        return s    
+try:
+    _encoding = QtGui.QApplication.UnicodeUTF8
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig, _encoding)
+except AttributeError:
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig)
 
 class GpuInfoMonitor():
 	
@@ -58,6 +71,7 @@ class GpuInfoMonitor():
 	memoryUse = 0
 	driverVersion = 0
 	gpuName = ""
+	freqGpu = 0
 	
 class MonitorApp(QMainWindow):
 	
@@ -81,16 +95,17 @@ class MonitorApp(QMainWindow):
 		self.ui = Ui_MainWindow()
 		self.ui.setupUi(self)
 		print "Nvidiux Monitor Beta 1"
+		textSystem = _translate("monitor","Nvidia driver version: ",None)
 		cmd = "nvidia-settings --query [gpu:0]/NvidiaDriverVersion"
 		if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 			out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
 			self.versionPilote = float(out.split(':')[-1][1:])
-			self.ui.labelInfo.setText("Nvidia driver version: " + str(self.versionPilote))
+			textSystem = textSystem + str(self.versionPilote) + "\n"
 		else:
 			sys.exit(1)
 		
 		if self.versionPilote > self.versionPiloteMaxTest:
-			print "Driver non testé"
+			print _translate("monitor","Driver non testé",None)
 			
 		
 		self.iscompatible()
@@ -112,37 +127,12 @@ class MonitorApp(QMainWindow):
 			self.tabGpu[i].yFan = np.zeros(self.bufSize, dtype=np.float)
 			self.tabGpu[i].yMem = np.zeros(self.bufSize, dtype=np.float)
 			self.tabGpu[i].yTemp = np.zeros(self.bufSize, dtype=np.float)
-
-		self.ui.plotGpu.setTitle("Use GPU")
-		self.ui.plotGpu.showGrid(x=True, y=True)
-		self.ui.plotGpu.setLabel('left', '%')
-		self.ui.plotGpu.setLabel('bottom', 'Time', 'sec')
-		self.ui.plotGpu.setRange(yRange=[8,91],xRange=[20,220])
-		self.ui.plotGpu.setMenuEnabled(enableMenu=False)
-		
-		self.ui.plotGpu.autoRange(padding=0)
-		self.plotGpuCurve = self.ui.plotGpu.plot(self.tabGpu[0].xGpu, self.tabGpu[0].yGpu, pen=(255,0,0))
-		self.ui.plotFan.setTitle("Use Fan")
-		self.ui.plotFan.showGrid(x=True, y=True)
-		self.ui.plotFan.setLabel('left', '%')
-		self.ui.plotFan.setLabel('bottom', 'Time', 'sec')
-		self.ui.plotFan.setRange(yRange=[9,91],xRange=[20,220])
-		self.ui.plotFan.autoRange(padding=0)
-		self.plotFanCurve = self.ui.plotFan.plot(self.tabGpu[0].xFan, self.tabGpu[0].yFan, pen=(255,0,0))
-		self.ui.plotTemp.setTitle("Temperature")
-		self.ui.plotTemp.showGrid(x=True, y=True)
-		self.ui.plotTemp.setLabel('left', '°C')
-		self.ui.plotTemp.setLabel('bottom', 'Time', 'sec')
-		self.ui.plotTemp.setRange(yRange=[9,91],xRange=[20,220])
-		self.ui.plotTemp.autoRange(padding=0)
-		self.plotTempCurve = self.ui.plotTemp.plot(self.tabGpu[0].xTemp, self.tabGpu[0].yTemp, pen=(255,0,0))
-		
+			
 		self.ui.labelGpu.setAlignment(QtCore.Qt.AlignCenter)
 		self.ui.labelMemory.setAlignment(QtCore.Qt.AlignCenter)
 		self.ui.labelTemp.setAlignment(QtCore.Qt.AlignCenter)
 		self.ui.labelFan.setAlignment(QtCore.Qt.AlignCenter)
 		self.ui.labelTime.setAlignment(QtCore.Qt.AlignCenter)
-		
 		
 		cmd = "nvidia-settings --query [gpu:0]/videoRam"
 		if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
@@ -150,28 +140,87 @@ class MonitorApp(QMainWindow):
 			self.tabGpu[0].totalMem = int(float(out.split(': ')[1].split('.')[0]) / 1024)
 		else:
 			sys.exit(1)
+
+		self.ui.plotGpu.setTitle(_translate("monitor","Use GPU",None))
+		self.ui.plotGpu.showGrid(x=True, y=True)
+		self.ui.plotGpu.setLabel('left', '%')
+		self.ui.plotGpu.setLabel('bottom', _translate("monitor","Time",None), 'sec')
+		self.ui.plotGpu.setRange(yRange=[8,91],xRange=[20,220])
+		self.ui.plotGpu.setMenuEnabled(enableMenu=False)
+		self.ui.plotGpu.autoRange(padding=0)
+		self.plotGpuCurve = self.ui.plotGpu.plot(self.tabGpu[0].xGpu, self.tabGpu[0].yGpu, pen=(255,0,0))
 		
-		self.ui.plotMem.setTitle("Use Memory")
+		self.ui.plotFan.setTitle(_translate("monitor","Use Fan",None))
+		self.ui.plotFan.showGrid(x=True, y=True)
+		self.ui.plotFan.setLabel('left', '%')
+		self.ui.plotFan.setLabel('bottom', _translate("monitor","Time",None), 'sec')
+		self.ui.plotFan.setRange(yRange=[9,91],xRange=[20,220])
+		self.ui.plotFan.setMenuEnabled(enableMenu=False)
+		self.ui.plotFan.autoRange(padding=0)
+		self.plotFanCurve = self.ui.plotFan.plot(self.tabGpu[0].xFan, self.tabGpu[0].yFan, pen=(255,0,0))
+		
+		self.ui.plotTemp.setTitle(_translate("monitor","Temperature",None))
+		self.ui.plotTemp.showGrid(x=True, y=True)
+		self.ui.plotTemp.setLabel('left', '°C')
+		self.ui.plotTemp.setLabel('bottom', _translate("monitor","Time",None), 'sec')
+		self.ui.plotTemp.setRange(yRange=[9,91],xRange=[20,220])
+		self.ui.plotTemp.setMenuEnabled(enableMenu=False)
+		self.ui.plotTemp.autoRange(padding=0)
+		self.plotTempCurve = self.ui.plotTemp.plot(self.tabGpu[0].xTemp, self.tabGpu[0].yTemp, pen=(255,0,0))
+			
+		self.ui.plotMem.setTitle(_translate("monitor","Use Memory",None))
 		self.ui.plotMem.showGrid(x=True, y=True)
 		self.ui.plotMem.setLabel('left', 'go')
-		self.ui.plotMem.setLabel('bottom', 'Time', 'sec')
+		self.ui.plotMem.setLabel('bottom', _translate("monitor","Time",None), 'sec')
 		self.ui.plotMem.setRange(yRange=[100,self.tabGpu[0].totalMem - 80],xRange=[20,220])
 		self.ui.plotMem.autoRange(padding=0)
+		self.ui.plotMem.setMenuEnabled(enableMenu=False)
 		self.plotMemCurve = self.ui.plotMem.plot(self.tabGpu[0].xMem, self.tabGpu[0].yMem, pen=(255,0,0))
 		
+		textgpu = _translate("monitor","Gpu name : ",None)
 		cmd = "lspci -vnn | grep NVIDIA | grep -v Audio | grep GeForce"
 		out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()			
 		try:
-			self.tabGpu[0].nameGpu =  str("GeForce" + out.split('\n')[i].split("GeForce")[-1].split("]")[0])
-			self.ui.labelGpuName.setText(self.tabGpu[0].nameGpu)
+			self.tabGpu[0].nameGpu = str("GeForce" + out.split('\n')[i].split("GeForce")[-1].split("]")[0])
+			textgpu = textgpu + self.tabGpu[0].nameGpu + "\n" + _translate("monitor","Gpu Freq : ",None)
+			 
 		except:
 			sys.exit(1)
 		
-		self.ui.labelTime.setText(str(self.totalTime + self.sampleInterval) + " second")
+		cmd = "nvidia-settings --query [gpu:" + str(i) + "]/GPUCurrentClockFreqsString"
+		if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
+			out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+			try:
+				self.tabGpu[0].freqGpu = str(out.split('nvclockmax=')[1].split(',')[0])
+				textgpu = textgpu + self.tabGpu[0].freqGpu + "Mhz\n" + _translate("monitor","Memory freq : ",None)
+			except:
+				sys.exit(1)
+			try:
+				self.tabGpu[i].freqMem = str(out.split('memTransferRatemax=')[1].split(',')[0])
+				textgpu = textgpu + self.tabGpu[i].freqMem  + "Mhz\n"
+			except:
+				sys.exit(1)
+
+		textSystem = textSystem + _translate("monitor","Os version : ",None)
+		self.linuxDistrib = platform.linux_distribution()
+		if self.linuxDistrib == ('', '', ''):
+			if os.path.isfile("/etc/issue"):
+				with open("/etc/issue") as f:
+					textSystem = textSystem + f.read().split()[0] + " " + platform.architecture()[0]
+			else:
+				textSystem = textSystem + "Unknow distrib " + platform.architecture()[0]
+		else:
+			textSystem = textSystem + self.linuxDistrib[0] + " " + self.linuxDistrib[1]
+		
+		self.ui.labelTime.setText(str(self.totalTime + self.sampleInterval) + _translate("monitor"," second",None))
+		self.ui.labelGpuName.setText(textgpu)
+		self.ui.labelInfo.setText(textSystem)
+		
+		self.ui.bouttonExport.connect(self.ui.bouttonExport,SIGNAL("released()"),self.exportGraph)
+		
 		self.timer = QtCore.QTimer()
 		self.timer.timeout.connect(self.updatePlot)
 		self.timer.start(self.interval)
-
 
 	def iscompatible(self):
 		
@@ -248,10 +297,27 @@ class MonitorApp(QMainWindow):
 		else:
 			sys.exit(1)
 			return None
+			
+	def exportGraph(self):
+		exporter = pg.exporters.ImageExporter(self.ui.plotGpu.plotItem)
+		exporter2 = pg.exporters.ImageExporter(self.ui.plotFan.plotItem)
+		exporter3 = pg.exporters.ImageExporter(self.ui.plotTemp.plotItem)
+		exporter4 = pg.exporters.ImageExporter(self.ui.plotMem.plotItem)
+
+		filename = QtGui.QFileDialog.getSaveFileName(self, "Save png", "Export.png", "*.png")
+		if filename == '':
+			return False
+		if str(filename[-4:]) == ".png":
+			filename = filename[:-4]
+		exporter.export(filename + "Gpu" + ".png")
+		exporter2.export(filename + "Fan" + ".png")
+		exporter3.export(filename + "Temp" + ".png")
+		exporter4.export(filename + "Mem" + ".png")
+		return True
 		
 	def showError(self,errorCode,title,errorMsg,etype):
 		if etype == self.error:
-			errorMsg = errorMsg + "\nError Code:" + str(errorCode)
+			errorMsg = errorMsg + "\n" + _translate("monitor","Error Code:",None) + str(errorCode)
 			QMessageBox.critical(self, _fromUtf8(title),_fromUtf8(errorMsg))
 		elif etype == self.warning:
 			QMessageBox.warning(self, _fromUtf8(title),_fromUtf8(errorMsg))	
@@ -273,8 +339,7 @@ class MonitorApp(QMainWindow):
 		self.tabGpu[0].yMem[:] = self.tabGpu[0].dataBufferMem
 		self.plotMemCurve.setData(self.tabGpu[0].xMem, self.tabGpu[0].yMem)
 		self.totalTime += self.sampleInterval
-		self.ui.labelTime.setText(str(self.totalTime) + " seconds")
-		
+		self.ui.labelTime.setText(str(self.totalTime) + _translate("monitor"," seconds",None))
 
 if __name__ == '__main__':
 
