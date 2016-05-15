@@ -54,9 +54,9 @@
      </rect>
     </property>
    </widget>
-   <widget class="QPushButton" name="BouttonReglage">
+   <widget class="QPushButton" name="bouttonSettings">
     <property name="enabled">
-     <bool>false</bool>
+     <bool>true</bool>
     </property>
     <property name="geometry">
      <rect>
@@ -70,9 +70,9 @@
      <string>Settings</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="BouttoAbout">
+   <widget class="QPushButton" name="bouttonAbout">
     <property name="enabled">
-     <bool>false</bool>
+     <bool>true</bool>
     </property>
     <property name="geometry">
      <rect>
@@ -207,7 +207,7 @@
      <string>Export</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="BouttonGpu">
+   <widget class="QPushButton" name="bouttonGpu">
     <property name="enabled">
      <bool>false</bool>
     </property>

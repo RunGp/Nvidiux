@@ -167,7 +167,8 @@ class NvidiuxApp(QMainWindow):
 	nvidiuxVersionStr = "1.4.0.19"
 	nvidiuxVersion = 1.4
 	change = 0
-	form = ""
+	formSettings = None
+	formConfirm = None
 	monitor = False
 	threadInfoGpu = None
 	threadMonitor = None
@@ -197,7 +198,7 @@ class NvidiuxApp(QMainWindow):
 	home = expanduser("~")
 	resetAllGpu = False
 	silent = False
-	monitorGen = 2
+	monitorGen = 1
 	
 	def __init__(self,argv,parent=None):
 		super (NvidiuxApp, self).__init__(parent)
@@ -271,8 +272,8 @@ class NvidiuxApp(QMainWindow):
 		tabGpu.append(self.sameParamGpu)
 		tabLang.append(self.language)
 		tabLang.append(app)
-		self.form = Ui_Pref(2,self.nvidiuxVersionStr,self.nvidiuxVersion,tabLang,tabGpu,self)
-		self.form.show()
+		self.formSettings = Ui_Pref(2,self.nvidiuxVersionStr,self.nvidiuxVersion,tabLang,tabGpu,self)
+		self.formSettings.show()
 		
 	def acceptEula(self):
 		if not os.path.isfile(self.home + "/.nvidiux/acceptedeula"):
@@ -288,10 +289,10 @@ class NvidiuxApp(QMainWindow):
 		tabLang = list()
 		tabLang.append(self.language)
 		tabLang.append(app)	
-		self.form = ConfirmWindow(text,tabLang,self.nbGpuNvidia,False)
-		self.form.setWindowModality(QtCore.Qt.ApplicationModal)
-		self.connect(self.form, SIGNAL("accept(PyQt_PyObject)"), self.overclock)
-		self.form.show()
+		self.formConfirm = ConfirmWindow(text,tabLang,self.nbGpuNvidia,False)
+		self.formConfirm.setWindowModality(QtCore.Qt.ApplicationModal)
+		self.connect(self.formConfirm, SIGNAL("accept(PyQt_PyObject)"), self.overclock)
+		self.formConfirm.show()
 		
 	def changeGpu(self,item):
 		self.numGpu = int(item.text().split(':')[0]) - 1
@@ -449,8 +450,8 @@ class NvidiuxApp(QMainWindow):
 		tabGpu.append(self.sameParamGpu)
 		tabLang.append(self.language)
 		tabLang.append(app)
-		self.form = Ui_Pref(1,self.nvidiuxVersionStr,self.nvidiuxVersion,tabLang,tabGpu,self)
-		self.form.show()
+		self.formSettings = Ui_Pref(1,self.nvidiuxVersionStr,self.nvidiuxVersion,tabLang,tabGpu,self)
+		self.formSettings.show()
 	
 	def clickImage(self):
 		try:
@@ -608,7 +609,6 @@ class NvidiuxApp(QMainWindow):
 		
 		self.nvidiuxTranslator = QtCore.QTranslator()
 		if self.language != "fr_FR":
-			print "erf"
 			if self.nvidiuxTranslator.load("/usr/share/nvidiux/nvidiux_" + self.language):
 				app.installTranslator(self.nvidiuxTranslator)
 				self.ui.retranslateUi(self)
@@ -967,8 +967,8 @@ class NvidiuxApp(QMainWindow):
 		tabGpu.append(self.sameParamGpu)
 		tabLang.append(self.language)
 		tabLang.append(app)
-		self.form = Ui_Pref(0,self.nvidiuxVersionStr,self.nvidiuxVersion,tabLang,tabGpu,self)
-		self.form.show()
+		self.formSettings = Ui_Pref(0,self.nvidiuxVersionStr,self.nvidiuxVersion,tabLang,tabGpu,self)
+		self.formSettings.show()
 	
 	def loadProfile(self,path = "",defaultOnly = False,otherCode = 2):
 		if path == "":

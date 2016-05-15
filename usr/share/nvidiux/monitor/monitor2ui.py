@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'nvidiux/usr/share/nvidiux/monitor/Monitor2.ui'
+# Form implementation generated from reading ui file 'nvidiux/usr/share/nvidiux/monitor/monitor2.ui'
 #
 # Created by: PyQt4 UI code generator 4.11.4
 #
@@ -40,14 +40,14 @@ class Ui_MainWindow(object):
         self.plotMem = PlotWidget(self.centralwidget)
         self.plotMem.setGeometry(QtCore.QRect(710, 550, 670, 430))
         self.plotMem.setObjectName(_fromUtf8("plotMem"))
-        self.BouttonReglage = QtGui.QPushButton(self.centralwidget)
-        self.BouttonReglage.setEnabled(False)
-        self.BouttonReglage.setGeometry(QtCore.QRect(20, 20, 130, 50))
-        self.BouttonReglage.setObjectName(_fromUtf8("BouttonReglage"))
-        self.BouttoAbout = QtGui.QPushButton(self.centralwidget)
-        self.BouttoAbout.setEnabled(False)
-        self.BouttoAbout.setGeometry(QtCore.QRect(1250, 20, 130, 50))
-        self.BouttoAbout.setObjectName(_fromUtf8("BouttoAbout"))
+        self.bouttonSettings = QtGui.QPushButton(self.centralwidget)
+        self.bouttonSettings.setEnabled(True)
+        self.bouttonSettings.setGeometry(QtCore.QRect(20, 20, 130, 50))
+        self.bouttonSettings.setObjectName(_fromUtf8("bouttonSettings"))
+        self.bouttonAbout = QtGui.QPushButton(self.centralwidget)
+        self.bouttonAbout.setEnabled(True)
+        self.bouttonAbout.setGeometry(QtCore.QRect(1250, 20, 130, 50))
+        self.bouttonAbout.setObjectName(_fromUtf8("bouttonAbout"))
         self.labelTime = QtGui.QLabel(self.centralwidget)
         self.labelTime.setGeometry(QtCore.QRect(443, 515, 491, 31))
         font = QtGui.QFont()
@@ -83,10 +83,10 @@ class Ui_MainWindow(object):
         self.bouttonExport = QtGui.QPushButton(self.centralwidget)
         self.bouttonExport.setGeometry(QtCore.QRect(710, 20, 120, 50))
         self.bouttonExport.setObjectName(_fromUtf8("bouttonExport"))
-        self.BouttonGpu = QtGui.QPushButton(self.centralwidget)
-        self.BouttonGpu.setEnabled(False)
-        self.BouttonGpu.setGeometry(QtCore.QRect(570, 20, 120, 50))
-        self.BouttonGpu.setObjectName(_fromUtf8("BouttonGpu"))
+        self.bouttonGpu = QtGui.QPushButton(self.centralwidget)
+        self.bouttonGpu.setEnabled(False)
+        self.bouttonGpu.setGeometry(QtCore.QRect(570, 20, 120, 50))
+        self.bouttonGpu.setObjectName(_fromUtf8("bouttonGpu"))
         MainWindow.setCentralWidget(self.centralwidget)
 
         self.retranslateUi(MainWindow)
@@ -94,8 +94,8 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(_translate("MainWindow", "Nvidiux Monitor beta 1", None))
-        self.BouttonReglage.setText(_translate("MainWindow", "Settings", None))
-        self.BouttoAbout.setText(_translate("MainWindow", "About", None))
+        self.bouttonSettings.setText(_translate("MainWindow", "Settings", None))
+        self.bouttonAbout.setText(_translate("MainWindow", "About", None))
         self.labelTime.setText(_translate("MainWindow", "<html><head/><body><p align=\"center\">Time : 0 sec</p></body></html>", None))
         self.labelGpuName.setText(_translate("MainWindow", "Gpu Name", None))
         self.labelInfo.setText(_translate("MainWindow", "Machine info", None))
@@ -104,7 +104,7 @@ class Ui_MainWindow(object):
         self.labelTemp.setText(_translate("MainWindow", "Temperature", None))
         self.labelMemory.setText(_translate("MainWindow", "Memory", None))
         self.bouttonExport.setText(_translate("MainWindow", "Export", None))
-        self.BouttonGpu.setText(_translate("MainWindow", "Select\n"
+        self.bouttonGpu.setText(_translate("MainWindow", "Select\n"
 "Gpu", None))
 
 from pyqtgraph import PlotWidget

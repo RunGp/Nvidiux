@@ -1,4 +1,4 @@
-# Nvidiux V 1.3.1
+# Nvidiux V 1.4
 Licence:gpl-3.0 https://github.com/RunGp/Nvidiux/blob/master/usr/share/nvidiux/gpl-3.0.txt
 
 =============================================================
@@ -27,7 +27,7 @@ Install
 
 Debian
 in command line use :
-- wget https://github.com/RunGp/Nvidiux/releases/download/1.3.1/nvidiux.deb
+- wget https://github.com/RunGp/Nvidiux/releases/download/1.4/nvidiux.deb
 - sudo dpkg -i nvidiux.deb
 - sudo apt-get install -f
 
@@ -40,6 +40,14 @@ Nvidiux is available on AUR : https://aur.archlinux.org/packages/nvidiux/
 Dependancy:python 2.7,python-qt4,gksu,vainfo,python-tk,python-psutil
 
 ![alt tag](http://pix.toile-libre.org/upload/original/1448449352.png)
+
+=============================================================
+
+I need help for traduce nvidiux in other language
+Special thanks to
+- @mglinux for german translation
+- @profesorfalken for spanish translation
+- @gaara @bishop @gfx @jul974 for testing and help for debug
 
 =============================================================
 
@@ -70,7 +78,7 @@ Installation :
 Debian
 Installez le paquet deb se trouvant ici (https://github.com/RunGp/Nvidiux/releases) avec votre instalateur de paquet favoris
 Ou taper les commandes dans votre terminal:
-- wget https://github.com/RunGp/Nvidiux/releases/download/1.3.1/nvidiux.deb
+- wget https://github.com/RunGp/Nvidiux/releases/download/1.4/nvidiux.deb
 - sudo dpkg -i nvidiux.deb
 - sudo apt-get install -f
 
@@ -85,8 +93,4 @@ Dependance:python 2.7,python-qt4,gksu,vainfo,python-tk,python-psutil
 ![alt tag](http://pix.toile-libre.org/upload/original/1448449268.png)
 
 =============================================================
-I need help for traduce nvidiux in other language
-Special thanks to
-- @mglinux for german translation
-- @profesorfalken for spanish translation
-- @gaara @bishop @gfx @jul974 for testing and help for debug
+

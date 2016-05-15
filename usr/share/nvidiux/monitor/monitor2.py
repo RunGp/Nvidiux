@@ -22,6 +22,7 @@ from pyqtgraph.Qt import QtGui, QtCore
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
+from monitorSettings import Ui_Pref_Monitor
 
 import os
 import collections
@@ -32,7 +33,7 @@ import subprocess as sub
 import pyqtgraph as pg
 import pyqtgraph.exporters
 import platform
-from Monitor2ui import Ui_MainWindow
+from monitor2ui import Ui_MainWindow
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -62,6 +63,7 @@ class GpuInfoMonitor():
 	xTemp = None
 	yTemp = None
 	dataBufferMem = None
+	formSettings = None
 	xMem = None
 	yMem = None
 	percentGpu = 0
@@ -83,7 +85,9 @@ class MonitorApp(QMainWindow):
 	warning = -2
 	plotGpuCurve = None
 	plotFanCurve = None
+	anguage = None
 	monitorVersion = 0.8
+	monitorVersionStr = "0.8 Beta 1"
 	versionPilote = 331.31
 	versionPiloteMaxTest = 364.19
 	nbGpuNvidia = -1
@@ -93,8 +97,8 @@ class MonitorApp(QMainWindow):
 		super (MonitorApp, self).__init__(parent)
 
 		self.ui = Ui_MainWindow()
+		self.language = QtCore.QLocale.system().name()
 		self.ui.setupUi(self)
-		print "Nvidiux Monitor Beta 1"
 		textSystem = _translate("monitor","Nvidia driver version: ",None)
 		cmd = "nvidia-settings --query [gpu:0]/NvidiaDriverVersion"
 		if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
@@ -133,6 +137,8 @@ class MonitorApp(QMainWindow):
 		self.ui.labelTemp.setAlignment(QtCore.Qt.AlignCenter)
 		self.ui.labelFan.setAlignment(QtCore.Qt.AlignCenter)
 		self.ui.labelTime.setAlignment(QtCore.Qt.AlignCenter)
+		self.ui.labelGpuName.setAlignment(QtCore.Qt.AlignCenter)
+		self.ui.labelInfo.setAlignment(QtCore.Qt.AlignCenter)
 		
 		cmd = "nvidia-settings --query [gpu:0]/videoRam"
 		if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
@@ -170,7 +176,7 @@ class MonitorApp(QMainWindow):
 			
 		self.ui.plotMem.setTitle(_translate("monitor","Use Memory",None))
 		self.ui.plotMem.showGrid(x=True, y=True)
-		self.ui.plotMem.setLabel('left', 'go')
+		self.ui.plotMem.setLabel('left', 'Mo')
 		self.ui.plotMem.setLabel('bottom', _translate("monitor","Time",None), 'sec')
 		self.ui.plotMem.setRange(yRange=[100,self.tabGpu[0].totalMem - 80],xRange=[20,220])
 		self.ui.plotMem.autoRange(padding=0)
@@ -197,7 +203,7 @@ class MonitorApp(QMainWindow):
 				sys.exit(1)
 			try:
 				self.tabGpu[i].freqMem = str(out.split('memTransferRatemax=')[1].split(',')[0])
-				textgpu = textgpu + self.tabGpu[i].freqMem  + "Mhz\n"
+				textgpu = textgpu + self.tabGpu[i].freqMem  + "Mhz"
 			except:
 				sys.exit(1)
 
@@ -216,43 +222,48 @@ class MonitorApp(QMainWindow):
 		self.ui.labelGpuName.setText(textgpu)
 		self.ui.labelInfo.setText(textSystem)
 		
+		if self.nbGpuNvidia >=2:
+			self.ui.bouttonGpu.setEnabled(True)
+		
 		self.ui.bouttonExport.connect(self.ui.bouttonExport,SIGNAL("released()"),self.exportGraph)
+		self.ui.bouttonSettings.connect(self.ui.bouttonSettings,SIGNAL("released()"),self.settings)
+		self.ui.bouttonAbout.connect(self.ui.bouttonAbout,SIGNAL("released()"),self.about)
+		self.ui.bouttonGpu.connect(self.ui.bouttonGpu,SIGNAL("released()"),self.changeGpu)
 		
 		self.timer = QtCore.QTimer()
 		self.timer.timeout.connect(self.updatePlot)
 		self.timer.start(self.interval)
+		
+	def about(self):
+		tabParam = list()
+		tabParam.append(self.monitorVersion)
+		tabParam.append(self.monitorVersionStr)
+		tabParam.append(self.nbGpuNvidia)
+		tabParam.append(self.tabGpu)
+		tabParam.append(self.language)
+		tabParam.append(app)
+		self.formSettings = Ui_Pref_Monitor(1,tabParam,self)
+		self.formSettings.show()
+	
+	def changeGpu(self):
+		sys.exit(0)
+		
+	def exportGraph(self):
+		exporter = pg.exporters.ImageExporter(self.ui.plotGpu.plotItem)
+		exporter2 = pg.exporters.ImageExporter(self.ui.plotFan.plotItem)
+		exporter3 = pg.exporters.ImageExporter(self.ui.plotTemp.plotItem)
+		exporter4 = pg.exporters.ImageExporter(self.ui.plotMem.plotItem)
 
-	def iscompatible(self):
-		
-		cmd = "ls -l /usr/lib | grep nvidia"
-		if sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
-			return self.showError(1,_translate("monitor","Unsupported",None),_translate("monitor","Driver not found \nPlease install nvidia proprietary drivers",None),self.error)
-		if not os.path.isfile("/usr/bin/nvidia-settings"):
-			return self.showError(2,_translate("monitor","Unsupported",None),_translate("monitor","Nvidia settings not found \nPlease install nvidia proprietary drivers",None),self.error)
-		
-		cmd = "lspci -vnn | grep -E 'VGA|3D'"
-		ListeGpu, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-		self.nbGpuNvidia = ListeGpu.count('GeForce')
-		self.nbGpu = len(ListeGpu)
-		if self.nbGpuNvidia == 0:
-			try:
-				cmd = "nvidia-smi -L"
-				ListeGpuSmi, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-				self.nbGpuNvidia = ListeGpu.count('GeForce')
-				if self.nbGpuNvidia == 0:
-					return self.showError(4,_translate("monitor","Nvidia gpu not found",None),_translate("monitor","Nvidia gpu not found",None),self.error)
-			except:
-				return self.showError(4,_translate("monitor","Nvidia gpu not found",None),_translate("monitor","Nvidia gpu not found",None),self.error)
-		
-		if self.nbGpu >= 2: #MultiGpu
-			if ListeGpu.count('Intel') == 1 and self.nbGpuNvidia == 1 : #optimus
-				if os.popen("prime-supported 2>> /dev/null", "r").read().replace('\n','') != "yes":
-					return self.showError(3,_translate("monitor","Prime",None),_translate("monitor","Only prime is supported for optimus configuration",None),self.error)	
-				if os.popen("prime-select query", "r").read().replace('\n','') != "nvidia":
-					return self.showError(-1,_translate("monitor","Mode intel",None),_translate("monitor","Prime\nPlease switch to nvidia mode",None),self.info)
-				self.optimus = 1
-				self.ui.checkBoxOptimus.setChecked(1)
-		
+		filename = QtGui.QFileDialog.getSaveFileName(self, "Save png", "Export.png", "*.png")
+		if filename == '':
+			return False
+		if str(filename[-4:]) == ".png":
+			filename = filename[:-4]
+		exporter.export(filename + "Gpu" + ".png")
+		exporter2.export(filename + "Fan" + ".png")
+		exporter3.export(filename + "Temp" + ".png")
+		exporter4.export(filename + "Mem" + ".png")
+		return True
 		
 	def getDataGpu(self):
 		cmd = "nvidia-settings --query [gpu:0]/GPUUtilization"
@@ -298,22 +309,47 @@ class MonitorApp(QMainWindow):
 			sys.exit(1)
 			return None
 			
-	def exportGraph(self):
-		exporter = pg.exporters.ImageExporter(self.ui.plotGpu.plotItem)
-		exporter2 = pg.exporters.ImageExporter(self.ui.plotFan.plotItem)
-		exporter3 = pg.exporters.ImageExporter(self.ui.plotTemp.plotItem)
-		exporter4 = pg.exporters.ImageExporter(self.ui.plotMem.plotItem)
-
-		filename = QtGui.QFileDialog.getSaveFileName(self, "Save png", "Export.png", "*.png")
-		if filename == '':
-			return False
-		if str(filename[-4:]) == ".png":
-			filename = filename[:-4]
-		exporter.export(filename + "Gpu" + ".png")
-		exporter2.export(filename + "Fan" + ".png")
-		exporter3.export(filename + "Temp" + ".png")
-		exporter4.export(filename + "Mem" + ".png")
-		return True
+	def iscompatible(self):
+		
+		cmd = "ls -l /usr/lib | grep nvidia"
+		if sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
+			return self.showError(1,_translate("monitor","Unsupported",None),_translate("monitor","Driver not found \nPlease install nvidia proprietary drivers",None),self.error)
+		if not os.path.isfile("/usr/bin/nvidia-settings"):
+			return self.showError(2,_translate("monitor","Unsupported",None),_translate("monitor","Nvidia settings not found \nPlease install nvidia proprietary drivers",None),self.error)
+		
+		cmd = "lspci -vnn | grep -E 'VGA|3D'"
+		ListeGpu, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+		self.nbGpuNvidia = ListeGpu.count('GeForce')
+		self.nbGpu = len(ListeGpu)
+		if self.nbGpuNvidia == 0:
+			try:
+				cmd = "nvidia-smi -L"
+				ListeGpuSmi, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+				self.nbGpuNvidia = ListeGpu.count('GeForce')
+				if self.nbGpuNvidia == 0:
+					return self.showError(4,_translate("monitor","Nvidia gpu not found",None),_translate("monitor","Nvidia gpu not found",None),self.error)
+			except:
+				return self.showError(4,_translate("monitor","Nvidia gpu not found",None),_translate("monitor","Nvidia gpu not found",None),self.error)
+		
+		if self.nbGpu >= 2: #MultiGpu
+			if ListeGpu.count('Intel') == 1 and self.nbGpuNvidia == 1 : #optimus
+				if os.popen("prime-supported 2>> /dev/null", "r").read().replace('\n','') != "yes":
+					return self.showError(3,_translate("monitor","Prime",None),_translate("monitor","Only prime is supported for optimus configuration",None),self.error)	
+				if os.popen("prime-select query", "r").read().replace('\n','') != "nvidia":
+					return self.showError(-1,_translate("monitor","Mode intel",None),_translate("monitor","Prime\nPlease switch to nvidia mode",None),self.info)
+				self.optimus = 1
+				self.ui.checkBoxOptimus.setChecked(1)
+			
+	def settings(self):
+		tabParam = list()
+		tabParam.append(self.monitorVersion)
+		tabParam.append(self.monitorVersionStr)
+		tabParam.append(self.nbGpuNvidia)
+		tabParam.append(self.tabGpu)
+		tabParam.append(self.language)
+		tabParam.append(app)
+		self.formSettings = Ui_Pref_Monitor(0,tabParam,self)
+		self.formSettings.show()
 		
 	def showError(self,errorCode,title,errorMsg,etype):
 		if etype == self.error:
