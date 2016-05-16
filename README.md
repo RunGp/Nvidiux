@@ -37,6 +37,9 @@ use this ppa https://launchpad.net/~nvidiux/+archive/ubuntu/nvidiux
 Arch - Manjaro
 Nvidiux is available on AUR : https://aur.archlinux.org/packages/nvidiux/
 
+Red Hat Family
+Use rpm package here : https://github.com/RunGp/Nvidiux/releases or http://schotty.com/yum/el/7/repoview/nvidiux.html
+
 Dependancy:python 2.7,python-qt4,gksu,vainfo,python-tk,python-psutil
 
 ![alt tag](http://pix.toile-libre.org/upload/original/1448449352.png)
@@ -48,6 +51,7 @@ Special thanks to
 - @mglinux for german translation
 - @profesorfalken for spanish translation
 - @gaara @bishop @gfx @jul974 for testing and help for debug
+- @andrewschott for packaging nvidiux (rpm package)
 
 =============================================================
 
@@ -87,6 +91,9 @@ Un ppa est dispo : https://launchpad.net/~nvidiux/+archive/ubuntu/nvidiux
 
 Arch - Manjaro
 Nvidiux est disponible sur AUR : https://aur.archlinux.org/packages/nvidiux/
+
+Red Hat et derivé
+Utilisez le paquet rpm se trouvant ici : https://github.com/RunGp/Nvidiux/releases ou http://schotty.com/yum/el/7/repoview/nvidiux.html
 
 Dependance:python 2.7,python-qt4,gksu,vainfo,python-tk,python-psutil
 
