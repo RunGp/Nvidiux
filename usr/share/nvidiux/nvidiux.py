@@ -164,7 +164,7 @@ class NvidiuxApp(QMainWindow):
 	nbGpu = -1
 	nbGpuNvidia = -1
 	optimus = 0
-	nvidiuxVersionStr = "1.4.0.19"
+	nvidiuxVersionStr = "1.4.1.21"
 	nvidiuxVersion = 1.4
 	change = 0
 	formSettings = None
@@ -183,7 +183,8 @@ class NvidiuxApp(QMainWindow):
 	startWithSystem = False
 	valueStart = "0:0"
 	piloteVersion = "331.31"
-	piloteVersionMaxTest = 364.19
+	piloteVersionMaxTest = 367.35
+	pathLibNvidia = "/usr/lib/"
 	language = "en_EN"
 	overclockEnabled = True
 	overvoltEnabled = False
@@ -203,7 +204,7 @@ class NvidiuxApp(QMainWindow):
 	def __init__(self,argv,parent=None):
 		super (NvidiuxApp, self).__init__(parent)
 		try:                            
-			opts, args = getopt.getopt(argv, "vhs:r", ["version","help", "silent=","reset","accept-eula"])
+			opts, args = getopt.getopt(argv, "vhs:p:r", ["version","help", "silent=","pathlib=","reset","accept-eula"])
 		except getopt.GetoptError:
 			if "-s" in argv:
 				print "Missing ndiFile"
@@ -211,6 +212,14 @@ class NvidiuxApp(QMainWindow):
 			elif "--silent" in argv:
 				print "Missing ndiFile"
 				print "Use nvidiux --silent <ndiFile>" 
+			elif "-p" in argv:
+				print "Missing path"
+				print "Use nvidiux -p <path to nvidia library>"
+				print "ex : nvidiux -p /usr/lib/lib32/"
+			elif "--pathlib" in argv:
+				print "Missing path"
+				print "Use nvidiux --pathlib <path to nvidia library>"
+				print "ex : nvidiux --pathlib /usr/lib/lib32/"
 			else:
 				print "Unknown option"
 				self.showHelp()
@@ -220,6 +229,15 @@ class NvidiuxApp(QMainWindow):
 			if opt in ("-h", "--help"):
 				self.showHelp()
 				sys.exit(0)
+				
+			if opt in ("-p", "--pathlib"):
+				if os.path.isdir(arg):
+					self.pathLibNvidia = arg
+				else:
+					print "Unable to access this directory (please verify your path)"
+					self.showHelp()
+					sys.exit(3)
+					
 			if opt in ("-v", "--version"):
 				print "Nvidiux version:" + self.nvidiuxVersionStr
 				sys.exit(0)
@@ -468,7 +486,8 @@ class NvidiuxApp(QMainWindow):
 			msg += _translate("nvidiux","Nom gpu:",None) + self.tabGpu[self.numGpu].nameGpu + "\n"
 			msg += _translate("nvidiux","Gpu UUid:",None) + out.split("):")[-1] + "\n"
 			msg += _translate("nvidiux","Interface memoire gpu:",None) + out2.split("):")[1].split(".")[0] + _translate("nvidiux","bits",None) + "\n"
-			msg += _translate("nvidiux","PCIE Gen:",None) + out3.split("):")[1].split(".")[0]
+			msg += _translate("nvidiux","PCIE Gen:",None) + out3.split("):")[1].split(".")[0] + "\n"
+			msg += _translate("nvidiux","Famille Gpu:",None) + self.tabGpu[self.numGpu].arch + "\n" 
 			
 			QMessageBox.information(self,_translate("nvidiux","Extra informations",None),msg)
 		except:
@@ -523,9 +542,13 @@ class NvidiuxApp(QMainWindow):
 		sys.exit(-2)
 	
 	def iscompatible(self):
-		cmd = "ls -l /usr/lib | grep nvidia"
+		
+		
+		cmd = "ls -l " + self.pathLibNvidia +  " | grep nvidia"
 		if sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
-			return self.showError(1,_translate("nvidiux","Non supporte",None),_translate("nvidiux","Driver introuvable \nVeuillez installer les pilotes proprietaires",None),self.error)
+			cmd = "ls -l " + self.pathLibNvidia + "i386-linux-gnu/ | grep nvidia" #Debian 32BIts
+			if sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
+				return self.showError(1,_translate("nvidiux","Non supporte",None),_translate("nvidiux","Librairie nvidia introuvable \nVeuillez installer les pilotes proprietaires",None),self.error)
 		if not os.path.isfile("/usr/bin/nvidia-settings"):
 			return self.showError(2,_translate("nvidiux","Non supporte",None),_translate("nvidiux","Nvidia settings introuvable \nveuillez installer les pilotes proprietaires et nvidia settings",None),self.error)
 		
@@ -660,7 +683,9 @@ class NvidiuxApp(QMainWindow):
 			openGlV = "4.5.0"
 
 		cmd = "lspci -vnn | grep NVIDIA | grep -v Audio | grep GeForce"
-		out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()			
+		out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+		#~ print "===========Info Debug=============="
+		#~ print out			
 		for i in range(0, self.nbGpuNvidia):
 			try:
 				self.tabGpu.append(Gpuinfo())
@@ -721,19 +746,28 @@ class NvidiuxApp(QMainWindow):
 					sys.exit(1)
 			else:
 				self.showError(31,_translate("nvidiux","Echec",None),_translate("nvidiux","Echec chargement des parametres Gpu",None),self.error)
-			 
-			nb_nvi = int(re.findall('\d+',self.tabGpu[i].nameGpu)[0]) # A verifier
-			if nb_nvi >= 400 and nb_nvi <= 799:
-				if int(self.tabGpu[i].freqShader) == int(self.tabGpu[i].freqGpu) * 2 or int(self.tabGpu[i].freqShader) == int(self.tabGpu[i].freqGpu) * 2 + 1:
-					self.tabGpu[i].arch = "fermi"
+			
+			tempNum = re.findall('\d+',self.tabGpu[i].nameGpu)
+			#~ print "========= Gpu " + str(i) + " ============="
+			#~ print "Sortie:" + str(self.tabGpu[i].nameGpu)
+			#~ print tempNum
+			#~ print "================================="
+			if len(tempNum) > 0:
+				nb_nvi = int(tempNum[0]) # A verifier
+				if nb_nvi >= 400 and nb_nvi <= 799:
+					if int(self.tabGpu[i].freqShader) == int(self.tabGpu[i].freqGpu) * 2 or int(self.tabGpu[i].freqShader) == int(self.tabGpu[i].freqGpu) * 2 + 1:
+						self.tabGpu[i].arch = "fermi"
+					else:
+						self.tabGpu[i].arch = "kepler"	
+				elif nb_nvi >= 900 and nb_nvi <= 999:
+					self.tabGpu[i].arch = "maxwell"
+				elif nb_nvi >= 1000 and nb_nvi <= 1099:
+					self.tabGpu[i].arch = "pascal"
 				else:
-					self.tabGpu[i].arch = "kepler"	
-			elif nb_nvi >= 900 and nb_nvi <= 999:
-				self.tabGpu[i].arch = "maxwell"
-			elif nb_nvi >= 1000 and nb_nvi <= 1099:
-				self.tabGpu[i].arch = "pascal"
+					self.tabGpu[i].arch = "Unknow"
 			else:
 				self.tabGpu[i].arch = "Unknow"
+				
 				
 			cmd = "nvidia-settings --query all | grep SyncToVBlank"
 			out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
@@ -1535,7 +1569,8 @@ class NvidiuxApp(QMainWindow):
 		"GeForce GTX 550 Ti","GeForce GTX 560M","GeForce GTX 560 Ti","GeForce GTX 570","GeForce GTX 580",
 		"GeForce GT 620","GeForce GT 630","GeForce GTX 650","GeForce GTX 660","GeForce GTX 670","GeForce GTX 680","GeForce GTX 690",
 		"GeForce GT 730","GeForce GT 740","GeForce GTX 750","GeForce GTX 750 TI","GeForce GTX 760","GeForce GTX 770","GeForce GTX 780","GeForce GTX 780 Ti",
-		"GeForce Gtx 960","GeForce GTX 970","GeForce GTX 980","GeForce GTX 880m"]
+		"GeForce Gtx 960","GeForce GTX 970","GeForce GTX 980","GeForce GTX 880m",
+		"GeForce Gtx 1070"]
 		notWork = ["GeForce GT 340", "GeForce GT 330", "GeForce GT 320", "GeForce 315", "GeForce 310","GeForce GTS 360M", "GeForce GTS 350M", "GeForce GT 335M", "GeForce GT 330M","GeForce GT 325M", "GeForce GT 320M", "GeForce 320M", "GeForce 315M", "GeForce 310M", "GeForce 305M",
 		"GeForce GTX 295", "GeForce GTX 285","GeForce GTX 280", "GeForce GTX 275", "GeForce GTX 260", "GeForce GTS 250", "GeForce GTS 240", "GeForce GT 230", "GeForce GT 240", "GeForce GT 220", "GeForce G210", "GeForce 210", "GeForce 205",
 		"GeForce GTX 285M", "GeForce GTX 280M", "GeForce GTX 260M", "GeForce GTS 260M", "GeForce GTS 250M", "GeForce GT 240M", "GeForce GT 230M", "GeForce GT 220M", "GeForce G210M", "GeForce G205M",

@@ -274,7 +274,7 @@ class Ui_Pref(QWidget):
 		self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabConf), _translate("Form", "Nvidiux", None))
 		self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabMoniteur), _translate("Form", "Moniteur", None))
 		self.tabWidget.setTabText(self.tabWidget.indexOf(self.about), _translate("Form", "A Propos", None))
-		self.labelInfo.setText(_translate("Form", "Permet d'underclocker ou d'overclocker votre gpu nvidia\n(C) 2014-2016 Payet Guillaume\nNvidiux n'est en aucun cas affilie à Nvidia\n",None) + _translate("Form","Version : ",None) + self.versionStr + " | " + self.labelOs)
+		self.labelInfo.setText(_translate("Form", "Permet d'underclocker ou d'overclocker votre gpu nvidia\n(C) 2014-2016 Payet Guillaume\nNvidiux n'est en aucun cas affilie à Nvidia\n",None) + "\n" +_translate("Form","Version : ",None) + self.versionStr + " | " + self.labelOs)
 		self.labelLang.setText(_translate("Form","Langue",None))
 		self.checkBoxExpert.setText(_translate("Form", "Option avancé", None))
 		self.buttonLicence.setText(_translate("Form", "Licence",None))
@@ -346,6 +346,7 @@ class Ui_Pref(QWidget):
 		else:
 			self.monitorGen = 1
 			self.groupBoxPrefGpu.setVisible(True)
+			self.checkBoxUpdateMon.setVisible(True)
 		self.mainWindows.setMonitorGen(self.monitorGen)
 		
 	
@@ -680,9 +681,9 @@ class Ui_Pref(QWidget):
 		self.about.setObjectName(_fromUtf8("about"))
 		self.tabWidget.addTab(self.about, _fromUtf8(""))
 		
-		self.Img = QtGui.QLabel(self.about)
-		self.Img.move(0,120)
-		self.Img.setPixmap(QtGui.QPixmap("/usr/share/nvidiux/img/drivers_nvidia_linux.png"))
+		#~ self.Img = QtGui.QLabel(self.about)
+		#~ self.Img.move(0,120)
+		#~ self.Img.setPixmap(QtGui.QPixmap("/usr/share/nvidiux/img/drivers_nvidia_linux.png"))
 			
 		self.title = QtGui.QLabel(self.about)
 		self.title.move(180,10)
@@ -707,7 +708,7 @@ class Ui_Pref(QWidget):
 		self.labelInfo.setFont(font)
 		
 		self.groupBoxAbout = QtGui.QGroupBox(self.about)
-		self.groupBoxAbout.setGeometry(QtCore.QRect(225, 160, 220, 95))
+		self.groupBoxAbout.setGeometry(QtCore.QRect(190, 160, 220, 95))
 		self.groupBoxAbout.setStyleSheet(_fromUtf8("QGroupBox \n"
 			"{ \n"
 			"border: 2px solid SlateGrey;\n"
@@ -724,7 +725,6 @@ class Ui_Pref(QWidget):
 		self.buttonDonate = QtGui.QPushButton(self.groupBoxAbout)
 		self.buttonDonate.setGeometry(QtCore.QRect(110, 5, 105, 40))
 		self.buttonDonate.setObjectName(_fromUtf8("buttonDonate"))
-		self.buttonDonate.setEnabled(False)
 		self.buttonDonate.setVisible(False)
 		
 		self.buttonThanks = QtGui.QPushButton(self.groupBoxAbout)
@@ -743,7 +743,7 @@ class Ui_Pref(QWidget):
 					with open("/etc/issue") as f:
 						self.labelOs = f.read().split()[0] + " " + platform.architecture()[0]
 				else:
-					self.labelOs = "Unknow distrib " + platform.architecture()[0]
+					self.labelOs = "Unknown distrib" + platform.architecture()[0]
 			else:
 				self.labelOs =  self.linuxDistrib[0] + " " + self.linuxDistrib[1]
 		except:
