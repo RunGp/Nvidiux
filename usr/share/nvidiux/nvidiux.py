@@ -233,6 +233,8 @@ class NvidiuxApp(QMainWindow):
 			if opt in ("-p", "--pathlib"):
 				if os.path.isdir(arg):
 					self.pathLibNvidia = arg
+					if os.path.isdir(self.home + "/.nvidiux/libNvidia"):
+						os.unlink(self.home + "/.nvidiux/libNvidia")
 				else:
 					print "Unable to access this directory (please verify your path)"
 					self.showHelp()
@@ -393,6 +395,8 @@ class NvidiuxApp(QMainWindow):
 	def createWidgets(self):
 		self.ui = Ui_MainWindow()
 		self.ui.setupUi(self)
+		if os.path.isdir(self.home + "/.nvidiux/libNvidia"):
+			self.pathLibNvidia = os.path.realpath(self.home + "/.nvidiux/libNvidia")
 		self.initialiseData()
 		if self.ndifile != None:
 			if os.path.isfile(self.home + "/.nvidiux/acceptedeula"):
@@ -403,7 +407,7 @@ class NvidiuxApp(QMainWindow):
 				self.loadProfile(self.ndifile)
 			else:
 				print "Please accept EULA first\nYou can accept this with --accept-eula option"
-				sys.exit(2)
+				sys.exit(2)	
 		if self.resetAllGpu:
 			self.reset()
 		self.ui.buttonReset.connect(self.ui.buttonReset,SIGNAL("released()"),self.reset)
@@ -452,7 +456,11 @@ class NvidiuxApp(QMainWindow):
 		for gpu in self.tabGpu:
 			self.ui.listWidgetGpu.addItem(str(i + 1) + ":" + gpu.nameGpu)
 			i = i + 1
-		
+		if self.pathLibNvidia != "/usr/lib/" and not os.path.isdir(self.home + "/.nvidiux/libNvidia"):
+			reply = QtGui.QMessageBox.question(self,_translate("nvidiux","Modifier chemin par defaut lib nvidia",None),_translate("nvidiux","Choisir le chemin:" + self.pathLibNvidia + " par defaut pour les prochaines utilisations ?",None), QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
+			if reply == QtGui.QMessageBox.Yes:
+				os.symlink(self.pathLibNvidia,self.home + "/.nvidiux/libNvidia")
+			
 	def configureMonitor(self):
 		tabGpu = list()
 		tabLang = list()
@@ -542,13 +550,9 @@ class NvidiuxApp(QMainWindow):
 		sys.exit(-2)
 	
 	def iscompatible(self):
-		
-		
 		cmd = "ls -l " + self.pathLibNvidia +  " | grep nvidia"
 		if sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
-			cmd = "ls -l " + self.pathLibNvidia + "i386-linux-gnu/ | grep nvidia" #Debian 32BIts
-			if sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
-				return self.showError(1,_translate("nvidiux","Non supporte",None),_translate("nvidiux","Librairie nvidia introuvable \nVeuillez installer les pilotes proprietaires",None),self.error)
+			return self.showError(1,_translate("nvidiux","Non supporte",None),_translate("nvidiux","Librairie nvidia introuvable \nVeuillez installer les pilotes proprietaires\nVous pouvez indiquer un chemin alternatif pour acceder aux librairie nvidia\navec l'option -p",None),self.error)
 		if not os.path.isfile("/usr/bin/nvidia-settings"):
 			return self.showError(2,_translate("nvidiux","Non supporte",None),_translate("nvidiux","Nvidia settings introuvable \nveuillez installer les pilotes proprietaires et nvidia settings",None),self.error)
 		
@@ -683,9 +687,7 @@ class NvidiuxApp(QMainWindow):
 			openGlV = "4.5.0"
 
 		cmd = "lspci -vnn | grep NVIDIA | grep -v Audio | grep GeForce"
-		out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-		#~ print "===========Info Debug=============="
-		#~ print out			
+		out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()		
 		for i in range(0, self.nbGpuNvidia):
 			try:
 				self.tabGpu.append(Gpuinfo())
@@ -748,25 +750,24 @@ class NvidiuxApp(QMainWindow):
 				self.showError(31,_translate("nvidiux","Echec",None),_translate("nvidiux","Echec chargement des parametres Gpu",None),self.error)
 			
 			tempNum = re.findall('\d+',self.tabGpu[i].nameGpu)
-			#~ print "========= Gpu " + str(i) + " ============="
-			#~ print "Sortie:" + str(self.tabGpu[i].nameGpu)
-			#~ print tempNum
-			#~ print "================================="
-			if len(tempNum) > 0:
-				nb_nvi = int(tempNum[0]) # A verifier
-				if nb_nvi >= 400 and nb_nvi <= 799:
-					if int(self.tabGpu[i].freqShader) == int(self.tabGpu[i].freqGpu) * 2 or int(self.tabGpu[i].freqShader) == int(self.tabGpu[i].freqGpu) * 2 + 1:
-						self.tabGpu[i].arch = "fermi"
+			try:
+				if len(tempNum) > 0:
+					nb_nvi = int(tempNum[0]) # A verifier
+					if nb_nvi >= 400 and nb_nvi <= 799:
+						if int(self.tabGpu[i].freqShader) == int(self.tabGpu[i].freqGpu) * 2 or int(self.tabGpu[i].freqShader) == int(self.tabGpu[i].freqGpu) * 2 + 1:
+							self.tabGpu[i].arch = "fermi"
+						else:
+							self.tabGpu[i].arch = "kepler"	
+					elif nb_nvi >= 900 and nb_nvi <= 999:
+						self.tabGpu[i].arch = "maxwell"
+					elif nb_nvi >= 1000 and nb_nvi <= 1099:
+						self.tabGpu[i].arch = "pascal"
 					else:
-						self.tabGpu[i].arch = "kepler"	
-				elif nb_nvi >= 900 and nb_nvi <= 999:
-					self.tabGpu[i].arch = "maxwell"
-				elif nb_nvi >= 1000 and nb_nvi <= 1099:
-					self.tabGpu[i].arch = "pascal"
+						self.tabGpu[i].arch = "Unknown"
 				else:
-					self.tabGpu[i].arch = "Unknow"
-			else:
-				self.tabGpu[i].arch = "Unknow"
+					self.tabGpu[i].arch = "Unknown"
+			except:
+				self.tabGpu[i].arch = "Unknown"
 				
 				
 			cmd = "nvidia-settings --query all | grep SyncToVBlank"
@@ -924,7 +925,7 @@ class NvidiuxApp(QMainWindow):
 			self.ui.buttonReset.setEnabled(True)
 		else:
 			self.ui.buttonReset.setEnabled(False)
-		
+
 		self.ui.about.setText(_translate("nvidiux","Version ",None) + str(".".join(self.nvidiuxVersionStr.split(".")[:-1])))
 		
 	def killTMonitor(self):

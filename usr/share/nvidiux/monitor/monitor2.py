@@ -89,7 +89,7 @@ class MonitorApp(QMainWindow):
 	monitorVersion = 0.8
 	monitorVersionStr = "0.8 Beta 1"
 	versionPilote = 331.31
-	versionPiloteMaxTest = 364.19
+	versionPiloteMaxTest = 367.59
 	nbGpuNvidia = -1
 	tabGpu = list()
     
@@ -109,9 +109,8 @@ class MonitorApp(QMainWindow):
 			sys.exit(1)
 		
 		if self.versionPilote > self.versionPiloteMaxTest:
-			print _translate("monitor","Driver non testé",None)
+			print _translate("monitor","Driver non teste",None)
 			
-		
 		self.iscompatible()
 		self.interval = int(self.sampleInterval*1000)
 		self.bufSize = int(self.timeWindow / self.sampleInterval)
