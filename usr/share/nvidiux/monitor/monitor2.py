@@ -16,22 +16,30 @@
 # with this program. If not, see <http://www.gnu.org/licenses/>.
 
 
+try:
+	from pyqtgraph.Qt import QtGui, QtCore
+	import pyqtgraph as pg
+	import pyqtgraph.exporters
+except:
+	from PyQt4.QtCore import *
+	from PyQt4.QtGui import *
+	from PyQt4 import QtCore, QtGui
+	import sys
+	app = QApplication(None)
+	QtGui.QMessageBox.critical(None, "pyqtgraph","You must install pyqtgraph Package")
+	sys.exit(0)
 
 
-from pyqtgraph.Qt import QtGui, QtCore
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from monitorSettings import Ui_Pref_Monitor
-
 import os
 import collections
 import sys
 import time
 import numpy as np
 import subprocess as sub
-import pyqtgraph as pg
-import pyqtgraph.exporters
 import platform
 from monitor2ui import Ui_MainWindow
 

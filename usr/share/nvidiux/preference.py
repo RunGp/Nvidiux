@@ -87,6 +87,7 @@ class Ui_Pref(QWidget):
 		self.overvoltEnabled = tabParam[7]
 		self.versionPilote = tabParam[8]
 		self.sameParamGpu = tabParam[9]
+		self.monitorGen = tabParam[10]
 		self.home = expanduser("~")
 		self.mainWindows = mainW
 		self.setupUi()
@@ -672,7 +673,14 @@ class Ui_Pref(QWidget):
 		self.checkBoxChangeGenMon = QtGui.QCheckBox(_translate("Form", "Activer Moniteur Experimental",None),self.tabMoniteur)
 		self.checkBoxChangeGenMon.setGeometry(QtCore.QRect(10, 70 + self.nbGpuNvidia * 50, 340, 20))
 		self.checkBoxChangeGenMon.setObjectName(_fromUtf8("checkBoxChangeGenMon"))
-		self.checkBoxChangeGenMon.setChecked(False)
+		if self.monitorGen == 1:
+			self.checkBoxChangeGenMon.setChecked(False)
+			self.groupBoxPrefGpu.setVisible(True)
+			self.checkBoxUpdateMon.setVisible(True)
+		else:
+			self.checkBoxChangeGenMon.setChecked(True)
+			self.groupBoxPrefGpu.setVisible(False)
+			self.checkBoxUpdateMon.setVisible(False)
 		
 		if ndiFile == None:
 			self.saveMonitorConf()
