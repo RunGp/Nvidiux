@@ -38,7 +38,7 @@ class ConfirmWindow(QWidget):
 	def __init__(self,text,tabLang,nbGpu=1,showEula=True,parent=None):
 		super (ConfirmWindow, self).__init__(parent)
 		self.nbGpu = nbGpu
-		self.language = tabLang[0]
+		self.pref.language = tabLang[0]
 		self.app = tabLang[1]
 		self.showEula = showEula
 		self.createWidgets(text)
@@ -82,7 +82,7 @@ class ConfirmWindow(QWidget):
 		self.buttonConfirm.connect(self.buttonConfirm, SIGNAL("released()"),self.confirm)
 		self.buttonCancel.connect(self.buttonCancel, SIGNAL("released()"),self.quitapp)
 		ConfirmTranslator = QtCore.QTranslator()
-		if ConfirmTranslator.load("/usr/share/nvidiux/nvidiux_" + self.language):
+		if ConfirmTranslator.load("/usr/share/nvidiux/nvidiux_" + self.pref.language):
 			self.app.installTranslator(ConfirmTranslator)
 			self.retranslateUi()
 		

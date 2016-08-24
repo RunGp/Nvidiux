@@ -95,9 +95,9 @@ class MonitorApp(QMainWindow):
 	plotFanCurve = None
 	anguage = None
 	monitorVersion = 0.8
-	monitorVersionStr = "0.8 Beta 1"
+	monitorVersionStr = "0.8.1"
 	versionPilote = 331.31
-	versionPiloteMaxTest = 367.59
+	versionPiloteMaxTest = 370.23
 	nbGpuNvidia = -1
 	tabGpu = list()
     
@@ -105,19 +105,19 @@ class MonitorApp(QMainWindow):
 		super (MonitorApp, self).__init__(parent)
 
 		self.ui = Ui_MainWindow()
-		self.language = QtCore.QLocale.system().name()
+		self.pref.language = QtCore.QLocale.system().name()
 		self.ui.setupUi(self)
 		textSystem = _translate("monitor","Nvidia driver version: ",None)
 		cmd = "nvidia-settings --query [gpu:0]/NvidiaDriverVersion"
 		if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 			out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-			self.versionPilote = float(out.split(':')[-1][1:])
-			textSystem = textSystem + str(self.versionPilote) + "\n"
+			self.pref.piloteVersion = float(out.split(':')[-1][1:])
+			textSystem = textSystem + str(self.pref.piloteVersion) + "\n"
 		else:
 			sys.exit(1)
 		
-		if self.versionPilote > self.versionPiloteMaxTest:
-			print _translate("monitor","Driver non teste",None)
+		if self.pref.piloteVersion > self.versionPiloteMaxTest:
+			print _translate("monitor","Driver > MAX",None)
 			
 		self.iscompatible()
 		self.interval = int(self.sampleInterval*1000)
@@ -185,7 +185,7 @@ class MonitorApp(QMainWindow):
 		self.ui.plotMem.showGrid(x=True, y=True)
 		self.ui.plotMem.setLabel('left', 'Mo')
 		self.ui.plotMem.setLabel('bottom', _translate("monitor","Time",None), 'sec')
-		self.ui.plotMem.setRange(yRange=[100,self.tabGpu[0].totalMem - 80],xRange=[20,220])
+		self.ui.plotMem.setRange(yRange=[110,self.tabGpu[0].totalMem - 80],xRange=[20,220])
 		self.ui.plotMem.autoRange(padding=0)
 		self.ui.plotMem.setMenuEnabled(enableMenu=False)
 		self.plotMemCurve = self.ui.plotMem.plot(self.tabGpu[0].xMem, self.tabGpu[0].yMem, pen=(255,0,0))
@@ -247,7 +247,7 @@ class MonitorApp(QMainWindow):
 		tabParam.append(self.monitorVersionStr)
 		tabParam.append(self.nbGpuNvidia)
 		tabParam.append(self.tabGpu)
-		tabParam.append(self.language)
+		tabParam.append(self.pref.language)
 		tabParam.append(app)
 		self.formSettings = Ui_Pref_Monitor(1,tabParam,self)
 		self.formSettings.show()
@@ -275,7 +275,7 @@ class MonitorApp(QMainWindow):
 	def getDataGpu(self):
 		cmd = "nvidia-settings --query [gpu:0]/GPUUtilization"
 		if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
-			out, err = sub.Popen(cmd + "| grep GPUUtilization | head -1",stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+			out, err = sub.Popen(cmd + "| grep GPUUtilization",stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
 			self.tabGpu[0].percentGpu = int(out.split('=')[1].split(',')[0])
 			self.ui.labelGpu.setText(str(self.tabGpu[0].percentGpu) + " %")
 			return self.tabGpu[0].percentGpu 
@@ -297,8 +297,8 @@ class MonitorApp(QMainWindow):
 	def getDataTemp(self):
 		cmd = "nvidia-settings --query [gpu:0]/GPUCoreTemp"
 		if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
-			out, err = sub.Popen(cmd + " | grep GPUCore | head -1",stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-			self.tabGpu[0].temperature = int(out.split(':')[-1].split('.')[0])
+			out, err = sub.Popen(cmd + " | grep GPUCore",stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+			self.tabGpu[0].temperature = int(out.split('.')[0].split(': ')[1])
 			self.ui.labelTemp.setText(str(self.tabGpu[0].temperature) + " C")
 			return self.tabGpu[0].temperature
 		else:
@@ -308,8 +308,8 @@ class MonitorApp(QMainWindow):
 	def getDataMem(self):
 		cmd = "nvidia-settings --query [gpu:0]/UsedDedicatedGPUMemory"
 		if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
-			out, err = sub.Popen(cmd + " | grep UsedDedicatedGPUMemory | head -1",stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-			self.tabGpu[0].memoryUse = int(out.split(':')[-1].split('.')[0])
+			out, err = sub.Popen(cmd + " | grep UsedDedicatedGPUMemory",stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+			self.tabGpu[0].memoryUse = int(out.split('.')[0].split(': ')[1])
 			self.ui.labelMemory.setText(str(self.tabGpu[0].memoryUse) + " Mo")
 			return self.tabGpu[0].memoryUse
 		else:
@@ -353,7 +353,7 @@ class MonitorApp(QMainWindow):
 		tabParam.append(self.monitorVersionStr)
 		tabParam.append(self.nbGpuNvidia)
 		tabParam.append(self.tabGpu)
-		tabParam.append(self.language)
+		tabParam.append(self.pref.language)
 		tabParam.append(app)
 		self.formSettings = Ui_Pref_Monitor(0,tabParam,self)
 		self.formSettings.show()

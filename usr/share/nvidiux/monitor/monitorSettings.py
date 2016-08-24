@@ -66,7 +66,7 @@ class Ui_Pref_Monitor(QWidget):
 		self.versionStr = tabParam[1]
 		self.nbGpuNvidia = tabParam[2]
 		self.tabGpu = tabParam[3]
-		self.language = tabParam[4]
+		self.pref.language = tabParam[4]
 		self.app = tabParam[5]
 		self.home = expanduser("~")
 		self.mainWindows = mainW
@@ -298,8 +298,8 @@ class Ui_Pref_Monitor(QWidget):
 		self.textBrowser.setGeometry(QtCore.QRect(10, 280, 560, 240))
 		self.textBrowser.setAlignment(QtCore.Qt.AlignCenter)
 		
-		if os.path.isfile("/usr/share/nvidiux/licences/gpl-3.0_" + self.language + ".txt"):
-			txtFile = open("/usr/share/nvidiux/licences/gpl-3.0_" + self.language + ".txt", "r")
+		if os.path.isfile("/usr/share/nvidiux/licences/gpl-3.0_" + self.pref.language + ".txt"):
+			txtFile = open("/usr/share/nvidiux/licences/gpl-3.0_" + self.pref.language + ".txt", "r")
 			self.textBrowser.setText(_fromUtf8(txtFile.read()))
 		elif os.path.isfile("/usr/share/nvidiux/licences/gpl-3.0.txt"):
 			txtFile = open('/usr/share/nvidiux/licences/gpl-3.0.txt', 'r')
@@ -316,7 +316,7 @@ class Ui_Pref_Monitor(QWidget):
 		self.tabWidget.setTabText(self.tabWidget.indexOf(self.about), _translate("Pref_Mon", "About", None))
 		
 		prefTranslator = QtCore.QTranslator()
-		if prefTranslator.load("/usr/share/nvidiux/nvidiux_" + self.language):
+		if prefTranslator.load("/usr/share/nvidiux/nvidiux_" + self.pref.language):
 			self.app.installTranslator(prefTranslator)
 			self.retranslateUi()
 		self.tabWidget.setCurrentIndex(self.loadTab)
@@ -324,8 +324,8 @@ class Ui_Pref_Monitor(QWidget):
 	def showLicence(self):
 		self.buttonThanks.setEnabled(True)
 		self.buttonLicence.setEnabled(False)
-		if os.path.isfile("/usr/share/nvidiux/licences/gpl-3.0_" + self.language + ".txt"):
-			txtFile = open("/usr/share/nvidiux/licences/gpl-3.0_" + self.language + ".txt", "r")
+		if os.path.isfile("/usr/share/nvidiux/licences/gpl-3.0_" + self.pref.language + ".txt"):
+			txtFile = open("/usr/share/nvidiux/licences/gpl-3.0_" + self.pref.language + ".txt", "r")
 			self.textBrowser.setText(_fromUtf8(txtFile.read()))
 		elif os.path.isfile("/usr/share/nvidiux/licences/gpl-3.0.txt"):
 			txtFile = open('/usr/share/nvidiux/licences/gpl-3.0.txt', 'r')

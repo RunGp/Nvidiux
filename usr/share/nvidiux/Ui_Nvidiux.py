@@ -490,7 +490,7 @@ class Ui_MainWindow(object):
         self.label_Img.setGeometry(QtCore.QRect(554, 5, 240, 140))
         self.label_Img.setObjectName(_fromUtf8("label_Img"))
         self.Message = QtGui.QLabel(self.centralwidget)
-        self.Message.setGeometry(QtCore.QRect(250, 470, 300,60))
+        self.Message.setGeometry(QtCore.QRect(250, 470, 320,60))
         font = QtGui.QFont()
         font.setPointSize(12)
         font.setBold(True)
