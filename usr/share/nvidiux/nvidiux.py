@@ -868,6 +868,19 @@ class NvidiuxApp(QMainWindow):
 			self.ui.Message.setText(_translate("nvidiux","Gpu(" ,None) + str(self.tabGpu[0].nameGpu) + _translate("nvidiux",")non supporte",None))
 			self.pref.overclockEnabled = False	
 			
+		if self.tabGpu[i].arch == "pascal" and self.driverVersion < 370.01:
+			self.ui.SliderMem.setEnabled(False)
+			self.ui.SliderGpu.setEnabled(False)
+			self.ui.buttonReset.setEnabled(False)
+			self.ui.buttonApply.setEnabled(False)
+			self.ui.SliderFan.setEnabled(False)
+			self.ui.checkBoxFan.setEnabled(False)
+			self.ui.buttonLoadProfile.setEnabled(False)
+			self.ui.buttonSaveProfile.setEnabled(False)
+			self.ui.actionLoadProfile.setEnabled(False)
+			self.ui.actionSaveProfile.setEnabled(False)
+			self.pref.overclockEnabled = False
+			
 		self.ui.SliderFan.setMaximum(100)
 		self.ui.SliderMem.setMinimum(int(self.tabGpu[self.numGpu].resetFreqMem) * 0.80)
 		self.ui.SliderMem.setMaximum(int(self.tabGpu[self.numGpu].resetFreqMem) * 1.3)
