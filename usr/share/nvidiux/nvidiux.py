@@ -34,6 +34,7 @@ import psutil
 import getopt
 import platform
 import re
+import urllib 
 
 muttex = threading.RLock()
 
@@ -167,13 +168,13 @@ class NvidiuxApp(QMainWindow):
 	optimus = 0
 	
 	pref = Settings()
-	pref.nvidiuxVersionStr = "1.4.2.25"
+	pref.nvidiuxVersionStr = "1.4.3.26"
 	pref.nvidiuxVersion = 1.4
 	pref.updateTime = 1
 	pref.startWithSystem = False
 	pref.valueStart = "0:0"
 	piloteVersion = "331.31"
-	piloteVersionMaxTest = 370.23
+	piloteVersionMaxTest = 370.28
 	pathLibNvidia = "/usr/lib/"
 	pref.language = "en_EN"
 	pref.overclockEnabled = True
@@ -390,6 +391,9 @@ class NvidiuxApp(QMainWindow):
 		self.ui.setupUi(self)
 		if os.path.isdir(self.home + "/.nvidiux/libNvidia"):
 			self.pathLibNvidia = os.path.realpath(self.home + "/.nvidiux/libNvidia")
+		driver = self.getVersionDriverSupport()
+		if driver != 0:
+			self.piloteVersionMaxTest = driver
 		self.initialiseData()
 		if self.ndifile != None:
 			if os.path.isfile(self.home + "/.nvidiux/acceptedeula"):
@@ -595,6 +599,13 @@ class NvidiuxApp(QMainWindow):
 			if os.path.isfile("/tmp/.reboot_nvidiux"):
 				return self.showError(-1,_translate("nvidiux","Redemarrage Requis",None),_translate("nvidiux","Configuration effectue\nVous devez redemarrer votre machine",None),self.info)
 		return 0
+	
+	def getVersionDriverSupport(self):
+		try:
+			page=urllib.urlopen('http://nvidiux.redirectme.net:2008/version.html') 
+			return int(page.read())
+		except:
+			return 0
 		
 	def initialiseData(self):
 		info = ""
@@ -1342,7 +1353,7 @@ class NvidiuxApp(QMainWindow):
 			self.threadMonitor.stop()
 			self.pidMonitor = 0
 		else:
-			if self.monitorGen == 1:
+			if self.pref.monitorGen == 1:
 				proc = sub.Popen(['python2', '/usr/share/nvidiux/monitor/monitor.py', "&"])
 			else:
 				proc = sub.Popen(['python2', '/usr/share/nvidiux/monitor/monitor2.py', "&"])
@@ -1481,7 +1492,7 @@ class NvidiuxApp(QMainWindow):
 		return errorCode
 		
 	def setMonitorGen(self,gen):
-		self.monitorGen = gen
+		self.pref.monitorGen = gen
 	
 	def setThread(self,threadMonitor,threadInfoGpu):
 		self.threadMonitor = threadMonitor
@@ -1557,7 +1568,7 @@ class NvidiuxApp(QMainWindow):
 		"GeForce GT 620","GeForce GT 630","GeForce GTX 650","GeForce GTX 660","GeForce GTX 670","GeForce GTX 680","GeForce GTX 690",
 		"GeForce GT 730","GeForce GT 740","GeForce GTX 750","GeForce GTX 750 TI","GeForce GTX 760","GeForce GTX 770","GeForce GTX 780","GeForce GTX 780 Ti",
 		"GeForce Gtx 960","GeForce GTX 970","GeForce GTX 980","GeForce GTX 880m",
-		"GeForce Gtx 1070"]
+		"GeForce Gtx 1060","GeForce Gtx 1070"]
 		notWork = ["GeForce GT 340", "GeForce GT 330", "GeForce GT 320", "GeForce 315", "GeForce 310","GeForce GTS 360M", "GeForce GTS 350M", "GeForce GT 335M", "GeForce GT 330M","GeForce GT 325M", "GeForce GT 320M", "GeForce 320M", "GeForce 315M", "GeForce 310M", "GeForce 305M",
 		"GeForce GTX 295", "GeForce GTX 285","GeForce GTX 280", "GeForce GTX 275", "GeForce GTX 260", "GeForce GTS 250", "GeForce GTS 240", "GeForce GT 230", "GeForce GT 240", "GeForce GT 220", "GeForce G210", "GeForce 210", "GeForce 205",
 		"GeForce GTX 285M", "GeForce GTX 280M", "GeForce GTX 260M", "GeForce GTS 260M", "GeForce GTS 250M", "GeForce GT 240M", "GeForce GT 230M", "GeForce GT 220M", "GeForce G210M", "GeForce G205M",
