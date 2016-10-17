@@ -1,4 +1,4 @@
-# Nvidiux V 1.4.2
+# Nvidiux
 Licence GPL3 https://github.com/RunGp/Nvidiux/blob/master/usr/share/nvidiux/gpl-3.0.txt
 
 =============================================================

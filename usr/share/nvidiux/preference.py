@@ -705,8 +705,15 @@ class Ui_Pref(QWidget):
 		font.setStyleStrategy(QtGui.QFont.PreferAntialias)
 		self.labelInfo.setFont(font)
 		
+		self.linkToWeb = QtGui.QLabel(self.about)
+		self.linkToWeb.move(250,150)
+		self.linkToWeb.setAlignment(QtCore.Qt.AlignCenter)
+		urlLink="<a href=\"http://github.com/RunGp/Nvidiux\">Site Officiel</a>" 
+		self.linkToWeb .setText(urlLink)
+		self.linkToWeb.setOpenExternalLinks(True)
+		
 		self.groupBoxAbout = QtGui.QGroupBox(self.about)
-		self.groupBoxAbout.setGeometry(QtCore.QRect(190, 160, 220, 95))
+		self.groupBoxAbout.setGeometry(QtCore.QRect(190,175,220,95))
 		self.groupBoxAbout.setStyleSheet(_fromUtf8("QGroupBox \n"
 			"{ \n"
 			"border: 2px solid SlateGrey;\n"
@@ -828,7 +835,7 @@ class Ui_Pref(QWidget):
 	def showT(self):
 		self.buttonLicence.setEnabled(True)
 		self.buttonThanks.setEnabled(False)
-		self.textBrowser.setText(_fromUtf8(_translate("Form","Special thanks to\n - @mglinux for german translation\n - @profesorfalken for spanish translation\n - @gaara @bishop @gfx @jul974 for testing and help for debug",None)))
+		self.textBrowser.setText(_fromUtf8(_translate("Form","Special thanks to\n - @mglinux for german translation\n - @profesorfalken for spanish translation\n - @andrewschott for RPM packaging http://schotty.com/yum/el/7/repoview/nvidiux.html\n - @gaara @bishop @gfx @jul974 for testing and help for debug",None)))
 		
 	def showDonate(self):
 		import webbrowser
