@@ -53,6 +53,7 @@ class Settings():
 	overclockEnabled = False
 	overvoltEnabled = False	
 	piloteVersion = "331"
+	labelOs = ""
 	sameParamGpu = False
 	monitorGen = 1
 	language = None
@@ -265,7 +266,7 @@ class Ui_Pref(QWidget):
 		self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabConf), _translate("Form", "Nvidiux", None))
 		self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabMoniteur), _translate("Form", "Moniteur", None))
 		self.tabWidget.setTabText(self.tabWidget.indexOf(self.about), _translate("Form", "A Propos", None))
-		self.labelInfo.setText(_translate("Form", "Permet d'underclocker ou d'overclocker votre gpu nvidia\n(C) 2014-2017 Payet Guillaume\nNvidiux n'est en aucun cas affilie à Nvidia\n",None) + "\n" +_translate("Form","Version : ",None) + self.pref.nvidiuxVersionStr + " | " + self.labelOs)
+		self.labelInfo.setText(_translate("Form", "Permet d'underclocker ou d'overclocker votre gpu nvidia\n(C) 2014-2016 Payet Guillaume\nNvidiux n'est en aucun cas affilie à Nvidia\n",None) + "\n" +_translate("Form","Version : ",None) + self.pref.nvidiuxVersionStr + " | " + self.pref.labelOs)
 		self.labelLang.setText(_translate("Form","Langue",None))
 		self.checkBoxExpert.setText(_translate("Form", "Option avancé", None))
 		self.buttonLicence.setText(_translate("Form", "Licence",None))
@@ -741,19 +742,20 @@ class Ui_Pref(QWidget):
 		self.buttonDonate.setText(_translate("Form", "Faire un don",None))
 		self.buttonThanks.setText(_translate("Form", "Remerciement",None)) 
 		
-		try:
-			self.linuxDistrib = platform.linux_distribution()
-			if self.linuxDistrib == ('', '', ''):
-				if os.path.isfile("/etc/issue"):
-					with open("/etc/issue") as f:
-						self.labelOs = f.read().split()[0] + " " + platform.architecture()[0]
+		if self.pref.labelOs == "":
+			try:
+				self.linuxDistrib = platform.linux_distribution()
+				if self.linuxDistrib == ('', '', ''):
+					if os.path.isfile("/etc/issue"):
+						with open("/etc/issue") as f:
+							self.pref.labelOs = f.read().split()[0] + " " + platform.architecture()[0]
+					else:
+						self.pref.labelOs = "Unknown" + platform.architecture()[0]
 				else:
-					self.labelOs = "Unknown distrib" + platform.architecture()[0]
-			else:
-				self.labelOs =  self.linuxDistrib[0] + " " + self.linuxDistrib[1]
-		except:
-			self.labelOs = ""
-		info = _translate("Form", "Permet d'underclocker ou d'overclocker votre gpu nvidia\n(C) 2014-2016 Payet Guillaume\nNvidiux n'est en aucun cas affilie à Nvidia",None) + _translate("Form","Version:",None) + self.pref.nvidiuxVersionStr + " | " + self.labelOs 
+					self.pref.labelOs =  self.linuxDistrib[0] + " " + self.linuxDistrib[1]
+			except:
+				self.pref.labelOs = "Unknown"
+		info = _translate("Form", "Permet d'underclocker ou d'overclocker votre gpu nvidia\n(C) 2014-2016 Payet Guillaume\nNvidiux n'est en aucun cas affilie à Nvidia",None) + _translate("Form","Version:",None) + self.pref.nvidiuxVersionStr + " | " + self.pref.labelOs 
 		self.labelInfo.setText(info)
 		self.textBrowser = QtGui.QTextBrowser(self.about)
 		self.textBrowser.setGeometry(QtCore.QRect(10, 280, 560, 240))

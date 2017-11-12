@@ -34,7 +34,8 @@ import psutil
 import getopt
 import platform
 import re
-import urllib 
+import urllib
+import platform
 
 muttex = threading.RLock()
 
@@ -168,7 +169,7 @@ class NvidiuxApp(QMainWindow):
 	optimus = 0
 	
 	pref = Settings()
-	pref.nvidiuxVersionStr = "1.4.3.29"
+	pref.nvidiuxVersionStr = "1.4.4.30"
 	pref.nvidiuxVersion = 1.4
 	pref.updateTime = 1
 	pref.startWithSystem = False
@@ -177,6 +178,7 @@ class NvidiuxApp(QMainWindow):
 	piloteVersionMaxTest = 375.10
 	pathLibNvidia = "/usr/lib/"
 	pref.language = "en_EN"
+	pref.labelOs = ""
 	pref.overclockEnabled = True
 	pref.overvoltEnabled = False
 	pref.sameParamGpu = True
@@ -407,6 +409,7 @@ class NvidiuxApp(QMainWindow):
 				sys.exit(2)	
 		if self.resetAllGpu:
 			self.reset()
+		self.setGpuStat()
 		self.ui.buttonReset.connect(self.ui.buttonReset,SIGNAL("released()"),self.reset)
 		self.ui.buttonAbout.connect(self.ui.buttonAbout,SIGNAL("released()"),self.about)
 		self.ui.buttonLoadProfile.connect(self.ui.buttonLoadProfile,SIGNAL("released()"),self.loadProfile)
@@ -606,7 +609,21 @@ class NvidiuxApp(QMainWindow):
 			return float(page.read())
 		except:
 			return 0
-		
+			
+	def setGpuStat(self):
+		try:
+			linuxDistrib = platform.linux_distribution()
+			if linuxDistrib == ('', '', ''):
+				if os.path.isfile("/etc/issue"):
+					with open("/etc/issue") as f:
+						self.pref.labelOs = f.read().split()[0] + " " + platform.architecture()[0]
+				else:
+					self.pref.labelOs = "Unknown distrib" + platform.architecture()[0]
+			page=urllib.urlopen('http://nvidiux.redirectme.net:2008/gpuStat.html?gpu=' + str(self.tabGpu[0].nameGpu) + '?os=' + str(self.pref.labelOs))
+			return float(page.read())
+		except:
+			return 0
+			
 	def initialiseData(self):
 		info = ""
 		err = ""
@@ -1568,7 +1585,7 @@ class NvidiuxApp(QMainWindow):
 		"GeForce GT 620","GeForce GT 630","GeForce GTX 650","GeForce GTX 660","GeForce GTX 670","GeForce GTX 680","GeForce GTX 690",
 		"GeForce GT 730","GeForce GT 740","GeForce GTX 750","GeForce GTX 750 TI","GeForce GTX 760","GeForce GTX 770","GeForce GTX 780","GeForce GTX 780 Ti",
 		"GeForce Gtx 960","GeForce GTX 970","GeForce GTX 980","GeForce GTX 880m",
-		"GeForce Gt 1030","GeForce Gtx 1060","GeForce Gtx 1070"]
+		"GeForce GT 1030","GeForce Gtx 1060","GeForce Gtx 1070","GeForce Gtx 1080"]
 		notWork = ["GeForce GT 340", "GeForce GT 330", "GeForce GT 320", "GeForce 315", "GeForce 310","GeForce GTS 360M", "GeForce GTS 350M", "GeForce GT 335M", "GeForce GT 330M","GeForce GT 325M", "GeForce GT 320M", "GeForce 320M", "GeForce 315M", "GeForce 310M", "GeForce 305M",
 		"GeForce GTX 295", "GeForce GTX 285","GeForce GTX 280", "GeForce GTX 275", "GeForce GTX 260", "GeForce GTS 250", "GeForce GTS 240", "GeForce GT 230", "GeForce GT 240", "GeForce GT 220", "GeForce G210", "GeForce 210", "GeForce 205",
 		"GeForce GTX 285M", "GeForce GTX 280M", "GeForce GTX 260M", "GeForce GTS 260M", "GeForce GTS 250M", "GeForce GT 240M", "GeForce GT 230M", "GeForce GT 220M", "GeForce G210M", "GeForce G205M",
