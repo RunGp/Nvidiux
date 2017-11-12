@@ -168,13 +168,13 @@ class NvidiuxApp(QMainWindow):
 	optimus = 0
 	
 	pref = Settings()
-	pref.nvidiuxVersionStr = "1.4.3.26"
+	pref.nvidiuxVersionStr = "1.4.3.29"
 	pref.nvidiuxVersion = 1.4
 	pref.updateTime = 1
 	pref.startWithSystem = False
 	pref.valueStart = "0:0"
 	piloteVersion = "331.31"
-	piloteVersionMaxTest = 370.28
+	piloteVersionMaxTest = 375.10
 	pathLibNvidia = "/usr/lib/"
 	pref.language = "en_EN"
 	pref.overclockEnabled = True
@@ -602,8 +602,8 @@ class NvidiuxApp(QMainWindow):
 	
 	def getVersionDriverSupport(self):
 		try:
-			page=urllib.urlopen('http://nvidiux.redirectme.net:2008/version.html') 
-			return int(page.read())
+			page=urllib.urlopen('http://nvidiux.redirectme.net:2008/version.html')
+			return float(page.read())
 		except:
 			return 0
 		
@@ -879,7 +879,7 @@ class NvidiuxApp(QMainWindow):
 			self.ui.Message.setText(_translate("nvidiux","Gpu(" ,None) + str(self.tabGpu[0].nameGpu) + _translate("nvidiux",")non supporte",None))
 			self.pref.overclockEnabled = False	
 			
-		if self.tabGpu[i].arch == "pascal" and self.driverVersion < 370.01:
+		if self.tabGpu[i].arch == "pascal" and self.pref.piloteVersion < 370.01:
 			self.ui.SliderMem.setEnabled(False)
 			self.ui.SliderGpu.setEnabled(False)
 			self.ui.buttonReset.setEnabled(False)
@@ -1307,7 +1307,7 @@ class NvidiuxApp(QMainWindow):
 		self.threadInfoGpu.start()
 		
 	def setVaapi(self,value):
-		if not vaapi:
+		if not self.vaapi:
 			msg = "Pour activer la vaapi (Vidéo Accélération api) vous devez installer les paquets neccesaire à la vaapi\n"
 			if platform.linux_distribution()[0] == "Ubuntu" or platform.linux_distribution()[0] == "Debian":
 				msg = msg + "Utiliser la commande suivante:apt install libvdpau1 vdpau-va-driver"
@@ -1568,7 +1568,7 @@ class NvidiuxApp(QMainWindow):
 		"GeForce GT 620","GeForce GT 630","GeForce GTX 650","GeForce GTX 660","GeForce GTX 670","GeForce GTX 680","GeForce GTX 690",
 		"GeForce GT 730","GeForce GT 740","GeForce GTX 750","GeForce GTX 750 TI","GeForce GTX 760","GeForce GTX 770","GeForce GTX 780","GeForce GTX 780 Ti",
 		"GeForce Gtx 960","GeForce GTX 970","GeForce GTX 980","GeForce GTX 880m",
-		"GeForce Gtx 1060","GeForce Gtx 1070"]
+		"GeForce Gt 1030","GeForce Gtx 1060","GeForce Gtx 1070"]
 		notWork = ["GeForce GT 340", "GeForce GT 330", "GeForce GT 320", "GeForce 315", "GeForce 310","GeForce GTS 360M", "GeForce GTS 350M", "GeForce GT 335M", "GeForce GT 330M","GeForce GT 325M", "GeForce GT 320M", "GeForce 320M", "GeForce 315M", "GeForce 310M", "GeForce 305M",
 		"GeForce GTX 295", "GeForce GTX 285","GeForce GTX 280", "GeForce GTX 275", "GeForce GTX 260", "GeForce GTS 250", "GeForce GTS 240", "GeForce GT 230", "GeForce GT 240", "GeForce GT 220", "GeForce G210", "GeForce 210", "GeForce 205",
 		"GeForce GTX 285M", "GeForce GTX 280M", "GeForce GTX 260M", "GeForce GTS 260M", "GeForce GTS 250M", "GeForce GT 240M", "GeForce GT 230M", "GeForce GT 220M", "GeForce G210M", "GeForce G205M",

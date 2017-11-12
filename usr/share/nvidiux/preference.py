@@ -265,7 +265,7 @@ class Ui_Pref(QWidget):
 		self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabConf), _translate("Form", "Nvidiux", None))
 		self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabMoniteur), _translate("Form", "Moniteur", None))
 		self.tabWidget.setTabText(self.tabWidget.indexOf(self.about), _translate("Form", "A Propos", None))
-		self.labelInfo.setText(_translate("Form", "Permet d'underclocker ou d'overclocker votre gpu nvidia\n(C) 2014-2016 Payet Guillaume\nNvidiux n'est en aucun cas affilie à Nvidia\n",None) + "\n" +_translate("Form","Version : ",None) + self.pref.nvidiuxVersionStr + " | " + self.labelOs)
+		self.labelInfo.setText(_translate("Form", "Permet d'underclocker ou d'overclocker votre gpu nvidia\n(C) 2014-2017 Payet Guillaume\nNvidiux n'est en aucun cas affilie à Nvidia\n",None) + "\n" +_translate("Form","Version : ",None) + self.pref.nvidiuxVersionStr + " | " + self.labelOs)
 		self.labelLang.setText(_translate("Form","Langue",None))
 		self.checkBoxExpert.setText(_translate("Form", "Option avancé", None))
 		self.buttonLicence.setText(_translate("Form", "Licence",None))
