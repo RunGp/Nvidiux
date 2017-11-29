@@ -27,12 +27,12 @@ Install
 
 Debian
 in command line use :
-- wget https://github.com/RunGp/Nvidiux/releases/download/1.4.3/nvidiux.deb
-- sudo dpkg -i nvidiux.deb
+- wget https://github.com/RunGp/Nvidiux/releases/download/1.4.5/nvidiux.deb
+- sudo dpkg -i nvidiux1.4.5.deb
 - sudo apt-get install -f
 
 Ubuntu 
-use this ppa https://launchpad.net/~nvidiux/+archive/ubuntu/nvidiux
+use this ppa https://launchpad.net/~nvidiux/+archive/ubuntu/nvidiux or use the deb file in release
 
 Arch - Manjaro
 Nvidiux is available on AUR : https://aur.archlinux.org/packages/nvidiux/
@@ -82,12 +82,12 @@ Installation :
 Debian
 Installez le paquet deb se trouvant ici (https://github.com/RunGp/Nvidiux/releases) avec votre instalateur de paquet favoris
 Ou taper les commandes dans votre terminal:
-- wget https://github.com/RunGp/Nvidiux/releases/download/1.4.3/nvidiux.deb
-- sudo dpkg -i nvidiux.deb
+- wget https://github.com/RunGp/Nvidiux/releases/download/1.4.5/nvidiux.deb
+- sudo dpkg -i nvidiux1.4.5.deb
 - sudo apt-get install -f
 
 Ubuntu
-Un ppa est dispo : https://launchpad.net/~nvidiux/+archive/ubuntu/nvidiux
+Un ppa est dispo : https://launchpad.net/~nvidiux/+archive/ubuntu/nvidiux vous pouvez aussi utiliser le fichier deb dans les release
 
 Arch - Manjaro
 Nvidiux est disponible sur AUR : https://aur.archlinux.org/packages/nvidiux/
