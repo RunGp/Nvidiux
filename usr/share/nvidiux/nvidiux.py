@@ -35,7 +35,6 @@ import getopt
 import platform
 import re
 import urllib
-import platform
 
 muttex = threading.RLock()
 
@@ -169,7 +168,7 @@ class NvidiuxApp(QMainWindow):
 	optimus = 0
 	
 	pref = Settings()
-	pref.nvidiuxVersionStr = "1.4.4.30"
+	pref.nvidiuxVersionStr = "1.4.5.33"
 	pref.nvidiuxVersion = 1.4
 	pref.updateTime = 1
 	pref.startWithSystem = False
@@ -182,7 +181,7 @@ class NvidiuxApp(QMainWindow):
 	pref.overclockEnabled = True
 	pref.overvoltEnabled = False
 	pref.sameParamGpu = True
-	pref.monitorGen = 1
+	pref.monitorGen = 2
 	
 	change = 0
 	formSettings = None
@@ -206,13 +205,13 @@ class NvidiuxApp(QMainWindow):
 	vaapi= False
 	home = expanduser("~")
 	resetAllGpu = False
+	notUseNdi= False
 	silent = False
-	
 	
 	def __init__(self,argv,parent=None):
 		super (NvidiuxApp, self).__init__(parent)
 		try:                            
-			opts, args = getopt.getopt(argv, "vhs:p:r", ["version","help", "silent=","pathlib=","reset","accept-eula"])
+			opts, args = getopt.getopt(argv, "vhs:p:r", ["version","help", "silent=","pathlib=","reset","accept-eula","no-stat"])
 		except getopt.GetoptError:
 			if "-s" in argv:
 				print "Missing ndiFile"
@@ -247,10 +246,16 @@ class NvidiuxApp(QMainWindow):
 					print "Unable to access this directory (please verify your path)"
 					self.showHelp()
 					sys.exit(3)
-					
-			if opt in ("-v", "--version"):
+		
+			elif opt in ("-v", "--version"):
 				print "Nvidiux version:" + self.pref.nvidiuxVersionStr
 				sys.exit(0)
+				
+			elif opt in ("--no-stat"):
+				self.pref.sendStat = False
+				self.notUseNdi = True
+				print "NO STAT"
+			
 			elif opt in ("-s", "--silent"):
 				if os.path.isfile(arg):
 					self.ndifile = arg
@@ -259,8 +264,10 @@ class NvidiuxApp(QMainWindow):
 					print "Unable to find profile file"
 					self.showHelp()
 					sys.exit(3)
+	
 			elif opt in ("-r", "--reset"):
-				self.resetAllGpu = True	 
+				self.resetAllGpu = True
+				self.notUseNdi = True	 
 			
 			elif opt in ("--accept-eula"):
 				if not os.path.isfile(self.home + "/.nvidiux/acceptedeula"):
@@ -275,8 +282,9 @@ class NvidiuxApp(QMainWindow):
 				else:
 					print "You already accept EULA\nnothing to do"
 					sys.exit(0)
+					
 		if len(argv) == 1:
-			if argv[0] != "-r" and argv[0] != "--reset":
+			if not self.notUseNdi:
 				if os.path.isfile(argv[0]):
 					self.ndifile = argv[0]
 				else:
@@ -409,7 +417,16 @@ class NvidiuxApp(QMainWindow):
 				sys.exit(2)	
 		if self.resetAllGpu:
 			self.reset()
-		self.setGpuStat()
+		linuxDistrib = platform.linux_distribution()
+		if linuxDistrib == ('', '', ''):
+			if os.path.isfile("/etc/issue"):
+				with open("/etc/issue") as f:
+					self.pref.labelOs = f.read().split()[0] + " " + platform.architecture()[0]
+			else:
+				self.pref.labelOs = "Unknown distrib" + platform.architecture()[0]
+		else:
+			self.pref.labelOs = linuxDistrib[0] + " " + linuxDistrib[1] + " " + linuxDistrib[2] + " " + platform.architecture()[0]
+		self.setGpuStat(1,0,0)
 		self.ui.buttonReset.connect(self.ui.buttonReset,SIGNAL("released()"),self.reset)
 		self.ui.buttonAbout.connect(self.ui.buttonAbout,SIGNAL("released()"),self.about)
 		self.ui.buttonLoadProfile.connect(self.ui.buttonLoadProfile,SIGNAL("released()"),self.loadProfile)
@@ -552,9 +569,10 @@ class NvidiuxApp(QMainWindow):
 			try:
 				cmd = "nvidia-smi -L"
 				ListeGpuSmi, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-				self.pref.nbGpuNvidia = ListeGpu.count('GeForce')
+				self.pref.nbGpuNvidia = ListeGpuSmi.count('GeForce')
 				if self.pref.nbGpuNvidia == 0:
 					return self.showError(4,"Gpu Nvidia introuvable","Gpu Nvidia introuvable",self.error)
+				ListeGpu = ListeGpuSmi
 			except:
 				return self.showError(4,"Gpu Nvidia introuvable","Gpu Nvidia introuvable",self.error)
 
@@ -605,25 +623,11 @@ class NvidiuxApp(QMainWindow):
 	
 	def getVersionDriverSupport(self):
 		try:
-			page=urllib.urlopen('http://nvidiux.redirectme.net:2008/version.html')
+			page=urllib.urlopen('http://nvidiux.redirectme.net:2008/version.html?version=' + self.pref.nvidiuxVersionStr)
 			return float(page.read())
 		except:
 			return 0
-			
-	def setGpuStat(self):
-		try:
-			linuxDistrib = platform.linux_distribution()
-			if linuxDistrib == ('', '', ''):
-				if os.path.isfile("/etc/issue"):
-					with open("/etc/issue") as f:
-						self.pref.labelOs = f.read().split()[0] + " " + platform.architecture()[0]
-				else:
-					self.pref.labelOs = "Unknown distrib" + platform.architecture()[0]
-			page=urllib.urlopen('http://nvidiux.redirectme.net:2008/gpuStat.html?gpu=' + str(self.tabGpu[0].nameGpu) + '?os=' + str(self.pref.labelOs))
-			return float(page.read())
-		except:
-			return 0
-			
+					
 	def initialiseData(self):
 		info = ""
 		err = ""
@@ -696,19 +700,38 @@ class NvidiuxApp(QMainWindow):
 		out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
 		try:
 			openGlV = out.split('NVIDIA')[0].split('string:')[-1]
+			if openGlV == "":
+				openGlV = "4.5.0"
 		except: #Assuming  all card is in 4.5.0 found other method detect openGL version
 			openGlV = "4.5.0"
 
 		cmd = "lspci -vnn | grep NVIDIA | grep -v Audio | grep GeForce"
 		out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()		
 		for i in range(0, self.pref.nbGpuNvidia):
-			try:
-				self.tabGpu.append(Gpuinfo())
-				self.tabGpu[i].nameGpu =  "GeForce" + out.split('\n')[i].split("GeForce")[-1].split("]")[0]
-			except:
-				print "Text to send:" + str(out)
-				self.showError(34,_translate("nvidiux","Echec",None),_translate("nvidiux","Echec chargement des parametres Gpu",None),self.error)
-				sys.exit(1)
+			if out.count('GeForce') == 1:
+				try:
+					self.tabGpu.append(Gpuinfo())
+					self.tabGpu[i].nameGpu =  "GeForce" + out.split('\n')[i].split("GeForce")[-1].split("]")[0]
+				except:
+					print "Text to send:" + str(out)
+					self.showError(34,_translate("nvidiux","Echec",None),_translate("nvidiux","Echec chargement des parametres Gpu",None),self.error)
+					sys.exit(1)
+			else:
+				cmd = "nvidia-smi -L"
+				out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+				if out.count('GeForce') == 1:
+					try:
+						self.tabGpu.append(Gpuinfo())
+						self.tabGpu[i].nameGpu =  "GeForce" + out.split('\n')[i].split("GeForce")[-1].split("(")[0][:-1]
+					except:
+						print "Text to send:" + str(out)
+						self.showError(34,_translate("nvidiux","Echec",None),_translate("nvidiux","Echec chargement des parametres Gpu",None),self.error)
+						sys.exit(1)
+				else:
+					print "Text to send:" + str(out)
+					self.showError(-34,_translate("nvidiux","Echec",None),_translate("nvidiux","Echec chargement des parametres Gpu",None),self.error)
+					sys.exit(1)
+				
 			cmd = "nvidia-settings -a [gpu:" + str(i) + "]/GPUPowerMizerMode=1"
 			sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True)
 				
@@ -799,13 +822,26 @@ class NvidiuxApp(QMainWindow):
 					try:
 						out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
 						self.tabGpu[i].fanSpeed = out.split(': ')[1].split('.')[0]
+						if int(self.tabGpu[i].fanSpeed) == 0:
+							self.ui.SliderFan.setEnabled(False)
+							self.ui.checkBoxFan.setChecked(False)
+							self.ui.checkBoxFan.setEnabled(False)
+							self.ui.checkBoxFan.setVisible(False)
+							self.ui.labelFanVitesse.setText(_translate("nvidiux","incompatible",None))
 					except:
 						self.tabGpu[i].fanSpeed = 0
 						self.ui.SliderFan.setEnabled(False)
 						self.ui.checkBoxFan.setChecked(False)
-						self.ui.labelFanVitesse.setText(_translate("nvidiux","incompatible(impossible de detecter la vitesse)",None))
+						self.ui.checkBoxFan.setEnabled(False)
+						self.ui.checkBoxFan.setVisible(False)
+						self.ui.labelFanVitesse.setText(_translate("nvidiux","incompatible",None))
 				else:
 					self.tabGpu[i].fanSpeed = 0
+					self.ui.SliderFan.setEnabled(False)
+					self.ui.checkBoxFan.setEnabled(False)
+					self.ui.checkBoxFan.setChecked(False)
+					self.ui.checkBoxFan.setVisible(False)
+					self.ui.labelFanVitesse.setText(_translate("nvidiux","incompatible",None))
 					
 				try:
 					cmd = "nvidia-settings --query [gpu:" + str(i) + "]/GPUFanControlState"
@@ -822,6 +858,7 @@ class NvidiuxApp(QMainWindow):
 					self.ui.SliderFan.setEnabled(False)
 					self.ui.checkBoxFan.setChecked(False)
 					self.ui.checkBoxFan.setEnabled(False)
+					self.tabGpu[i].fanSpeed = 0
 					self.ui.labelFanVitesse.setText(_translate("nvidiux","incompatible",None))
 			else:
 				self.ui.SliderFan.setEnabled(False)
@@ -969,6 +1006,7 @@ class NvidiuxApp(QMainWindow):
 			lang = confFile.getElementsByTagName("lang")
 			start = confFile.getElementsByTagName("start-system")
 			valueStart = confFile.getElementsByTagName("valuestart")
+			sendStat = confFile.getElementsByTagName("send-stat")
 			overvoltEnabled =  confFile.getElementsByTagName("overvoltenabled")
 			sameGpuParam =  confFile.getElementsByTagName("samegpuparam")
 			if float(versionElement[0].firstChild.nodeValue) > float(self.pref.nvidiuxVersion):
@@ -987,6 +1025,13 @@ class NvidiuxApp(QMainWindow):
 				self.pref.sameParamGpu = True
 			elif sameGpuParam[0].firstChild.nodeValue == "False":
 				self.pref.sameParamGpu = False
+			else:
+				raise DataError("corrupt Data")
+				
+			if sendStat[0].firstChild.nodeValue == "True":
+				self.pref.sendStat = True
+			elif sendStat[0].firstChild.nodeValue == "False":
+				self.pref.sendStat = False
 			else:
 				raise DataError("corrupt Data")
 				
@@ -1154,6 +1199,8 @@ class NvidiuxApp(QMainWindow):
 		overclock = False
 		i = 0
 		maxNivPerf = 2
+		offsetMem = 0
+		offsetGpu = 0
 		cmd = "nvidia-settings --query [gpu:" + str(i) + "]/GPUPerfModes"
 		if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 			out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
@@ -1198,6 +1245,7 @@ class NvidiuxApp(QMainWindow):
 			self.ui.label_Dfreq_Gpu.setText(str(self.tabGpu[self.numGpu].freqGpu) + _fromUtf8(" Mhz →"))
 			self.ui.label_Dfreq_Shader.setText(str(self.tabGpu[self.numGpu].freqShader) + _fromUtf8(" Mhz →"))
 			self.ui.label_Dfreq_Mem.setText(str(self.tabGpu[self.numGpu].freqMem) + _fromUtf8(" Mhz →"))
+			self.setGpuStat(2,offsetGpu,offsetMem)
 		else:
 			if mode == "1":
 				return self.showError(8,_translate("nvidiux","Echec",None),_translate("nvidiux","L'overclock à echoué",None),self.error)
@@ -1266,8 +1314,25 @@ class NvidiuxApp(QMainWindow):
 		-s --silent <ndiFile>	apply profile and not show interface
 		-v --version 		print nvidiux version
 		--accept-eula		Read and accept eula
+		--no-stat 		Disable All stat
 		<ndiFile> 		apply profile and show nvidiux'''
 	
+	def setGpuStat(self,step,offsetGpu,offsetMem):
+		if self.pref.sendStat:
+			try:
+				if step == 1:
+					page=urllib.urlopen('http://nvidiux.redirectme.net:2008/gpuStat.html?gpu=' + str(self.tabGpu[0].nameGpu) + '?os=' + str(self.pref.labelOs))
+					return 0
+				elif step == 2:
+					page=urllib.urlopen('http://nvidiux.redirectme.net:2008/gpuStatOverclock.html?gpu=' + str(self.tabGpu[0].nameGpu) + '?gpu_new_freq=' + str(self.tabGpu[0].freqGpu) + "," + str(offsetGpu) + '?mem_new_freq=' + str(self.tabGpu[0].freqMem)+ "," + str(offsetMem))
+					return 0
+				else:
+					return 11
+			except:
+				return 1
+		else:
+			return 10
+			
 	def setStartSystem(self,start,value):
 		self.pref.startWithSystem = start
 		self.pref.valueStart = value
@@ -1432,6 +1497,13 @@ class NvidiuxApp(QMainWindow):
 			text = fileToSave.createTextNode("False")
 		startSystem.appendChild(text)
 		racine.appendChild(startSystem)
+		sendStat = fileToSave.createElement('send-stat')
+		if self.pref.sendStat:
+			text = fileToSave.createTextNode("True")
+		else:
+			text = fileToSave.createTextNode("False")
+		sendStat.appendChild(text)
+		racine.appendChild(sendStat)
 		valueStart = fileToSave.createElement('valuestart')
 		text = fileToSave.createTextNode(str(self.pref.valueStart))
 		valueStart.appendChild(text)
@@ -1583,9 +1655,9 @@ class NvidiuxApp(QMainWindow):
 		verified = ["GeForce GT 420M","GeForce GTX 460M","GeForce GT 430","GeForce GT 440","GeForce GTX 460","GeForce GTX 460 SE v2","GeForce GTX 470","GeForce GTX 480",
 		"GeForce GTX 550 Ti","GeForce GTX 560M","GeForce GTX 560 Ti","GeForce GTX 570","GeForce GTX 580",
 		"GeForce GT 620","GeForce GT 630","GeForce GTX 650","GeForce GTX 660","GeForce GTX 670","GeForce GTX 680","GeForce GTX 690",
-		"GeForce GT 730","GeForce GT 740","GeForce GTX 750","GeForce GTX 750 TI","GeForce GTX 760","GeForce GTX 770","GeForce GTX 780","GeForce GTX 780 Ti",
-		"GeForce Gtx 960","GeForce GTX 970","GeForce GTX 980","GeForce GTX 880m",
-		"GeForce GT 1030","GeForce Gtx 1060","GeForce Gtx 1070","GeForce Gtx 1080"]
+		"GeForce GT 730","GeForce GT 740","GeForce GTX 750","GeForce GTX 750 TI","GeForce GTX 760","GeForce GTX 770","GeForce GTX 780","GeForce GTX 780 TI",
+		"GeForce GTX 960","GeForce GTX 970","GeForce GTX 980","GeForce GTX 980 TI","GeForce GTX 880m",
+		"GeForce GT 1030","GeForce GTX 1050","GeForce GTX 1050 TI","GeForce GTX 1060","GeForce GTX 1070","GeForce GTX 1070 TI","GeForce GTX 1080","GeForce GTX 1080 TI"]
 		notWork = ["GeForce GT 340", "GeForce GT 330", "GeForce GT 320", "GeForce 315", "GeForce 310","GeForce GTS 360M", "GeForce GTS 350M", "GeForce GT 335M", "GeForce GT 330M","GeForce GT 325M", "GeForce GT 320M", "GeForce 320M", "GeForce 315M", "GeForce 310M", "GeForce 305M",
 		"GeForce GTX 295", "GeForce GTX 285","GeForce GTX 280", "GeForce GTX 275", "GeForce GTX 260", "GeForce GTS 250", "GeForce GTS 240", "GeForce GT 230", "GeForce GT 240", "GeForce GT 220", "GeForce G210", "GeForce 210", "GeForce 205",
 		"GeForce GTX 285M", "GeForce GTX 280M", "GeForce GTX 260M", "GeForce GTS 260M", "GeForce GTS 250M", "GeForce GT 240M", "GeForce GT 230M", "GeForce GT 220M", "GeForce G210M", "GeForce G205M",

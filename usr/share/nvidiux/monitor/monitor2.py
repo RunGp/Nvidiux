@@ -95,9 +95,9 @@ class MonitorApp(QMainWindow):
 	plotFanCurve = None
 	anguage = None
 	monitorVersion = 0.8
-	monitorVersionStr = "0.8.1"
+	monitorVersionStr = "0.8.2"
 	versionPilote = 331.31
-	versionPiloteMaxTest = 370.23
+	versionPiloteMaxTest = 387.22
 	nbGpuNvidia = -1
 	tabGpu = list()
     
@@ -105,18 +105,18 @@ class MonitorApp(QMainWindow):
 		super (MonitorApp, self).__init__(parent)
 
 		self.ui = Ui_MainWindow()
-		self.pref.language = QtCore.QLocale.system().name()
+		self.language = QtCore.QLocale.system().name()
 		self.ui.setupUi(self)
 		textSystem = _translate("monitor","Nvidia driver version: ",None)
 		cmd = "nvidia-settings --query [gpu:0]/NvidiaDriverVersion"
 		if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 			out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-			self.pref.piloteVersion = float(out.split(':')[-1][1:])
-			textSystem = textSystem + str(self.pref.piloteVersion) + "\n"
+			self.piloteVersion = float(out.split(':')[-1][1:])
+			textSystem = textSystem + str(self.piloteVersion) + "\n"
 		else:
 			sys.exit(1)
 		
-		if self.pref.piloteVersion > self.versionPiloteMaxTest:
+		if self.piloteVersion > self.versionPiloteMaxTest:
 			print _translate("monitor","Driver > MAX",None)
 			
 		self.iscompatible()
@@ -247,7 +247,7 @@ class MonitorApp(QMainWindow):
 		tabParam.append(self.monitorVersionStr)
 		tabParam.append(self.nbGpuNvidia)
 		tabParam.append(self.tabGpu)
-		tabParam.append(self.pref.language)
+		tabParam.append(self.language)
 		tabParam.append(app)
 		self.formSettings = Ui_Pref_Monitor(1,tabParam,self)
 		self.formSettings.show()
@@ -266,6 +266,7 @@ class MonitorApp(QMainWindow):
 			return False
 		if str(filename[-4:]) == ".png":
 			filename = filename[:-4]
+		print filename
 		exporter.export(filename + "Gpu" + ".png")
 		exporter2.export(filename + "Fan" + ".png")
 		exporter3.export(filename + "Temp" + ".png")
@@ -353,7 +354,7 @@ class MonitorApp(QMainWindow):
 		tabParam.append(self.monitorVersionStr)
 		tabParam.append(self.nbGpuNvidia)
 		tabParam.append(self.tabGpu)
-		tabParam.append(self.pref.language)
+		tabParam.append(self.language)
 		tabParam.append(app)
 		self.formSettings = Ui_Pref_Monitor(0,tabParam,self)
 		self.formSettings.show()

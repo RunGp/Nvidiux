@@ -54,6 +54,7 @@ class Settings():
 	overvoltEnabled = False	
 	piloteVersion = "331"
 	labelOs = ""
+	sendStat = True
 	sameParamGpu = False
 	monitorGen = 1
 	language = None
