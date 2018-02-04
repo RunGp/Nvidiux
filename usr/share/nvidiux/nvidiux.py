@@ -70,6 +70,7 @@ class Gpuinfo():
 	openGlVersion = ""
 	vulkanVersion = ""
 	arch = ""
+	uuid = ""
 	isCompatible = False
 	
 class ThreadCheckMonitor(threading.Thread):
@@ -168,7 +169,7 @@ class NvidiuxApp(QMainWindow):
 	optimus = 0
 	
 	pref = Settings()
-	pref.nvidiuxVersionStr = "1.4.5.33"
+	pref.nvidiuxVersionStr = "1.4.6.35"
 	pref.nvidiuxVersion = 1.4
 	pref.updateTime = 1
 	pref.startWithSystem = False
@@ -181,7 +182,7 @@ class NvidiuxApp(QMainWindow):
 	pref.overclockEnabled = True
 	pref.overvoltEnabled = False
 	pref.sameParamGpu = True
-	pref.monitorGen = 2
+	pref.monitorGen = 1
 	
 	change = 0
 	formSettings = None
@@ -337,10 +338,13 @@ class NvidiuxApp(QMainWindow):
 		self.ui.label_Dfreq_Gpu.setText(str(self.tabGpu[self.numGpu].defaultFreqGpu) + _fromUtf8(" Mhz →"))
 		self.ui.label_Dfreq_Shader.setText(str(self.tabGpu[self.numGpu].defaultFreqShader) + _fromUtf8(" Mhz →"))
 		self.ui.label_Dfreq_Mem.setText(str(self.tabGpu[self.numGpu].defaultFreqMem) + _fromUtf8(" Mhz →"))
-		if self.tabGpu[self.numGpu].arch == "fermi":
-			self.ui.SliderFan.setMinimum(30)
-		else:
-			self.ui.SliderFan.setMinimum(10)
+		
+		if self.ui.SliderFan.isEnabled():
+			if self.tabGpu[self.numGpu].arch == "fermi":
+				self.ui.SliderFan.setMinimum(30)
+			else:
+				self.ui.SliderFan.setMinimum(10)
+
 		if not self.tabGpu[self.numGpu].isCompatible:
 			self.ui.SliderMem.setEnabled(False)
 			self.ui.SliderGpu.setEnabled(False)
@@ -486,9 +490,6 @@ class NvidiuxApp(QMainWindow):
 	
 	def clickImage(self):
 		try:
-			cmd = "nvidia-settings --query [gpu:" + str(self.numGpu) + "]/GpuUUID"
-			out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-			
 			cmd = "nvidia-settings --query [gpu:" + str(self.numGpu) + "]/GPUMemoryInterface"
 			out2, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
 			
@@ -497,7 +498,7 @@ class NvidiuxApp(QMainWindow):
 			
 			msg = ""
 			msg += _translate("nvidiux","Nom gpu:",None) + self.tabGpu[self.numGpu].nameGpu + "\n"
-			msg += _translate("nvidiux","Gpu UUid:",None) + out.split("):")[-1] + "\n"
+			msg += _translate("nvidiux","Gpu UUid:",None) + self.tabGpu[self.numGpu].uuid + "\n"
 			msg += _translate("nvidiux","Interface memoire gpu:",None) + out2.split("):")[1].split(".")[0] + _translate("nvidiux","bits",None) + "\n"
 			msg += _translate("nvidiux","PCIE Gen:",None) + out3.split("):")[1].split(".")[0] + "\n"
 			msg += _translate("nvidiux","Famille Gpu:",None) + self.tabGpu[self.numGpu].arch + "\n" 
@@ -701,14 +702,14 @@ class NvidiuxApp(QMainWindow):
 		try:
 			openGlV = out.split('NVIDIA')[0].split('string:')[-1]
 			if openGlV == "":
-				openGlV = "4.5.0"
-		except: #Assuming  all card is in 4.5.0 found other method detect openGL version
-			openGlV = "4.5.0"
+				openGlV = "4.6.0"
+		except: #Assuming  all card is in 4.6.0 found other method detect openGL version
+			openGlV = "4.6.0"
 
 		cmd = "lspci -vnn | grep NVIDIA | grep -v Audio | grep GeForce"
 		out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()		
 		for i in range(0, self.pref.nbGpuNvidia):
-			if out.count('GeForce') == 1:
+			if out.count('GeForce') >= 1:
 				try:
 					self.tabGpu.append(Gpuinfo())
 					self.tabGpu[i].nameGpu =  "GeForce" + out.split('\n')[i].split("GeForce")[-1].split("]")[0]
@@ -719,7 +720,7 @@ class NvidiuxApp(QMainWindow):
 			else:
 				cmd = "nvidia-smi -L"
 				out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-				if out.count('GeForce') == 1:
+				if out.count('GeForce') >= 1:
 					try:
 						self.tabGpu.append(Gpuinfo())
 						self.tabGpu[i].nameGpu =  "GeForce" + out.split('\n')[i].split("GeForce")[-1].split("(")[0][:-1]
@@ -805,6 +806,9 @@ class NvidiuxApp(QMainWindow):
 			except:
 				self.tabGpu[i].arch = "Unknown"
 				
+			cmd = "nvidia-settings --query [gpu:" + str(i) + "]/GpuUUID"
+			out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
+			self.tabGpu[i].uuid = str(out.split("):")[-1].split("\n")[1].replace(" ", ""))
 				
 			cmd = "nvidia-settings --query all | grep SyncToVBlank"
 			out, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
@@ -1321,10 +1325,10 @@ class NvidiuxApp(QMainWindow):
 		if self.pref.sendStat:
 			try:
 				if step == 1:
-					page=urllib.urlopen('http://nvidiux.redirectme.net:2008/gpuStat.html?gpu=' + str(self.tabGpu[0].nameGpu) + '?os=' + str(self.pref.labelOs))
+					page=urllib.urlopen('http://nvidiux.redirectme.net:2008/gpuStat.html?gpu=' + str(self.tabGpu[0].nameGpu).replace(" ","_") + "?uuid=" + str(self.tabGpu[0].uuid)  + '?os=' + str(self.pref.labelOs).replace(" ","_"))
 					return 0
 				elif step == 2:
-					page=urllib.urlopen('http://nvidiux.redirectme.net:2008/gpuStatOverclock.html?gpu=' + str(self.tabGpu[0].nameGpu) + '?gpu_new_freq=' + str(self.tabGpu[0].freqGpu) + "," + str(offsetGpu) + '?mem_new_freq=' + str(self.tabGpu[0].freqMem)+ "," + str(offsetMem))
+					page=urllib.urlopen('http://nvidiux.redirectme.net:2008/gpuStatOverclock.html?gpu=' + str(self.tabGpu[0].nameGpu).replace(" ","_") + '?gpu_new_freq=' + str(self.tabGpu[0].freqGpu) + "," + str(offsetGpu) + '?mem_new_freq=' + str(self.tabGpu[0].freqMem)+ "," + str(offsetMem))
 					return 0
 				else:
 					return 11
