@@ -28,7 +28,7 @@ Install
 Debian
 in command line use :
 - wget https://github.com/RunGp/Nvidiux/releases/download/1.4.6/nvidiux.deb
-- sudo dpkg -i nvidiux1.4.6.deb
+- sudo dpkg -i nvidiux.deb
 - sudo apt-get install -f
 
 Ubuntu 
@@ -83,7 +83,7 @@ Debian
 Installez le paquet deb se trouvant ici (https://github.com/RunGp/Nvidiux/releases) avec votre instalateur de paquet favoris
 Ou taper les commandes dans votre terminal:
 - wget https://github.com/RunGp/Nvidiux/releases/download/1.4.6/nvidiux.deb
-- sudo dpkg -i nvidiux1.4.6.deb
+- sudo dpkg -i nvidiux.deb
 - sudo apt-get install -f
 
 Ubuntu
