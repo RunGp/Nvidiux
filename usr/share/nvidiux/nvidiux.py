@@ -169,8 +169,8 @@ class NvidiuxApp(QMainWindow):
 	optimus = 0
 	
 	pref = Settings()
-	pref.nvidiuxVersionStr = "1.4.6.35"
-	pref.nvidiuxVersion = 1.4
+	pref.nvidiuxVersionStr = "1.5.0.35"
+	pref.nvidiuxVersion = 1.5
 	pref.updateTime = 1
 	pref.startWithSystem = False
 	pref.valueStart = "0:0"
@@ -442,7 +442,8 @@ class NvidiuxApp(QMainWindow):
 		self.ui.buttonApply.connect(self.ui.buttonApply,SIGNAL("released()"),self.applyNewClock)
 		self.ui.buttonSwitchApi.connect(self.ui.buttonSwitchApi,SIGNAL("released()"),self.switchApi)
 		self.ui.buttonSwitchUseGpu.connect(self.ui.buttonSwitchUseGpu,SIGNAL("released()"),self.switchUseGpu)
-		
+		self.ui.buttonWeb.connect(self.ui.buttonWeb,SIGNAL("released()"),self.openRapport)
+	
 		self.ui.SliderMem.connect(self.ui.SliderMem, SIGNAL("sliderMoved(int)"),self.updateMem)
 		self.ui.SliderGpu.connect(self.ui.SliderGpu, SIGNAL("sliderMoved(int)"),self.updateGpu)
 		self.ui.SliderFan.connect(self.ui.SliderFan, SIGNAL("sliderMoved(int)"),self.changeFanSpeed)
@@ -460,7 +461,7 @@ class NvidiuxApp(QMainWindow):
 		self.ui.checkBoxVSync.connect(self.ui.checkBoxVSync,QtCore.SIGNAL("clicked(bool)"),self.stateVSync)
 		self.ui.checkBoxMPerf.connect(self.ui.checkBoxMPerf,QtCore.SIGNAL("clicked(bool)"),self.maxPerf)
 		
-		self.ui.label_Img.connect(self.ui.label_Img, SIGNAL("clicked()"), self.clickImage)
+		self.ui.label_Img.connect(self.ui.label_Img, SIGNAL("clicked()"), self.openRapport)
 		self.ui.listWidgetGpu.itemClicked.connect(self.changeGpu)
 
 		cmd = "vainfo | wc -l"
@@ -481,14 +482,14 @@ class NvidiuxApp(QMainWindow):
 			reply = QtGui.QMessageBox.question(self,_translate("nvidiux","Modifier chemin par defaut lib nvidia",None),_translate("nvidiux","Choisir le chemin:" + self.pathLibNvidia + " par defaut pour les prochaines utilisations ?",None), QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
 			if reply == QtGui.QMessageBox.Yes:
 				os.symlink(self.pathLibNvidia,self.home + "/.nvidiux/libNvidia")
-			
+
 	def configureMonitor(self):
 		self.pref.gpu = self.tabGpu
 		self.pref.app = app
 		self.formSettings = Ui_Pref(1,self.pref,self)
 		self.formSettings.show()
 	
-	def clickImage(self):
+	def openRapport(self):
 		try:
 			cmd = "nvidia-settings --query [gpu:" + str(self.numGpu) + "]/GPUMemoryInterface"
 			out2, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
@@ -993,7 +994,12 @@ class NvidiuxApp(QMainWindow):
 		else:
 			self.ui.buttonReset.setEnabled(False)
 
-		self.ui.about.setText(_translate("nvidiux","Version ",None) + str(".".join(self.pref.nvidiuxVersionStr.split(".")[:-1])))
+		self.ui.versionLabel.setText(_translate("nvidiux","Version ",None) + str(".".join(self.pref.nvidiuxVersionStr.split(".")[:-1])))
+		#self.ui.nomGpu.setText("GeForce GTX 1080 TI")
+		#self.ui.checkBoxFan.setVisible(True)
+		self.ui.groupBoxOvervolt.setVisible(True)
+		self.ui.groupBoxOvervolt.setEnabled(False)
+		self.ui.buttonBench.setEnabled(False)
 		
 	def killTMonitor(self):
 		if self.pidMonitor != 0:
