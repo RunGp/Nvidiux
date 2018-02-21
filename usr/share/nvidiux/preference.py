@@ -59,6 +59,7 @@ class Settings():
 	monitorGen = 1
 	language = None
 	app = None
+	syncFan = False
 
 class Ui_Pref(QWidget):
 	
