@@ -579,7 +579,7 @@ class Ui_MainWindow(object):
         self.VitesseShader.setText(_translate("MainWindow", "Shader", None))
         self.VitesseGpu.setText(_translate("MainWindow", "Gpu", None))
         self.title.setText(_translate("MainWindow", "Nvidiux", None))
-        self.checkVersion.setText(_translate("MainWindow", "Nvidiux est à jour", None))
+        self.checkVersion.setText(_translate("MainWindow", "Nvidiux est a jour", None))
         self.buttonReset.setText(_translate("MainWindow", "Reset", None))
         self.buttonApply.setText(_translate("MainWindow", "Appliquer", None))
         self.labelFanVitesse.setText(_translate("MainWindow", "Auto",None))

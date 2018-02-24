@@ -520,7 +520,7 @@ class Ui_Pref(QWidget):
 		self.checkBoxStat.setText(_translate("Form", "Desactiver Stat", None))
 		self.checkBoxStat.setChecked(not self.pref.sendStat)
 		self.buttonStatDetails = QtGui.QPushButton(self.groupBoxPrefGen)
-		self.buttonStatDetails.setGeometry(QtCore.QRect(140, 130, 20, 20))
+		self.buttonStatDetails.setGeometry(QtCore.QRect(200, 130, 20, 20))
 		self.buttonStatDetails.setObjectName(_fromUtf8("buttonStatDetails"))
 		self.buttonStatDetails.setEnabled(True)
 		self.buttonStatDetails.setText("?")
@@ -715,7 +715,7 @@ class Ui_Pref(QWidget):
 		self.labelInfo.setFont(font)
 		
 		self.linkToWeb = QtGui.QLabel(self.about)
-		self.linkToWeb.move(250,150)
+		self.linkToWeb.move(250,130)
 		self.linkToWeb.setAlignment(QtCore.Qt.AlignCenter)
 		urlLink="<a href=\"http://github.com/RunGp/Nvidiux\">Site Officiel</a>" 
 		self.linkToWeb .setText(urlLink)

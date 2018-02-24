@@ -556,7 +556,7 @@ class NvidiuxApp(QMainWindow):
 				os.symlink(self.pathLibNvidia,self.home + "/.nvidiux/libNvidia")
 				
 		self.ui.groupBoxOvervolt.setVisible(True)		
-		self.printMessage(str(self.pref.nbGpuNvidia) + _translate("nvidiux"," gpu nvidia detecté",None))
+		self.printMessage(str(self.pref.nbGpuNvidia) + _translate("nvidiux"," gpu nvidia detecte",None))
 		if not self.pref.sendStat:
 			self.printMessage(_translate("nvidiux","Statistique desactivé",None))
 
