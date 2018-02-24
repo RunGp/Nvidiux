@@ -370,7 +370,6 @@ class NvidiuxApp(QMainWindow):
 		self.numGpu = 3
 		self.changeGpu()
 	
-	
 	def changeGpu(self):
 		self.ui.lcdShader.display(self.tabGpu[self.numGpu].freqShader)
 		self.ui.SliderShader.setSliderPosition(int(self.tabGpu[self.numGpu].freqShader))
@@ -407,7 +406,7 @@ class NvidiuxApp(QMainWindow):
 			self.ui.buttonSaveProfile.setEnabled(False)
 			self.ui.actionLoadProfile.setEnabled(False)
 			self.ui.actionSaveProfile.setEnabled(False)
-			self.ui.Message.setText(_translate("nvidiux","Gpu(" ,None) + str(gpu.nameGpu) + _translate("nvidiux",") non supporte",None))
+			self.printMessage(_translate("nvidiux","Gpu(" ,None) + str(gpu.nameGpu) + _translate("nvidiux",") non supporte",None))
 			self.pref.overclockEnabled = False
 		else:
 			self.ui.SliderMem.setEnabled(True)
@@ -416,7 +415,7 @@ class NvidiuxApp(QMainWindow):
 			self.ui.buttonSaveProfile.setEnabled(True)
 			self.ui.actionLoadProfile.setEnabled(True)
 			self.ui.actionSaveProfile.setEnabled(True)
-			self.ui.Message.setText(_translate("nvidiux","",None))
+			self.printMessage(_translate("nvidiux","",None))
 			self.pref.overclockEnabled = True
 			if self.pref.overvoltEnabled and self.piloteVersion >= 346.16:
 				self.ui.spinBoxOvervolt.setMaximum(self.tabGpu[self.numGpu].maxOvervolt)
@@ -505,7 +504,7 @@ class NvidiuxApp(QMainWindow):
 		self.ui.buttonSwitchApi.connect(self.ui.buttonSwitchApi,SIGNAL("released()"),self.switchApi)
 		self.ui.buttonSwitchUseGpu.connect(self.ui.buttonSwitchUseGpu,SIGNAL("released()"),self.switchUseGpu)
 		self.ui.buttonWeb.connect(self.ui.buttonWeb,SIGNAL("released()"),self.openRapport)
-		self.ui.buttonThemes.connect(self.ui.buttonThemes,SIGNAL("released()"),self.changeThemes)
+		self.ui.buttonDonate.connect(self.ui.buttonDonate,SIGNAL("released()"),self.showDonate)
 		self.ui.buttonSwitchUseMem.connect(self.ui.buttonSwitchUseMem,SIGNAL("released()"),self.switchValueMem)
 		self.ui.buttonSwitchTypeMem.connect(self.ui.buttonSwitchTypeMem,SIGNAL("released()"),self.switchMemVid)
 
@@ -525,10 +524,7 @@ class NvidiuxApp(QMainWindow):
 		self.ui.checkBoxFan.connect(self.ui.checkBoxFan,QtCore.SIGNAL("clicked(bool)"),self.stateFan)
 		self.ui.checkBoxVSync.connect(self.ui.checkBoxVSync,QtCore.SIGNAL("clicked(bool)"),self.stateVSync)
 		self.ui.checkBoxMPerf.connect(self.ui.checkBoxMPerf,QtCore.SIGNAL("clicked(bool)"),self.maxPerf)
-		
-		#self.ui.label_Img.connect(self.ui.label_Img, SIGNAL("clicked()"), self.openRapport)
-		#self.ui.listWidgetGpu.itemClicked.connect(self.changeGpu)
-
+	
 		try:
 			cmd = "vainfo | wc -l"
 			if int(sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()[0].replace('\n','')) > 6:
@@ -558,6 +554,11 @@ class NvidiuxApp(QMainWindow):
 			reply = QtGui.QMessageBox.question(self,_translate("nvidiux","Modifier chemin par defaut lib nvidia",None),_translate("nvidiux","Choisir le chemin:" + self.pathLibNvidia + " par defaut pour les prochaines utilisations ?",None), QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
 			if reply == QtGui.QMessageBox.Yes:
 				os.symlink(self.pathLibNvidia,self.home + "/.nvidiux/libNvidia")
+				
+		self.ui.groupBoxOvervolt.setVisible(True)		
+		self.printMessage(str(self.pref.nbGpuNvidia) + _translate("nvidiux"," gpu nvidia detecté",None))
+		if not self.pref.sendStat:
+			self.printMessage(_translate("nvidiux","Statistique desactivé",None))
 
 	def configureMonitor(self):
 		self.pref.gpu = self.tabGpu
@@ -582,7 +583,7 @@ class NvidiuxApp(QMainWindow):
 					if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 						self.ui.labelFanVitesse.setText(str(value) + "%")
 					else:
-						self.ui.Message.setText(_translate("nvidiux","Echec\nchangement vitesse ventillo",None) + " gpu " + str(i) + ":" + nomGpu)
+						self.printMessage(_translate("nvidiux","Echec changement vitesse ventillo",None) + " gpu " + str(i) + ":" + nomGpu)
 				i = i + 1
 		else:
 			if self.piloteVersion < 346.99:
@@ -593,7 +594,7 @@ class NvidiuxApp(QMainWindow):
 			if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 				self.ui.labelFanVitesse.setText(str(value) + "%")
 			else:
-				self.ui.Message.setText(_translate("nvidiux","Echec\nchangement vitesse ventillo",None))			
+				self.printMessage(_translate("nvidiux","Echec changement vitesse ventillo",None))			
 		
 	def defineDefaultFreqGpu(self,gpuName):
 		try:
@@ -726,7 +727,7 @@ class NvidiuxApp(QMainWindow):
 		else:
 			self.showError(29,_translate("nvidiux","Echec",None),_translate("nvidiux","Impossible de determiner la version des drivers",None),self.error)
 		if self.piloteVersion > self.piloteVersionMaxTest:
-			self.ui.Message.setText(_translate("nvidiux","Driver non supporté (trop recent ?)",None)) 
+			self.printMessage(_translate("nvidiux","Driver non supporté (trop recent ?)",None)) 
 			if not os.path.isfile(self.home + "/.nvidiux/ntchkdriver"):
 				reply = QtGui.QMessageBox.question(self,_translate("nvidiux","Xorg.conf",None),_translate("nvidiux","Driver non testé (support < " + str(self.piloteVersionMaxTest) +")!\nVoulez vous activer l'overcloking ?",None), QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
 				if reply == QtGui.QMessageBox.No:	
@@ -741,7 +742,7 @@ class NvidiuxApp(QMainWindow):
 					self.ui.actionLoadProfile.setEnabled(False)
 					self.ui.actionSaveProfile.setEnabled(False)
 					self.pref.overclockEnabled = False
-					self.ui.Message.setText(_translate("nvidiux","Driver non supporté (trop recent ?)\nOverclock desactivé",None))
+					self.printMessage(_translate("nvidiux","Driver non supporté (trop recent ?) Overclock desactivé",None))
 				
 		if self.piloteVersion <= 337.18:
 			self.ui.SliderMem.setEnabled(False)
@@ -755,7 +756,7 @@ class NvidiuxApp(QMainWindow):
 			self.ui.actionLoadProfile.setEnabled(False)
 			self.ui.actionSaveProfile.setEnabled(False)
 			self.pref.overclockEnabled = False
-			self.ui.Message.setText(_translate("nvidiux","Driver non supporté (trop ancien)!\nOverclock desactivé",None))
+			self.printMessage(_translate("nvidiux","Driver non supporté (trop ancien)! Overclock desactivé",None))
 			QMessageBox.information(self,_translate("nvidiux","Driver",None),_translate("nvidiux","Driver non supporte:trop ancien\nOverclock desactive\nIl vous faut la version 337.19 ou plus recent pour overclocker",None))
 		
 		cmd = "glxinfo | grep \"OpenGL version string\""
@@ -1053,7 +1054,7 @@ class NvidiuxApp(QMainWindow):
 			self.ui.buttonSaveProfile.setEnabled(False)
 			self.ui.actionLoadProfile.setEnabled(False)
 			self.ui.actionSaveProfile.setEnabled(False)
-			self.ui.Message.setText(_translate("nvidiux","Gpu(" ,None) + str(self.tabGpu[0].nameGpu) + _translate("nvidiux",") non supporte",None))
+			self.printMessage(_translate("nvidiux","Gpu(" ,None) + str(self.tabGpu[0].nameGpu) + _translate("nvidiux",") non supporte",None))
 			self.pref.overclockEnabled = False	
 			
 		if self.tabGpu[i].arch == "pascal" and self.pref.piloteVersion < 370.01:
@@ -1114,15 +1115,6 @@ class NvidiuxApp(QMainWindow):
 
 		self.ui.labelGpuArch.setText("Gen: " + str(self.tabGpu[0].arch))
 		self.ui.versionLabel.setText(_translate("nvidiux","Version : ",None) + str(".".join(self.pref.nvidiuxVersionStr.split(".")[:-1])))
-		
-		## debug
-		self.ui.nomGpu.setText("GeForce GTX 1080 TI")
-		self.ui.checkBoxFan.setVisible(True)
-		#self.ui.SliderFan.setEnabled(True)
-		self.ui.groupBoxOvervolt.setVisible(True)
-		self.ui.groupBoxOvervolt.setEnabled(False)
-		self.ui.buttonThemes.setEnabled(False)
-		## debug
 		
 	def killTMonitor(self):
 		if self.pidMonitor != 0:
@@ -1307,6 +1299,7 @@ class NvidiuxApp(QMainWindow):
 					if sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 						self.showError(-1,_translate("nvidiux","Erreur",None),_translate("nvidiux","Impossible de passer en mode max perf",None),self.warning)
 						self.ui.checkBoxMPerf.setChecked(False)
+				self.printMessage(_translate("nvidiux","Mode Max perf : Actif",None))
 			else:
 				self.ui.checkBoxMPerf.setChecked(False)
 		else:
@@ -1315,6 +1308,7 @@ class NvidiuxApp(QMainWindow):
 				if sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 					self.showError(-1,_translate("nvidiux","Erreur",None),_translate("nvidiux","Impossible de passer en mode adaptatif",None),self.warning)
 					self.ui.checkBoxMPerf.setChecked(True)
+				self.printMessage(_translate("nvidiux","Mode Max perf : Inactif",None))
 	
 	def openRapport(self):
 		try:
@@ -1377,19 +1371,19 @@ class NvidiuxApp(QMainWindow):
 		if success:
 			if mode == "0": #Reset
 				self.showError(0,_translate("nvidiux","Effectue",None),_translate("nvidiux","Reset effectue",None),self.info)
-				self.ui.Message.setText(_translate("nvidiux","Reset effectué",None))
+				self.printMessage(_translate("nvidiux","Reset effectué",None))
 			elif mode == "1": #Normal
 				self.showError(0,_translate("nvidiux","Effectue",None),_translate("nvidiux","Changement effectue",None),self.info)
-				self.ui.Message.setText(_translate("nvidiux","Overclock effectué",None))
+				self.printMessage(_translate("nvidiux","Overclock effectué",None))
 			elif mode == "2": #On Load Profile
-				self.ui.Message.setText(_translate("nvidiux","Overclock effectué",None))
+				self.printMessage(_translate("nvidiux","Overclock effectué",None))
 			elif mode == "3": #Auto Startup
 				self.ui.SliderGpu.setSliderPosition(self.tabGpu[self.numGpu].freqGpu)
 				self.ui.SliderShader.setSliderPosition(self.tabGpu[self.numGpu].freqShader)
 				self.ui.SliderMem.setSliderPosition(self.tabGpu[self.numGpu].freqMem)
-				self.ui.Message.setText(_translate("nvidiux","Auto overclock effectué",None))
+				self.printMessage(_translate("nvidiux","Auto overclock effectué",None))
 			else:
-				self.ui.Message.setText(_fromUtf8(""))
+				self.printMessage(_fromUtf8(""))
 				
 			self.change = False
 			self.ui.buttonApply.setEnabled(False)
@@ -1404,6 +1398,14 @@ class NvidiuxApp(QMainWindow):
 			else:
 				return self.showError(9,_translate("nvidiux","Echec",None),_translate("nvidiux","Le reset à echoué",None),self.error)
 				
+	def printMessage(self,textToPrint):
+		if self.ui.Message.text() == "":
+			self.ui.Message.setText(textToPrint)
+		else:
+			if self.ui.Message.text().count('\n') >= 2:
+				self.ui.Message.setText(self.ui.Message.text().split('\n')[1] + "\n" + self.ui.Message.text().split('\n')[2])
+			self.ui.Message.setText(self.ui.Message.text() + "\n" + textToPrint.replace("\n",""))
+		
 	def quitapp(self):
 		if self.change:
 			reply = QtGui.QMessageBox.question(self,_translate("nvidiux","Message",None),_translate("nvidiux","Etes vous sur de vouloir quitter sans appliquer les modifications ?",None), QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
@@ -1443,7 +1445,7 @@ class NvidiuxApp(QMainWindow):
 		self.change = False
 		self.ui.buttonApply.setEnabled(False)
 		self.ui.buttonReset.setEnabled(False)
-		self.ui.Message.setText(_translate("nvidiux","Reset effectue",None))
+		self.printMessage(_translate("nvidiux","Reset effectue",None))
 	
 	def resizeEvent(self, event):
 		self.showNormal()
@@ -1525,7 +1527,7 @@ class NvidiuxApp(QMainWindow):
 		self.ui.spinBoxOvervolt.setMaximum(self.tabGpu[self.numGpu].maxOvervolt)
 		self.ui.labelValueOvervolt.setText(str(self.tabGpu[self.numGpu].overvolt) + _translate("nvidiux","μv",None))
 		self.pref.overvoltEnabled = value
-		self.ui.groupBoxOvervolt.setVisible(value)
+		self.ui.groupBoxOvervolt.setEnabled(value)
 		
 		if self.tabGpu[self.numGpu].maxOvervolt == 0:
 			self.ui.groupBoxOvervolt.setEnabled(False)
@@ -1576,6 +1578,12 @@ class NvidiuxApp(QMainWindow):
 			else:
 				self.ui.SliderFan.setEnabled(False)
 				self.ui.labelFanVitesse.setText("Auto")
+				
+	def showDonate(self):
+		import webbrowser
+		url = "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=4FQJZJXVH5994"
+		webbrowser.open(url,new=2)
+	
 	def startMonitor(self):
 		if self.pidMonitor != 0:
 			try:
@@ -1604,7 +1612,7 @@ class NvidiuxApp(QMainWindow):
 			cmd = "nvidia-settings -a SyncToVBlank=1"
 			if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 				self.ui.checkBoxVSync.setChecked(True)
-				self.ui.Message.setText(_fromUtf8("Vsync Actif"))
+				printMessage(_fromUtf8("Vsync Actif"))
 			else:
 				self.ui.checkBoxVSync.setChecked(False)
 				self.showError(-1,_translate("nvidiux","Impossible",None),_translate("nvidiux","Impossible d'activer la syncro vertical",None),self.warning)
@@ -1612,7 +1620,7 @@ class NvidiuxApp(QMainWindow):
 			cmd = "nvidia-settings -a SyncToVBlank=0"
 			if not sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
 				self.ui.checkBoxVSync.setChecked(False)
-				self.ui.Message.setText(_fromUtf8("Vsync Inactif"))
+				self.printMessage(_fromUtf8("Vsync Inactif"))
 			else:
 				self.ui.checkBoxVSync.setChecked(True)
 				self.showError(-1,_translate("nvidiux","Impossible",None),_translate("nvidiux","Impossible de desactiver la syncro vertical",None),self.warning)

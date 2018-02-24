@@ -130,6 +130,9 @@ class Ui_Pref(QWidget):
 		else:
 			self.showError(50,_translate("Form","Echec",None),_translate("Form","Erreur Interne",None),self.error)
 	
+	def changeStat(self):
+		self.pref.sendStat = not self.pref.sendStat
+		
 	def disableCronStartup(self):
 		startUpFilePath = expanduser("~") + "/.nvidiux/startup.sh"
 		cmd = "bash /usr/share/nvidiux/toRoot.sh disableStartupCron.sh " + expanduser("~") + " >> /dev/null 2>&1"
@@ -176,7 +179,10 @@ class Ui_Pref(QWidget):
 			self.checkBoxSys.setChecked(False)
 			return -1
 		return 0
-			
+		
+	def getStatDetails(self):
+		QMessageBox.information(self,_translate("nvidiux","Details",None),_translate("nvidiux","Information recolté par nvidiux:\n- Version des drivers nvidia\n- Nom des gpu nvidia installé\n- Nombre de gpu nvidia\n- Uuid de chaque Gpu\n- Version du systeme + l'Architecture (32/64Bits)\nLes données ne sont utilisé que pour des statistiques de compatibilité et d'utilisaton.\nElle ne sont pas revendue, ni partagé à des tiers.",None))
+		
 	def loadProfileNvi(self):
 		tab,fileToLoad = self.loadProfile()
 		if fileToLoad != None:
@@ -264,7 +270,7 @@ class Ui_Pref(QWidget):
 		self.buttonParcSys.setText(_translate("Form", "Parcourir", None))
 		self.checkBoxSys.setText(_translate("Form", "Appliquer ce profil au demarrage du systeme", None))
 		self.checkBoxTime.setText(_translate("Form", "Actualiser les donnees toutes les", None))
-		self.spinBox.setSuffix(_translate("Form", " secondes", None))
+		self.spinBox.setSuffix(_translate("Form", " seconde", None))
 		self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabConf), _translate("Form", "Nvidiux", None))
 		self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabMoniteur), _translate("Form", "Moniteur", None))
 		self.tabWidget.setTabText(self.tabWidget.indexOf(self.about), _translate("Form", "A Propos", None))
@@ -402,12 +408,13 @@ class Ui_Pref(QWidget):
 		self.tabWidget = QtGui.QTabWidget(self)
 		self.tabWidget.setGeometry(QtCore.QRect(0, 0, 600, 540))
 		self.tabWidget.setObjectName(_fromUtf8("tabWidget"))
-		
 		self.tabConf = QtGui.QWidget()
 		self.tabConf.setObjectName(_fromUtf8("tabConf"))
 		self.tabWidget.addTab(self.tabConf, _fromUtf8(""))
+		
+		
 		self.groupBoxPrefProfile = QtGui.QGroupBox(self.tabConf)
-		self.groupBoxPrefProfile.setGeometry(QtCore.QRect(10, 180, 535,120 ))
+		self.groupBoxPrefProfile.setGeometry(QtCore.QRect(10, 210, 560,120 ))
 		self.groupBoxPrefProfile.setStyleSheet(_fromUtf8("QGroupBox \n"
 			"{ \n"
 			"border: 1px solid SlateGrey;\n"
@@ -415,35 +422,31 @@ class Ui_Pref(QWidget):
 			"}"))
 		self.groupBoxPrefProfile.setTitle(_fromUtf8(""))
 		self.groupBoxPrefProfile.setObjectName(_fromUtf8("groupBoxPrefProfile"))
-		
 		self.buttonParcNvi = QtGui.QPushButton(self.groupBoxPrefProfile)
-		self.buttonParcNvi.setGeometry(QtCore.QRect(360, 5, 100, 27))
+		self.buttonParcNvi.setGeometry(QtCore.QRect(360, 5, 120, 40))
 		self.buttonParcNvi.setObjectName(_fromUtf8("buttonParcNvi"))
 		self.buttonParcNvi.setEnabled(False)
 		self.checkBoxNvi = QtGui.QCheckBox(self.groupBoxPrefProfile)
-		self.checkBoxNvi.setGeometry(QtCore.QRect(10, 5, 350, 20))
+		self.checkBoxNvi.setGeometry(QtCore.QRect(10, 15, 350, 20))
 		self.checkBoxNvi.setObjectName(_fromUtf8("checkBoxNvi"))
 		self.labelGpuNvi = QtGui.QLabel(self.groupBoxPrefProfile)
-		self.labelGpuNvi.setGeometry(QtCore.QRect(35, 25, 400, 30))
+		self.labelGpuNvi.setGeometry(QtCore.QRect(35, 35, 400, 30))
 		self.labelGpuNvi.setObjectName(_fromUtf8("labelGpuNvi"))
 		self.checkBoxNvi.setEnabled(self.pref.overclockEnabled)
-		
 		if os.path.isfile(self.home + "/.nvidiux/Startup.ndi"):
 			self.checkBoxNvi.setChecked(True)
 			self.buttonParcNvi.setEnabled(True)
 			self.labelGpuNvi.setText("Auto chargement actif")
-
 		self.buttonParcSys = QtGui.QPushButton(self.groupBoxPrefProfile)
-		self.buttonParcSys.setGeometry(QtCore.QRect(360, 65, 100, 27))
+		self.buttonParcSys.setGeometry(QtCore.QRect(360, 65, 120, 40))
 		self.buttonParcSys.setObjectName(_fromUtf8("buttonParcSys"))
 		self.buttonParcSys.setEnabled(False)
 		self.checkBoxSys = QtGui.QCheckBox(self.groupBoxPrefProfile)
-		self.checkBoxSys.setGeometry(QtCore.QRect(10, 65, 350, 20))
+		self.checkBoxSys.setGeometry(QtCore.QRect(10, 75, 350, 20))
 		self.checkBoxSys.setObjectName(_fromUtf8("checkBoxSys"))
 		self.labelGpuSys = QtGui.QLabel(self.groupBoxPrefProfile)
-		self.labelGpuSys.setGeometry(QtCore.QRect(35, 85, 400, 30))
+		self.labelGpuSys.setGeometry(QtCore.QRect(35, 95, 400, 30))
 		self.labelGpuSys.setObjectName(_fromUtf8("labelGpuSys"))
-		
 		if os.path.isfile("/usr/bin/crontab") and os.path.isfile("/usr/bin/sudo") and self.pref.overclockEnabled:
 			self.checkBoxSys.setEnabled(True)
 		else:
@@ -455,8 +458,9 @@ class Ui_Pref(QWidget):
 		else:
 			self.checkBoxSys.setChecked(False)
 
+
 		self.groupBoxPrefGen = QtGui.QGroupBox(self.tabConf)
-		self.groupBoxPrefGen.setGeometry(QtCore.QRect(10, 10, 535,160 ))
+		self.groupBoxPrefGen.setGeometry(QtCore.QRect(10, 10, 560,190 ))
 		self.groupBoxPrefGen.setStyleSheet(_fromUtf8("QGroupBox \n"
 			"{ \n"
 			"border: 1px solid SlateGrey;\n"
@@ -464,12 +468,10 @@ class Ui_Pref(QWidget):
 			"}"))
 		self.groupBoxPrefGen.setTitle(_fromUtf8(""))
 		self.groupBoxPrefGen.setObjectName(_fromUtf8("groupBoxPrefGen"))
-	
 		self.checkBoxTime = QtGui.QCheckBox(self.groupBoxPrefGen)
 		self.checkBoxTime.setGeometry(QtCore.QRect(10, 50, 320, 20))
 		self.checkBoxTime.setChecked(self.pref.autoUpdate)
 		self.checkBoxTime.setObjectName(_fromUtf8("checkBoxTime"))
-		
 		self.spinBox = QtGui.QSpinBox(self.groupBoxPrefGen)
 		self.spinBox.setGeometry(QtCore.QRect(270, 46, 120, 25))
 		self.spinBox.setAccelerated(True)
@@ -483,12 +485,10 @@ class Ui_Pref(QWidget):
 		else:
 			self.spinBox.setSuffix(_translate("Form", " secondes", None))
 		self.spinBox.setObjectName(_fromUtf8("spinBox"))
-		
 		self.labelLang = QtGui.QLabel(self.groupBoxPrefGen)
 		self.labelLang.setGeometry(QtCore.QRect(10, 5, 220, 40))
 		self.labelLang.setObjectName(_fromUtf8("labelLang"))
 		self.labelLang.setText(_translate("Form","Langue",None))
-
 		self.combolang=QComboBox(self.groupBoxPrefGen)
 		self.combolang.setObjectName("List language")
 		self.combolang.setGeometry(QtCore.QRect(90, 8, 200, 30))
@@ -504,36 +504,43 @@ class Ui_Pref(QWidget):
 			self.combolang.setCurrentIndex(3)
 		else:
 			self.combolang.setCurrentIndex(1)
-		
 		self.checkBoxSameGpu = QtGui.QCheckBox(self.groupBoxPrefGen)
 		self.checkBoxSameGpu.setGeometry(QtCore.QRect(10, 75, 450, 20))
 		self.checkBoxSameGpu.setObjectName(_fromUtf8("checkBoxSameGpu"))
 		self.checkBoxSameGpu.setChecked(self.pref.sameParamGpu)
 		self.checkBoxSameGpu.setText(_translate("Form", "Appliquer les mêmes paramètres à des gpus identiques",None))
-		
 		self.checkBoxVerifDriver = QtGui.QCheckBox(self.groupBoxPrefGen)
 		self.checkBoxVerifDriver.setGeometry(QtCore.QRect(10, 95, 450, 35))
 		self.checkBoxVerifDriver.setObjectName(_fromUtf8("checkBoxVerifDriver"))
 		self.checkBoxVerifDriver.setChecked(os.path.isfile(self.home + "/.nvidiux/ntchkdriver"))
 		self.checkBoxVerifDriver.setText(_translate("Form", "Activer overclock meme si la version\ndu driver n'est pas reconnue",None))
-		
+		self.checkBoxStat = QtGui.QCheckBox(self.groupBoxPrefGen)
+		self.checkBoxStat.setGeometry(QtCore.QRect(10, 130, 450, 20))
+		self.checkBoxStat.setObjectName(_fromUtf8("checkBoxStat"))
+		self.checkBoxStat.setText(_translate("Form", "Desactiver Stat", None))
+		self.checkBoxStat.setChecked(not self.pref.sendStat)
+		self.buttonStatDetails = QtGui.QPushButton(self.groupBoxPrefGen)
+		self.buttonStatDetails.setGeometry(QtCore.QRect(140, 130, 20, 20))
+		self.buttonStatDetails.setObjectName(_fromUtf8("buttonStatDetails"))
+		self.buttonStatDetails.setEnabled(True)
+		self.buttonStatDetails.setText("?")
 		self.checkBoxExpert = QtGui.QCheckBox(self.groupBoxPrefGen)
-		self.checkBoxExpert.setGeometry(QtCore.QRect(10, 130, 320, 20))
+		self.checkBoxExpert.setGeometry(QtCore.QRect(10, 155, 450, 20))
 		self.checkBoxExpert.setObjectName(_fromUtf8("checkBoxExpert"))
 		self.checkBoxExpert.setText(_translate("Form", "Option avancé", None))
 		self.checkBoxExpert.setChecked(False)	
 		
+		
 		self.groupBoxPrefAdvance= QtGui.QGroupBox(self.tabConf)
-		self.groupBoxPrefAdvance.setGeometry(QtCore.QRect(10, 310, 535,100 ))
+		self.groupBoxPrefAdvance.setGeometry(QtCore.QRect(10, 350, 560,100 ))
 		self.groupBoxPrefAdvance.setStyleSheet(_fromUtf8("QGroupBox \n"
 			"{ \n"
 			"border: 1px solid SlateGrey;\n"
 			"border-radius: 10px;\n"
 			"}"))
 		self.groupBoxPrefAdvance.setTitle(_fromUtf8(""))
-		self.groupBoxPrefAdvance.setVisible(False)
+		self.groupBoxPrefAdvance.setVisible(True)
 		self.groupBoxPrefAdvance.setObjectName(_fromUtf8("groupBoxPrefAdvance"))
-		
 		self.checkBoxOverVolt = QtGui.QCheckBox(self.groupBoxPrefAdvance)
 		self.checkBoxOverVolt.setGeometry(QtCore.QRect(10, 5, 600, 20))
 		self.checkBoxOverVolt.setObjectName(_fromUtf8("checkBoxOverVolt"))
@@ -554,14 +561,12 @@ class Ui_Pref(QWidget):
 				self.checkBoxOverVolt.setChecked(True)
 		else:
 			self.checkBoxOverVolt.setEnabled(False)
-		
 		self.checkBoxTurboBoost= QtGui.QCheckBox(self.groupBoxPrefAdvance)
 		self.checkBoxTurboBoost.setGeometry(QtCore.QRect(10, 25, 600, 20))
 		self.checkBoxTurboBoost.setObjectName(_fromUtf8("checkBoxTurboBoost"))
 		self.checkBoxTurboBoost.setText(_translate("Form","Forcer l'application des parametres pour gpuboost v1 (Gt(x)6XX)", None))
 		self.checkBoxTurboBoost.setChecked(False)
 		self.checkBoxTurboBoost.setEnabled(False)
-		
 		for i in range(0, self.pref.nbGpuNvidia):#only for gt(x) 6XX card
 			var_nb = int(re.findall('\d+', self.pref.gpu[i].nameGpu)[0])
 			if var_nb >= 600 and var_nb <= 699:
@@ -572,6 +577,7 @@ class Ui_Pref(QWidget):
 		    if search in line:
 			self.checkBoxTurboBoost.setChecked(True)
 		openFile.close()
+		
 		
 		self.tabMoniteur = QtGui.QWidget()
 		self.tabMoniteur.setObjectName(_fromUtf8("tabMoniteur"))
@@ -733,7 +739,7 @@ class Ui_Pref(QWidget):
 		self.buttonDonate = QtGui.QPushButton(self.groupBoxAbout)
 		self.buttonDonate.setGeometry(QtCore.QRect(110, 5, 105, 40))
 		self.buttonDonate.setObjectName(_fromUtf8("buttonDonate"))
-		self.buttonDonate.setVisible(False)
+		self.buttonDonate.setEnabled(True)
 		
 		self.buttonThanks = QtGui.QPushButton(self.groupBoxAbout)
 		self.buttonThanks.setGeometry(QtCore.QRect(5, 50, 210, 40))
@@ -780,13 +786,15 @@ class Ui_Pref(QWidget):
 		self.combolang.connect(self.combolang,QtCore.SIGNAL("currentIndexChanged(int)"),self.setLanguage)
 		self.checkBoxOverVolt.connect(self.checkBoxOverVolt,QtCore.SIGNAL("clicked(bool)"),self.setOvervolt)
 		self.checkBoxExpert.connect(self.checkBoxExpert,QtCore.SIGNAL("clicked(bool)"),self.showExpertSettings)
+		self.checkBoxStat.connect(self.checkBoxStat,QtCore.SIGNAL("clicked(bool)"),self.changeStat)
 		self.checkBoxSameGpu.connect(self.checkBoxSameGpu,QtCore.SIGNAL("clicked(bool)"),self.setSameParamGpu)
 		self.checkBoxVerifDriver.connect(self.checkBoxVerifDriver,QtCore.SIGNAL("clicked(bool)"),self.setVerifDriver)
 		self.checkBoxTurboBoost.connect(self.checkBoxTurboBoost,QtCore.SIGNAL("clicked(bool)"),self.setVerifTurboBoost)
 		self.checkBoxUpdateMon.connect(self.checkBoxUpdateMon,QtCore.SIGNAL("clicked(bool)"),self.setUpdateContin)
 		self.checkBoxChangeGenMon.connect(self.checkBoxChangeGenMon,QtCore.SIGNAL("clicked(bool)"),self.setChangeMonitor)
+		self.buttonStatDetails.connect(self.buttonStatDetails,SIGNAL("released()"),self.getStatDetails)
 		self.buttonLicence.connect(self.buttonLicence,SIGNAL("released()"),self.showLicence)
-		self.buttonDonate.connect(self.buttonDonate,SIGNAL("released()"),self.showDonate)
+		self.buttonDonate.connect(self.buttonDonate,SIGNAL("released()"),self.mainWindows.showDonate)
 		self.buttonThanks.connect(self.buttonThanks,SIGNAL("released()"),self.showT)
 		
 		self.setWindowTitle(_translate("Form", "Preferences", None))
@@ -841,11 +849,6 @@ class Ui_Pref(QWidget):
 		self.buttonThanks.setEnabled(False)
 		self.textBrowser.setText(_fromUtf8(_translate("Form","Special thanks to\n - @mglinux for german translation\n - @profesorfalken for spanish translation\n - @andrewschott for RPM packaging http://schotty.com/yum/el/7/repoview/nvidiux.html\n - @gaara @bishop @gfx @jul974 for testing and help for debug",None)))
 		
-	def showDonate(self):
-		import webbrowser
-		url = "http://docs.python.org/library/webbrowser.html"
-		webbrowser.open(url,new=2)
-	
 	def showColor(self,idButton):
 		pColor = self.colorBox.getColor()
 		self.listButtonColor[idButton].setStyleSheet("border-radius: 10px;\nbackground-color:rgb(" + str(pColor.getRgb()[0]) + "," + str(pColor.getRgb()[1]) + "," + str(pColor.getRgb()[2]) + ")")

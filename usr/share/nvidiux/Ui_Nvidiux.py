@@ -107,7 +107,6 @@ class Ui_MainWindow(object):
         self.labelProfile.setObjectName(_fromUtf8("LabelProfil"))
         font.setPointSize(12)
         self.labelProfile.setFont(font)
-        
 	self.groupBoxMonitor = QtGui.QGroupBox(self.groupBoxSettingsLeft)
         self.groupBoxMonitor.setGeometry(QtCore.QRect(3, 70, 190,65 ))
         self.groupBoxMonitor.setStyleSheet(_fromUtf8("QGroupBox \n"
@@ -202,12 +201,12 @@ class Ui_MainWindow(object):
         self.buttonAbout.setFlat(False)
         self.buttonAbout.setObjectName(_fromUtf8("buttonAbout"))
         # ~ self.buttonAbout.setIcon(QtGui.QIcon("/usr/share/nvidiux/img/i.png"))
-        self.buttonThemes = QtGui.QPushButton(self.groupBoxSettingsRight)
-        self.buttonThemes.setGeometry(QtCore.QRect(150, 5, 145, 62))
-        self.buttonThemes.setAutoDefault(False)
-        self.buttonThemes.setDefault(False)
-        self.buttonThemes.setFlat(False)
-        self.buttonThemes.setObjectName(_fromUtf8("buttonThemes"))
+        self.buttonDonate = QtGui.QPushButton(self.groupBoxSettingsRight)
+        self.buttonDonate.setGeometry(QtCore.QRect(150, 5, 145, 62))
+        self.buttonDonate.setAutoDefault(False)
+        self.buttonDonate.setDefault(False)
+        self.buttonDonate.setFlat(False)
+        self.buttonDonate.setObjectName(_fromUtf8("buttonDonate"))
         self.buttonConfigure = QtGui.QPushButton(self.groupBoxSettingsRight)
         self.buttonConfigure.setGeometry(QtCore.QRect(5, 70, 145, 62))
         self.buttonConfigure.setAutoDefault(False)
@@ -518,7 +517,7 @@ class Ui_MainWindow(object):
         self.buttonSwitchTypeMem.setIcon(QtGui.QIcon("/usr/share/nvidiux/img/switch25.png"))
 
         self.groupBoxMessage = QtGui.QGroupBox(self.centralwidget)
-        self.groupBoxMessage.setGeometry(QtCore.QRect(5, 650, 900,120 ))
+        self.groupBoxMessage.setGeometry(QtCore.QRect(5, 650, 900,140 ))
         self.groupBoxMessage.setStyleSheet(_fromUtf8("QGroupBox \n"
 	"{ \n"
 	"border: 2px solid black;\n"
@@ -532,7 +531,7 @@ class Ui_MainWindow(object):
         font.setBold(True)
         font.setWeight(75)
         self.Message.setFont(font)
-        self.Message.setText(_fromUtf8("1ere ligne \n2ieme ligne\n3ieme ligne"))
+        self.Message.setText(_fromUtf8(""))
         self.Message.setAlignment(QtCore.Qt.AlignCenter)
         self.Message.setObjectName(_fromUtf8("Message"))
         MainWindow.setCentralWidget(self.centralwidget)
@@ -590,7 +589,7 @@ class Ui_MainWindow(object):
         self.buttonAbout.setText(_translate("MainWindow", "A Propos", None))
         self.buttonConfigure.setText(_translate("MainWindow", "Parametres", None))
         self.buttonWeb.setText(_translate("MainWindow", "Rapport", None))
-        self.buttonThemes.setText(_translate("MainWindow", "Themes", None))
+        self.buttonDonate.setText(_translate("MainWindow", "Faire un don", None))
         self.labelTitleOvervolt.setText(_translate("MainWindow", "Volt", None))
         self.labelValueOvervolt.setText(_translate("MainWindow", "0 μv", None))
         self.buttonOvervolt.setText(_translate("MainWindow", "Changer", None))
