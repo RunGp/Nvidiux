@@ -539,7 +539,7 @@ class Ui_Pref(QWidget):
 			"border-radius: 10px;\n"
 			"}"))
 		self.groupBoxPrefAdvance.setTitle(_fromUtf8(""))
-		self.groupBoxPrefAdvance.setVisible(True)
+		self.groupBoxPrefAdvance.setVisible(False)
 		self.groupBoxPrefAdvance.setObjectName(_fromUtf8("groupBoxPrefAdvance"))
 		self.checkBoxOverVolt = QtGui.QCheckBox(self.groupBoxPrefAdvance)
 		self.checkBoxOverVolt.setGeometry(QtCore.QRect(10, 5, 600, 20))
@@ -602,18 +602,38 @@ class Ui_Pref(QWidget):
 				self.autoUpdate = True
 			itemlist = ndiFile.getElementsByTagName('gpu')
 			errorCode = 0
+			
 			if len(itemlist) > 0:
 				for item in itemlist:
 					if item.hasChildNodes():
 						for value in item.childNodes:
 							if value.nodeType == minidom.Node.ELEMENT_NODE:
 								gpuInfo.append(value.firstChild.nodeValue)
-							error = False
-						
+							else:
+								gpuInfo.append(str(i))
+								gpuInfo.append("255:255:0")
+								gpuInfo.append("True")
+								self.listGpuMonitor.append(gpuInfo)
+								
 						self.listGpuMonitor.append(gpuInfo)
 						gpuInfo = []
+					else:
+						gpuInfo.append(str(i))
+						gpuInfo.append("255:255:0")
+						gpuInfo.append("True")
+						self.listGpuMonitor.append(gpuInfo)
+			else:
+				i = 0
+				for gpu in self.pref.gpu:
+					gpuInfo.append(str(i))
+					gpuInfo.append("255:255:0")
+					gpuInfo.append("True")
+					self.listGpuMonitor.append(gpuInfo)
+					gpuInfo = []
+					i = i + 1
 		else:
 			i = 0
+			self.autoUpdate = False
 			for gpu in self.pref.gpu:
 				gpuInfo.append(str(i))
 				gpuInfo.append("255:255:0")

@@ -176,14 +176,14 @@ class NvidiuxApp(QMainWindow):
 	optimus = 0
 	
 	pref = Settings()
-	pref.nvidiuxVersionStr = "2.0.0.36"
+	pref.nvidiuxVersionStr = "2.0.1.40"
 	pref.nvidiuxVersion = 2.0
-	pref.nvidiuxVersionM = 0
+	pref.nvidiuxVersionM = 1
 	pref.updateTime = 1
 	pref.startWithSystem = False
 	pref.valueStart = "0:0"
 	piloteVersion = "331.31"
-	piloteVersionMaxTest = 375.10
+	piloteVersionMaxTest = 390.25
 	pathLibNvidia = "/usr/lib/"
 	pref.language = "en_EN"
 	pref.labelOs = ""
@@ -284,7 +284,6 @@ class NvidiuxApp(QMainWindow):
 			elif opt in ("--accept-eula"):
 				if not os.path.isfile(self.home + "/.nvidiux/acceptedeula"):
 					print "For use nvidiux you must accept this EULA :\nWarning this practice may void the warranty and remains of responsability of user software.\nThe author and community are not responsible of bad use and no liability for damages, direct or consequential, which may result from the use of Nvidiux.\nNvidiux is in no way affiliated to Nvidia"
-
 					response = str(raw_input('Do you accept this terms (N/y):'))
 					if response == "y" or response == "Y":
 						self.acceptEula()
@@ -622,7 +621,7 @@ class NvidiuxApp(QMainWindow):
 			page=urllib.urlopen('http://nvidiux.redirectme.net:2008/checkVersion.html?version=' + self.pref.nvidiuxVersionStr)#,timeout = 4
 			return str(page.read())
 		except:
-			return 0
+			return str(self.piloteVersionMaxTest) + "|" + str(self.pref.nvidiuxVersion) + ".0"
 			
 	def iscompatible(self):
 		cmd = "ls -l " + self.pathLibNvidia +  " | grep nvidia"
@@ -1314,15 +1313,15 @@ class NvidiuxApp(QMainWindow):
 		try:
 			cmd = "nvidia-settings --query [gpu:" + str(self.numGpu) + "]/PCIEGen"
 			out3, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
-			msg = ""
-			msg += _translate("nvidiux","Nom gpu:",None) + self.tabGpu[self.numGpu].nameGpu + "\n"
-			msg += _translate("nvidiux","Gpu UUid:",None) + self.tabGpu[self.numGpu].uuid + "\n"
-			msg += _translate("nvidiux","Interface memoire gpu:",None) +  self.tabGpu[self.numGpu].memInterface + _translate("nvidiux","bits",None) + "\n"
-			msg += _translate("nvidiux","PCIE Gen:",None) + out3.split("):")[1].split(".")[0] + "\n"
-			msg += _translate("nvidiux","Famille Gpu:",None) + self.tabGpu[self.numGpu].arch + "\n" 
-			QMessageBox.information(self,_translate("nvidiux","Extra informations",None),msg)
+			msg = "GPU INFO"
+			# ~ msg += _translate("nvidiux","Nom gpu:",None) + self.tabGpu[self.numGpu].nameGpu + "\n"
+			# ~ msg += _translate("nvidiux","Gpu UUid:",None) + self.tabGpu[self.numGpu].uuid + "\n"
+			# ~ msg += _translate("nvidiux","Interface memoire gpu:",None) + str(self.tabGpu[self.numGpu].memInterface) + _translate("nvidiux","bits",None) + "\n"
+			# ~ msg += _translate("nvidiux","PCIE Gen:",None) + out3.split("):")[1].split(".")[0] + "\n"
+			# ~ msg += _translate("nvidiux","Famille Gpu:",None) + self.tabGpu[self.numGpu].arch + "\n" 
+			QMessageBox.information(self,_translate("nvidiux","Rapport",None),msg)
 		except:
-			QMessageBox.information(self,_translate("nvidiux","Extra informations",None),_translate("nvidiux","Erreur lors d'obtention des données",None))
+			QMessageBox.information(self,_translate("nvidiux","Rapport",None),_translate("nvidiux","Erreur lors d'obtention des données",None))
 			
 	def overvolt(self):
 		if self.ui.spinBoxOvervolt.value() != 0 and self.pref.overvoltEnabled:
@@ -1826,24 +1825,24 @@ class NvidiuxApp(QMainWindow):
 			self.change = False
 		
 	def verifyGpu(self,gpuName):#-1:unknown 0:ok 1:not ok 
-		verified = ["GeForce GT 420M","GeForce GTX 460M","GeForce GT 430","GeForce GT 440","GeForce GTX 460","GeForce GTX 460 SE v2","GeForce GTX 470","GeForce GTX 480",
-		"GeForce GTX 550 Ti","GeForce GTX 560M","GeForce GTX 560 Ti","GeForce GTX 570","GeForce GTX 580",
-		"GeForce GT 620","GeForce GT 630","GeForce GTX 650","GeForce GTX 660","GeForce GTX 670","GeForce GTX 680","GeForce GTX 690",
-		"GeForce GT 730","GeForce GT 740","GeForce GTX 750","GeForce GTX 750 TI","GeForce GTX 760","GeForce GTX 770","GeForce GTX 780","GeForce GTX 780 TI",
-		"GeForce GTX 960","GeForce GTX 970","GeForce GTX 980","GeForce GTX 980 TI","GeForce GTX 880m",
-		"GeForce GT 1030","GeForce GTX 1050","GeForce GTX 1050 TI","GeForce GTX 1060","GeForce GTX 1070","GeForce GTX 1070 TI","GeForce GTX 1080","GeForce GTX 1080 TI"]
-		notWork = ["GeForce GT 340", "GeForce GT 330", "GeForce GT 320", "GeForce 315", "GeForce 310","GeForce GTS 360M", "GeForce GTS 350M", "GeForce GT 335M", "GeForce GT 330M","GeForce GT 325M", "GeForce GT 320M", "GeForce 320M", "GeForce 315M", "GeForce 310M", "GeForce 305M",
-		"GeForce GTX 295", "GeForce GTX 285","GeForce GTX 280", "GeForce GTX 275", "GeForce GTX 260", "GeForce GTS 250", "GeForce GTS 240", "GeForce GT 230", "GeForce GT 240", "GeForce GT 220", "GeForce G210", "GeForce 210", "GeForce 205",
-		"GeForce GTX 285M", "GeForce GTX 280M", "GeForce GTX 260M", "GeForce GTS 260M", "GeForce GTS 250M", "GeForce GT 240M", "GeForce GT 230M", "GeForce GT 220M", "GeForce G210M", "GeForce G205M",
-		"GeForce GT 140", "GeForce GT 130", "GeForce GT 120", "GeForce G100","GeForce GTS 160M", "GeForce GTS 150M", "GeForce GT 130M", "GeForce GT 120M", "GeForce G 110M", "GeForce G 105M", "GeForce G 103M"
-		"GeForce 9800 GX2", "GeForce 9800 GTX/GTX+", "GeForce 9800 GT", "GeForce 9600 GT", "GeForce 9600 GSO", "GeForce 9600 GSO 512", "GeForce 9600 GS", "GeForce 9500 GT", "GeForce 9500 GS", "GeForce 9400 GT", "GeForce 9400", "GeForce 9300 GS", "GeForce 9300 GE", "GeForce 9300 SE", "GeForce 9300", "GeForce 9200", "GeForce 9100",
-		"GeForce 9800M GTX", "GeForce 9800M GTS", "GeForce 9800M GT", "GeForce 9800M GS", "GeForce 9700M GTS", "GeForce 9700M GT", "GeForce 9650M GT", "GeForce 9650M GS", "GeForce 9600M GT", "GeForce 9600M GS", "GeForce 9500M GS", "GeForce 9500M G", "GeForce 9400M G", "GeForce 9400M", "GeForce 9300M GS", "GeForce 9300M G", "GeForce 9200M GS", "GeForce 9100M G",
-		"GeForce 8800 Ultra", "GeForce 8800 GTX", "GeForce 8800 GTS 512", "GeForce 8800 GTS", "GeForce 8800 GT","GeForce 8800 GS", "GeForce 8600 GTS", "GeForce 8600 GT", "GeForce 8600 GS", "GeForce 8500 GT", "GeForce 8400 GS", "GeForce 8400 SE", "GeForce 8400", "GeForce 8300 GS", "GeForce 8300", "GeForce 8200", "GeForce 8100 /nForce 720a",
-		"GeForce 8800M GTX", "GeForce 8800M GTS", "GeForce 8700M GT", "GeForce 8600M GT", "GeForce 8600M GS", "GeForce 8400M GT", "GeForce 8400M GS", "GeForce 8400M G", "GeForce 8200M G", "GeForce 8200M"]
+		verified = ["geforce gt 420m","geforce gtx 460m","geforce gt 430","geforce gt 440","geforce gtx 460","geforce gtx 460 se v2","geforce gtx 470","geforce gtx 480",
+		"geforce gtx 550 ti","geforce gtx 560m","geforce gtx 560 ti","geforce gtx 570","geforce gtx 580",
+		"geforce gt 620","geforce gt 630","geforce gtx 650","geforce gtx 660","geforce gtx 670","geforce gtx 680","geforce gtx 690",
+		"geforce gt 730","geforce gt 740","geforce gtx 750","geforce gtx 750 ti","geforce gtx 760","geforce gtx 770","geforce gtx 780","geforce gtx 780 ti",
+		"geforce gtx 960","geforce gtx 970","geforce gtx 980","geforce gtx 980 ti","geforce gtx 880m",
+		"geforce gt 1030","geforce gtx 1050","geforce gtx 1050 ti","geforce gtx 1060","geforce gtx 1070","geforce gtx 1070 ti","geforce gtx 1080","geforce gtx 1080 ti"]
+		notWork = ["geforce gt 340", "geforce gt 330", "geforce gt 320", "geforce 315", "geforce 310","geforce gts 360m", "geforce gts 350m", "geforce gt 335m", "geforce gt 330m","geforce gt 325m", "geforce gt 320m", "geforce 320m", "geforce 315m", "geforce 310m", "geforce 305m",
+		"geforce gtx 295", "geforce gtx 285","geforce gtx 280", "geforce gtx 275", "geforce gtx 260", "geforce gts 250", "geforce gts 240", "geforce gt 230", "geforce gt 240", "geforce gt 220", "geforce g210", "geforce 210", "geforce 205",
+		"geforce gtx 285m", "geforce gtx 280m", "geforce gtx 260m", "geforce gts 260m", "geforce gts 250m", "geforce gt 240m", "geforce gt 230m", "geforce gt 220m", "geforce g210m", "geforce g205m",
+		"geforce gt 140", "geforce gt 130", "geforce gt 120", "geforce g100","geforce gts 160m", "geforce gts 150m", "geforce gt 130m", "geforce gt 120m", "geforce g 110m", "geforce g 105m", "geforce g 103m"
+		"geforce 9800 gx2", "geforce 9800 gtx/gtx+", "geforce 9800 gt", "geforce 9600 gt", "geforce 9600 gso", "geforce 9600 gso 512", "geforce 9600 gs", "geforce 9500 gt", "geforce 9500 gs", "geforce 9400 gt", "geforce 9400", "geforce 9300 gs", "geforce 9300 ge", "geforce 9300 se", "geforce 9300", "geforce 9200", "geforce 9100",
+		"geforce 9800m gtx", "geforce 9800m gts", "geforce 9800m gt", "geforce 9800m gs", "geforce 9700m gts", "geforce 9700m gt", "geforce 9650m gt", "geforce 9650m gs", "geforce 9600m gt", "geforce 9600m gs", "geforce 9500m gs", "geforce 9500m g", "geforce 9400m g", "geforce 9400m", "geforce 9300m gs", "geforce 9300m g", "geforce 9200m gs", "geforce 9100m g",
+		"geforce 8800 ultra", "geforce 8800 gtx", "geforce 8800 gts 512", "geforce 8800 gts", "geforce 8800 gt","geforce 8800 gs", "geforce 8600 gts", "geforce 8600 gt", "geforce 8600 gs", "geforce 8500 gt", "geforce 8400 gs", "geforce 8400 se", "geforce 8400", "geforce 8300 gs", "geforce 8300", "geforce 8200", "geforce 8100 /nforce 720a",
+		"geforce 8800m gtx", "geforce 8800m gts", "geforce 8700m gt", "geforce 8600m gt", "geforce 8600m gs", "geforce 8400m gt", "geforce 8400m gs", "geforce 8400m g", "geforce 8200m g", "geforce 8200m"]
 	
-		if gpuName in verified:
+		if gpuName.lower() in verified:
 			return 0
-		if gpuName in notWork:
+		if gpuName.lower() in notWork:
 			return 1
 		return -1
 		
