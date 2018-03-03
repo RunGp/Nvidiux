@@ -176,7 +176,7 @@ class NvidiuxApp(QMainWindow):
 	optimus = 0
 	
 	pref = Settings()
-	pref.nvidiuxVersionStr = "2.0.1.40"
+	pref.nvidiuxVersionStr = "2.0.1.43"
 	pref.nvidiuxVersion = 2.0
 	pref.nvidiuxVersionM = 1
 	pref.updateTime = 1
@@ -606,9 +606,9 @@ class NvidiuxApp(QMainWindow):
 				if self.saveProfile(self.home  + "/.nvidiux/" + gpuName + ".ndi") != 0:
 					return self.showError(21,_translate("nvidiux","Droit insuffisant",None),_translate("nvidiux","Impossible d'ecrire le fichier !",None),self.error)
 				self.loadProfile(self.home  + "/.nvidiux/" + gpuName + ".ndi",True)
-			if self.ndifile != None:		
+			if self.ndifile == None:		
 				if os.path.isfile(self.home  + "/.nvidiux/Startup.ndi"):
-					self.loadProfile(home +"/.nvidiux/Startup.ndi",False,"3")	
+					self.loadProfile(self.home +"/.nvidiux/Startup.ndi",False,"3")	
 		except:
 			return self.showError(20,"Erreur","Erreur Chargement configuration",self.error)					
 		
@@ -956,9 +956,6 @@ class NvidiuxApp(QMainWindow):
 			cmd = "nvidia-settings --query [gpu:" + str(self.numGpu) + "]/GPUMemoryInterface"
 			out2, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
 			self.tabGpu[i].memInterface = int(out2.split("):")[1].split(".")[0])
-			
-		
-		
 		try:
 			for gpu in self.tabGpu:
 				returnCode = self.verifyGpu(gpu.nameGpu)
@@ -972,7 +969,7 @@ class NvidiuxApp(QMainWindow):
 					self.tabGpu[i].isCompatible = True
 				self.defineDefaultFreqGpu(gpu.nameGpu)
 			if info != "":
-					QMessageBox.information(self,_translate("nvidiux","Information",None),_fromUtf8(info))	
+				QMessageBox.information(self,_translate("nvidiux","Information",None),_fromUtf8(info))	
 		except:
 			self.showError(41,_translate("nvidiux","Echec",None),_translate("nvidiux","Echec chargement des parametres Gpu",None),self.error)
 			sys.exit(1)

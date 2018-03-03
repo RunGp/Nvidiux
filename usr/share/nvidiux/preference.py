@@ -457,7 +457,8 @@ class Ui_Pref(QWidget):
 			self.labelGpuSys.setText(_fromUtf8("Profil chargé"))
 		else:
 			self.checkBoxSys.setChecked(False)
-
+		
+		self.checkBoxSys.setEnabled(False) # find better way cron for 2.1...
 
 		self.groupBoxPrefGen = QtGui.QGroupBox(self.tabConf)
 		self.groupBoxPrefGen.setGeometry(QtCore.QRect(10, 10, 560,190 ))
@@ -556,11 +557,9 @@ class Ui_Pref(QWidget):
 							overvolt = False
 					except:
 						overvolt = False
+			print overvolt
 			self.checkBoxOverVolt.setEnabled(overvolt)
-			if self.pref.overvoltEnabled:
-				self.checkBoxOverVolt.setChecked(True)
-		else:
-			self.checkBoxOverVolt.setEnabled(False)
+		self.checkBoxOverVolt.setChecked(self.pref.overvoltEnabled)
 		self.checkBoxTurboBoost= QtGui.QCheckBox(self.groupBoxPrefAdvance)
 		self.checkBoxTurboBoost.setGeometry(QtCore.QRect(10, 25, 600, 20))
 		self.checkBoxTurboBoost.setObjectName(_fromUtf8("checkBoxTurboBoost"))
@@ -608,13 +607,7 @@ class Ui_Pref(QWidget):
 					if item.hasChildNodes():
 						for value in item.childNodes:
 							if value.nodeType == minidom.Node.ELEMENT_NODE:
-								gpuInfo.append(value.firstChild.nodeValue)
-							else:
-								gpuInfo.append(str(i))
-								gpuInfo.append("255:255:0")
-								gpuInfo.append("True")
-								self.listGpuMonitor.append(gpuInfo)
-								
+								gpuInfo.append(value.firstChild.nodeValue)	
 						self.listGpuMonitor.append(gpuInfo)
 						gpuInfo = []
 					else:
@@ -622,6 +615,7 @@ class Ui_Pref(QWidget):
 						gpuInfo.append("255:255:0")
 						gpuInfo.append("True")
 						self.listGpuMonitor.append(gpuInfo)
+						print "2"
 			else:
 				i = 0
 				for gpu in self.pref.gpu:
@@ -631,9 +625,10 @@ class Ui_Pref(QWidget):
 					self.listGpuMonitor.append(gpuInfo)
 					gpuInfo = []
 					i = i + 1
+					print "3"
 		else:
 			i = 0
-			self.autoUpdate = False
+			self.autoUpdate = True
 			for gpu in self.pref.gpu:
 				gpuInfo.append(str(i))
 				gpuInfo.append("255:255:0")
