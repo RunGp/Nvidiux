@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/python2
 
-# Copyright 2014-2016 Payet Guillaume
+# Copyright 2014-2018 Payet Guillaume
 #
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License version 3, as published
@@ -25,6 +25,7 @@ from confirm import ConfirmWindow
 from preference import Ui_Pref
 from preference import Settings
 from os.path import expanduser
+from donate import DonateWindow
 import subprocess as sub
 import sys
 import os
@@ -176,9 +177,9 @@ class NvidiuxApp(QMainWindow):
 	optimus = 0
 	
 	pref = Settings()
-	pref.nvidiuxVersionStr = "2.0.1.43"
+	pref.nvidiuxVersionStr = "2.0.2.43"
 	pref.nvidiuxVersion = 2.0
-	pref.nvidiuxVersionM = 1
+	pref.nvidiuxVersionM = 2
 	pref.updateTime = 1
 	pref.startWithSystem = False
 	pref.valueStart = "0:0"
@@ -1471,10 +1472,10 @@ class NvidiuxApp(QMainWindow):
 		if self.pref.sendStat:
 			try:
 				if step == 1:
-					page=urllib.urlopen('http://nvidiux.redirectme.net:2008/gpuStat.html?gpu=' + str(self.tabGpu[0].nameGpu).replace(" ","_") + "?uuid=" + str(self.tabGpu[0].uuid)  + '?os=' + str(self.pref.labelOs).replace(" ","_"))#,None,4
+					page=urllib.urlopen('http://nvidiux.redirectme.net:8883/gpuStat2.html?gpu=' + str(self.tabGpu[0].nameGpu).replace(" ","_") + "&uuid=" + str(self.tabGpu[0].uuid)  + '&os=' + str(self.pref.labelOs).replace(" ","_"))#,None,4
 					return 0
 				elif step == 2:
-					page=urllib.urlopen('http://nvidiux.redirectme.net:2008/gpuStatOverclock.html?gpu=' + str(self.tabGpu[0].nameGpu).replace(" ","_") + '?gpu_new_freq=' + str(self.tabGpu[0].freqGpu) + "," + str(offsetGpu) + '?mem_new_freq=' + str(self.tabGpu[0].freqMem)+ "," + str(offsetMem))#,None,4
+					page=urllib.urlopen('http://nvidiux.redirectme.net:2008/gpuStatOverclock.html?gpu=' + str(self.tabGpu[0].nameGpu).replace(" ","_") + '&gpu_new_freq=' + str(self.tabGpu[0].freqGpu) + "," + str(offsetGpu) + '&mem_new_freq=' + str(self.tabGpu[0].freqMem)+ "," + str(offsetMem))#,None,4
 					return 0
 				else:
 					return 11
@@ -1576,9 +1577,9 @@ class NvidiuxApp(QMainWindow):
 				self.ui.labelFanVitesse.setText("Auto")
 				
 	def showDonate(self):
-		import webbrowser
-		url = "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=4FQJZJXVH5994"
-		webbrowser.open(url,new=2)
+		
+		self.donateW = DonateWindow(self.pref.language,app)
+		self.donateW.show()
 	
 	def startMonitor(self):
 		if self.pidMonitor != 0:

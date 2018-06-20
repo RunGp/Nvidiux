@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/python2
 
-# Copyright 2014-2016 Payet Guillaume
+# Copyright 2014-2018 Payet Guillaume
 #
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License version 3, as published
@@ -557,7 +557,6 @@ class Ui_Pref(QWidget):
 							overvolt = False
 					except:
 						overvolt = False
-			print overvolt
 			self.checkBoxOverVolt.setEnabled(overvolt)
 		self.checkBoxOverVolt.setChecked(self.pref.overvoltEnabled)
 		self.checkBoxTurboBoost= QtGui.QCheckBox(self.groupBoxPrefAdvance)

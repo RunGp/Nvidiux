@@ -104,7 +104,6 @@ class Ui_MainWindow(object):
         self.labelTemp.setText(_translate("MainWindow", "Temperature", None))
         self.labelMemory.setText(_translate("MainWindow", "Memory", None))
         self.bouttonExport.setText(_translate("MainWindow", "Export", None))
-        self.bouttonGpu.setText(_translate("MainWindow", "Select\n"
-"Gpu", None))
+        self.bouttonGpu.setText(_translate("MainWindow", "Select Gpu", None))
 
 from pyqtgraph import PlotWidget
