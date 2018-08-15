@@ -177,14 +177,14 @@ class NvidiuxApp(QMainWindow):
 	optimus = 0
 	
 	pref = Settings()
-	pref.nvidiuxVersionStr = "2.0.2.43"
+	pref.nvidiuxVersionStr = "2.0.2.44"
 	pref.nvidiuxVersion = 2.0
 	pref.nvidiuxVersionM = 2
 	pref.updateTime = 1
 	pref.startWithSystem = False
 	pref.valueStart = "0:0"
 	piloteVersion = "331.31"
-	piloteVersionMaxTest = 390.25
+	piloteVersionMaxTest = 396.51
 	pathLibNvidia = "/usr/lib/"
 	pref.language = "en_EN"
 	pref.labelOs = ""
@@ -861,6 +861,8 @@ class NvidiuxApp(QMainWindow):
 						self.tabGpu[i].arch = "maxwell"
 					elif nb_nvi >= 1000 and nb_nvi <= 1099:
 						self.tabGpu[i].arch = "pascal"
+					elif nb_nvi >= 1100 and nb_nvi <= 1199 or nb_nvi >= 2000 and nb_nvi <= 2099:
+						self.tabGpu[i].arch = "turing"
 					else:
 						self.tabGpu[i].arch = "ND"
 				else:
@@ -1828,7 +1830,8 @@ class NvidiuxApp(QMainWindow):
 		"geforce gt 620","geforce gt 630","geforce gtx 650","geforce gtx 660","geforce gtx 670","geforce gtx 680","geforce gtx 690",
 		"geforce gt 730","geforce gt 740","geforce gtx 750","geforce gtx 750 ti","geforce gtx 760","geforce gtx 770","geforce gtx 780","geforce gtx 780 ti",
 		"geforce gtx 960","geforce gtx 970","geforce gtx 980","geforce gtx 980 ti","geforce gtx 880m",
-		"geforce gt 1030","geforce gtx 1050","geforce gtx 1050 ti","geforce gtx 1060","geforce gtx 1070","geforce gtx 1070 ti","geforce gtx 1080","geforce gtx 1080 ti"]
+		"geforce gt 1030","geforce gtx 1050","geforce gtx 1050 ti","geforce gtx 1060","geforce gtx 1070","geforce gtx 1070 ti","geforce gtx 1080","geforce gtx 1080 ti",
+		"geforce rtx 2070","geforce rtx 2080"]
 		notWork = ["geforce gt 340", "geforce gt 330", "geforce gt 320", "geforce 315", "geforce 310","geforce gts 360m", "geforce gts 350m", "geforce gt 335m", "geforce gt 330m","geforce gt 325m", "geforce gt 320m", "geforce 320m", "geforce 315m", "geforce 310m", "geforce 305m",
 		"geforce gtx 295", "geforce gtx 285","geforce gtx 280", "geforce gtx 275", "geforce gtx 260", "geforce gts 250", "geforce gts 240", "geforce gt 230", "geforce gt 240", "geforce gt 220", "geforce g210", "geforce 210", "geforce 205",
 		"geforce gtx 285m", "geforce gtx 280m", "geforce gtx 260m", "geforce gts 260m", "geforce gts 250m", "geforce gt 240m", "geforce gt 230m", "geforce gt 220m", "geforce g210m", "geforce g205m",

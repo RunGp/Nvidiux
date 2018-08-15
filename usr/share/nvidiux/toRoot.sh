@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright 2014 Payet Guillaume
+# Copyright 2014-2018 Payet Guillaume
 #
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License version 3, as published
@@ -23,41 +23,13 @@ then
 	exit 253
 fi
 
-if [ $XDG_CURRENT_DESKTOP = "Kde" ] || [ $XDG_CURRENT_DESKTOP = "KDE" ]
+if [ ${1#*.} = "py" ]
+then 
+	pkexec python2 /usr/share/nvidiux/root_script/$1 $2
+elif [ ${1#*.} = "sh" ]
 then
-	if [ ${1#*.} = "py" ]
-	then 
-		kdesudo python2 /usr/share/nvidiux/root_script/$1 $2
-	elif [ ${1#*.} = "sh" ]
-	then
-		kdesudo bash /usr/share/nvidiux/root_script/$1 $2
-	else
-		exit 252
-	
-	fi
-	exit $?
+	pkexec bash /usr/share/nvidiux/root_script/$1 $2
 else
-	if [ ${1#*.} = "py" ]
-	then
-		type gksu-polkit >> /dev/null 2>&1
-		if [ $? -eq 0 ]
-		then 
-			gksu-polkit python2 /usr/share/nvidiux/root_script/$1 $2
-		else
-			gksudo python2 /usr/share/nvidiux/root_script/$1 $2
-		fi
-	elif [ ${1#*.} = "sh" ]
-	then
-		type gksu-polkit >> /dev/null 2>&1
-		if [ $? -eq 0 ]
-		then 
-			gksu-polkit bash /usr/share/nvidiux/root_script/$1 $2
-		else
-			gksudo bash /usr/share/nvidiux/root_script/$1 $2
-		fi
-	else
-		exit 252
-	fi
-	exit $?
+	exit 252
 fi
-	
+exit $?

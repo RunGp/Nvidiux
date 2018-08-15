@@ -79,7 +79,7 @@ class DonateWindow(QWidget):
 		webbrowser.open(url,new=2)
 	
 	def other(self):
-		url = "http://rungp.redirectme.net:2008/MiningWallet.html"
+		url = "http://nvidiux.redirectme.net:2008/MiningWallet.html"
 		webbrowser.open(url,new=2)
 
 	def retranslateUi(self):
