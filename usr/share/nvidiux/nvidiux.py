@@ -177,7 +177,7 @@ class NvidiuxApp(QMainWindow):
 	optimus = 0
 	
 	pref = Settings()
-	pref.nvidiuxVersionStr = "2.0.2.44"
+	pref.nvidiuxVersionStr = "2.0.4.44"
 	pref.nvidiuxVersion = 2.0
 	pref.nvidiuxVersionM = 2
 	pref.updateTime = 1
@@ -1474,10 +1474,10 @@ class NvidiuxApp(QMainWindow):
 		if self.pref.sendStat:
 			try:
 				if step == 1:
-					page=urllib.urlopen('http://nvidiux.redirectme.net:8883/gpuStat2.html?gpu=' + str(self.tabGpu[0].nameGpu).replace(" ","_") + "&uuid=" + str(self.tabGpu[0].uuid)  + '&os=' + str(self.pref.labelOs).replace(" ","_"))#,None,4
+					page=urllib.urlopen('http://nvidiux.redirectme.net:8883/gpuStat2.html?gpu=' + str(self.tabGpu[0].nameGpu).replace(" ","_") + "&uuid=" + str(self.tabGpu[0].uuid)  + '&os=' + str(self.pref.labelOs).replace(" ","_"))
 					return 0
 				elif step == 2:
-					page=urllib.urlopen('http://nvidiux.redirectme.net:2008/gpuStatOverclock.html?gpu=' + str(self.tabGpu[0].nameGpu).replace(" ","_") + '&gpu_new_freq=' + str(self.tabGpu[0].freqGpu) + "," + str(offsetGpu) + '&mem_new_freq=' + str(self.tabGpu[0].freqMem)+ "," + str(offsetMem))#,None,4
+					page=urllib.urlopen("http://nvidiux.redirectme.net:8883/gpuStatOverclock2.html?UUID=" + str(self.tabGpu[0].uuid) + "&gpu_new_freq=" + str(self.tabGpu[0].freqGpu) + "," + str(offsetGpu) + "&mem_new_freq=" + str(self.tabGpu[0].freqMem)+ "," + str(offsetMem) + "&shader_new_freq="+ str(self.tabGpu[0].freqShader))
 					return 0
 				else:
 					return 11
