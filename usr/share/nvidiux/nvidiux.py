@@ -177,7 +177,7 @@ class NvidiuxApp(QMainWindow):
 	optimus = 0
 	
 	pref = Settings()
-	pref.nvidiuxVersionStr = "2.0.4.44"
+	pref.nvidiuxVersionStr = "2.0.5.46"
 	pref.nvidiuxVersion = 2.0
 	pref.nvidiuxVersionM = 2
 	pref.updateTime = 1
@@ -264,20 +264,21 @@ class NvidiuxApp(QMainWindow):
 				print "Nvidiux version : " + self.pref.nvidiuxVersionStr
 				sys.exit(0)
 				
+			elif opt in ("-s", "--silent"):
+				if os.path.isfile(arg):
+					self.ndifile = arg
+					self.silent = True
+					print "here !"
+				else:
+					print "Unable to find profile file"
+					self.showHelp()
+					sys.exit(3)
+			
 			elif opt in ("--no-stat"):
 				self.pref.sendStat = False
 				self.notUseNdi = True
 				print "NO STAT"
 			
-			elif opt in ("-s", "--silent"):
-				if os.path.isfile(arg):
-					self.ndifile = arg
-					self.silent = True
-				else:
-					print "Unable to find profile file"
-					self.showHelp()
-					sys.exit(3)
-	
 			elif opt in ("-r", "--reset"):
 				self.resetAllGpu = True
 				self.notUseNdi = True	 
@@ -620,7 +621,8 @@ class NvidiuxApp(QMainWindow):
 	def getVersionSupport(self):
 		try:
 			page=urllib.urlopen('http://nvidiux.redirectme.net:2008/checkVersion.html?version=' + self.pref.nvidiuxVersionStr)#,timeout = 4
-			return str(page.read())
+			return "356|2.1.6"
+			#return str(page.read())
 		except:
 			return str(self.piloteVersionMaxTest) + "|" + str(self.pref.nvidiuxVersion) + ".0"
 			
@@ -653,8 +655,6 @@ class NvidiuxApp(QMainWindow):
 				if os.popen("prime-select query", "r").read().replace('\n','') != "nvidia":
 					return self.showError(-1,_translate("nvidiux","Mode intel",None),_translate("nvidiux","Configuration Prime\nVeuillez passer en mode nvidia svp",None),self.info)
 				self.optimus = 1
-				self.ui.checkBoxOptimus.setChecked(1)
-		
 		
 		if not os.path.isfile("/etc/X11/xorg.conf"):
 			reply = QtGui.QMessageBox.question(self,_translate("nvidiux","Xorg.conf",None),_translate("nvidiux","Pas de fichier xorg.conf en generer un ?",None), QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
