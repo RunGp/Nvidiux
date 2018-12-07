@@ -268,7 +268,6 @@ class NvidiuxApp(QMainWindow):
 				if os.path.isfile(arg):
 					self.ndifile = arg
 					self.silent = True
-					print "here !"
 				else:
 					print "Unable to find profile file"
 					self.showHelp()
@@ -621,8 +620,8 @@ class NvidiuxApp(QMainWindow):
 	def getVersionSupport(self):
 		try:
 			page=urllib.urlopen('http://nvidiux.redirectme.net:2008/checkVersion.html?version=' + self.pref.nvidiuxVersionStr)#,timeout = 4
-			return "356|2.1.6"
-			#return str(page.read())
+			#return "356|2.1.6"
+			return str(page.read())
 		except:
 			return str(self.piloteVersionMaxTest) + "|" + str(self.pref.nvidiuxVersion) + ".0"
 			
@@ -1314,11 +1313,11 @@ class NvidiuxApp(QMainWindow):
 			cmd = "nvidia-settings --query [gpu:" + str(self.numGpu) + "]/PCIEGen"
 			out3, err = sub.Popen(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True).communicate()
 			msg = "GPU INFO"
-			# ~ msg += _translate("nvidiux","Nom gpu:",None) + self.tabGpu[self.numGpu].nameGpu + "\n"
-			# ~ msg += _translate("nvidiux","Gpu UUid:",None) + self.tabGpu[self.numGpu].uuid + "\n"
-			# ~ msg += _translate("nvidiux","Interface memoire gpu:",None) + str(self.tabGpu[self.numGpu].memInterface) + _translate("nvidiux","bits",None) + "\n"
-			# ~ msg += _translate("nvidiux","PCIE Gen:",None) + out3.split("):")[1].split(".")[0] + "\n"
-			# ~ msg += _translate("nvidiux","Famille Gpu:",None) + self.tabGpu[self.numGpu].arch + "\n" 
+			msg += _translate("nvidiux","\nNom gpu:",None) + self.tabGpu[self.numGpu].nameGpu + "\n"
+			msg += _translate("nvidiux","Gpu UUid:",None) + self.tabGpu[self.numGpu].uuid + "\n"
+			msg += _translate("nvidiux","Interface memoire gpu:",None) + str(self.tabGpu[self.numGpu].memInterface) + _translate("nvidiux","bits",None) + "\n"
+			msg += _translate("nvidiux","PCIE Gen:",None) + out3.split("):")[1].split(".")[0] + "\n"
+			msg += _translate("nvidiux","Famille Gpu:",None) + self.tabGpu[self.numGpu].arch + "\n" 
 			QMessageBox.information(self,_translate("nvidiux","Rapport",None),msg)
 		except:
 			QMessageBox.information(self,_translate("nvidiux","Rapport",None),_translate("nvidiux","Erreur lors d'obtention des données",None))
