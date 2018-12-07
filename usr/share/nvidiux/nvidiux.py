@@ -177,7 +177,7 @@ class NvidiuxApp(QMainWindow):
 	optimus = 0
 	
 	pref = Settings()
-	pref.nvidiuxVersionStr = "2.0.5.46"
+	pref.nvidiuxVersionStr = "2.1.0.46"
 	pref.nvidiuxVersion = 2.0
 	pref.nvidiuxVersionM = 2
 	pref.updateTime = 1
@@ -620,8 +620,7 @@ class NvidiuxApp(QMainWindow):
 	def getVersionSupport(self):
 		try:
 			page=urllib.urlopen('http://nvidiux.redirectme.net:2008/checkVersion.html?version=' + self.pref.nvidiuxVersionStr)#,timeout = 4
-			return "356|2.1.6"
-			#return str(page.read())
+			return str(page.read())#return "356|2.1.0"
 		except:
 			return str(self.piloteVersionMaxTest) + "|" + str(self.pref.nvidiuxVersion) + ".0"
 			
