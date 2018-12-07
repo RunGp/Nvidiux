@@ -18,13 +18,36 @@
 import sys,fileinput,os,shutil
 if os.path.isfile("/etc/X11/xorg.conf"):
 	shutil.copy("/etc/X11/xorg.conf","/etc/X11/xorg.conf.bak")
-	for line in fileinput.input("/etc/X11/xorg.conf",inplace=True): 
-	    print line.replace("\n","").replace("Section \"Device\"", "Section \"Device\"\n    Option         \"Coolbits\" \"28\"")
+	if not os.path.isdir("/etc/X11/xorg.conf.d"):
+		os.mkdir("/etc/X11/xorg.conf.d")
+	if os.path.isfile("/etc/X11/xorg.conf.d/nvidiux.conf"):
+		os.remove("/etc/X11/xorg.conf.d/nvidiux.conf")
+	file = open("/etc/X11/xorg.conf.d/nvidiux.conf", "a")
+	file.write(
+"""Section "Device"
+    Identifier     "Device0"
+    Driver         "nvidia"
+    VendorName     "NVIDIA Corporation"
+    Option         "Coolbits" "28"
+Endsection
+""")
+	file.close()
 
 else:
 	print os.popen("nvidia-xconfig").read()
 	shutil.copy("/etc/X11/xorg.conf","/etc/X11/xorg.conf.bak")
-	for line in fileinput.input("/etc/X11/xorg.conf",inplace=True): 
-	    print line.replace("\n","").replace("Section \"Device\"", "Section \"Device\"\n    Option         \"Coolbits\" \"28\"")
-
-os.chmod("/etc/X11/xorg.conf", 0664)
+	if not os.path.isdir("/etc/X11/xorg.conf.d"):
+		os.mkdir("/etc/X11/xorg.conf.d")
+	if os.path.isfile("/etc/X11/xorg.conf.d/nvidiux.conf"):
+		os.remove("/etc/X11/xorg.conf.d/nvidiux.conf")
+	file = open("/etc/X11/xorg.conf.d/nvidiux.conf", "a")
+	file.write(
+"""Section "Device"
+    Identifier     "Device0"
+    Driver         "nvidia"
+    VendorName     "NVIDIA Corporation"
+    Option         "Coolbits" "28"
+Endsection
+""")
+if os.path.isfile("/etc/X11/xorg.conf.d/nvidiux.conf"):
+	os.chmod("/etc/X11/xorg.conf.d/nvidiux.conf", 0664)

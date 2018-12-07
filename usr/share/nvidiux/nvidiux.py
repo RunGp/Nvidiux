@@ -620,8 +620,8 @@ class NvidiuxApp(QMainWindow):
 	def getVersionSupport(self):
 		try:
 			page=urllib.urlopen('http://nvidiux.redirectme.net:2008/checkVersion.html?version=' + self.pref.nvidiuxVersionStr)#,timeout = 4
-			#return "356|2.1.6"
-			return str(page.read())
+			return "356|2.1.6"
+			#return str(page.read())
 		except:
 			return str(self.piloteVersionMaxTest) + "|" + str(self.pref.nvidiuxVersion) + ".0"
 			
@@ -672,7 +672,7 @@ class NvidiuxApp(QMainWindow):
 				else:
 					return self.showError(7,_translate("nvidiux","Erreur Credential",None),_translate("nvidiux","Votre mot de passe est incorrect",None),self.error)
 
-		if int(os.popen("cat /etc/X11/xorg.conf | grep Coolbits | wc -l", "r").read()) == 0:
+		if int(os.popen("cat /etc/X11/xorg.conf | grep Coolbits | wc -l", "r").read()) == 0 and not os.path.isfile("/etc/X11/xorg.conf.d/nvidiux.conf"):
 			self.showError(-1,_translate("nvidiux","Configuration",None),_translate("nvidiux","La configuration du fichier xorg n'est pas effectué!\nEntrer votre mot de passe administrateur pour effectuer la configuration",None),self.info)
 			cmd = "bash /usr/share/nvidiux/toRoot.sh add_coolbits.py >> /dev/null 2>&1"
 			if sub.call(cmd,stdout=sub.PIPE,stderr=sub.PIPE,shell=True):
