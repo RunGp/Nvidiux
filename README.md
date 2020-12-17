@@ -1,4 +1,14 @@
 # Nvidiux
+
+**nvidiux is no longer developed and not support any modern distribution with drop support of python2
+Please use another tools
+Thanks to all for use nvidiux **
+
+
+
+
+
+
 Licence GPL3 https://github.com/RunGp/Nvidiux/blob/master/usr/share/nvidiux/gpl-3.0.txt
 
 =============================================================
